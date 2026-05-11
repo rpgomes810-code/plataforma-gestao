@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { createBrowserClient } from '@supabase/ssr'
 
 const inputClass = "w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
 const labelClass = "block text-sm font-medium text-gray-700 mb-1"
@@ -26,14 +27,19 @@ export default function NovaEscala() {
   })
 
   useEffect(() => {
-    fetch('/api/hospitais')
-      .then(res => res.json())
-      .then(data => setHospitais(data))
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    supabase
+      .from('hospitais')
+      .select('id, nome')
+      .order('nome', { ascending: true })
+      .then(({ data }) => setHospitais(data || []))
   }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
-
     if (name === 'hospital_id') {
       const hospital = hospitais.find(h => h.id === value)
       setForm({ ...form, hospital_id: value, local_texto: hospital?.nome || '' })
@@ -74,7 +80,6 @@ export default function NovaEscala() {
       <div className="bg-white rounded-2xl shadow p-4 md:p-8 w-full">
         <form onSubmit={handleSubmit} className="space-y-4">
 
-          {/* Data + Grupo + Hora */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className={labelClass}>Data *</label>
@@ -90,7 +95,6 @@ export default function NovaEscala() {
             </div>
           </div>
 
-          {/* Hospital + Local */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className={labelClass}>Hospital</label>
@@ -107,19 +111,16 @@ export default function NovaEscala() {
             </div>
           </div>
 
-          {/* Atendentes */}
           <div>
             <label className={labelClass}>Atendente(s) *</label>
             <input name="atendentes" type="text" required placeholder="Ex: Renê / Gilberto" value={form.atendentes} onChange={handleChange} className={inputClass}/>
           </div>
 
-          {/* Observações */}
           <div>
             <label className={labelClass}>Observações</label>
             <textarea name="observacoes" rows={2} placeholder="Alguma observação específica..." value={form.observacoes} onChange={handleChange} className={inputClass}/>
           </div>
 
-          {/* Botões */}
           <div className="flex flex-col md:flex-row gap-3 pt-2">
             <button type="submit" disabled={loading}
               className="w-full md:w-auto bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 text-sm">
