@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation'
 
 const navItems = [
-  { href: '/dashboard',            icon: '📊', label: 'Dashboard' },
+  { href: '/dashboard',            icon: '📊', label: 'Início' },
   { href: '/dashboard/membros',    icon: '👥', label: 'Membros' },
   { href: '/dashboard/hospitais',  icon: '🏥', label: 'Hospitais' },
   { href: '/dashboard/escalas',    icon: '📅', label: 'Escalas' },
@@ -29,16 +29,16 @@ function NavLink({ href, icon, label, active }: { href: string; icon: string; la
 function BottomNavLink({ href, icon, label, active }: { href: string; icon: string; label: string; active: boolean }) {
   if (active) {
     return (
-      <a href={href} className="flex flex-col items-center gap-0.5 px-2 py-1 text-xs text-blue-600 font-semibold">
-        <span className="text-lg">{icon}</span>
-        <span>{label}</span>
+      <a href={href} className="flex flex-col items-center gap-0.5 px-1 py-1 text-blue-600 font-semibold" style={{minWidth: 0}}>
+        <span className="text-xl">{icon}</span>
+        <span className="text-[10px] truncate w-full text-center">{label}</span>
       </a>
     )
   }
   return (
-    <a href={href} className="flex flex-col items-center gap-0.5 px-2 py-1 text-xs text-gray-500">
-      <span className="text-lg">{icon}</span>
-      <span>{label}</span>
+    <a href={href} className="flex flex-col items-center gap-0.5 px-1 py-1 text-gray-500" style={{minWidth: 0}}>
+      <span className="text-xl">{icon}</span>
+      <span className="text-[10px] truncate w-full text-center">{label}</span>
     </a>
   )
 }
@@ -80,13 +80,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
 
         {/* Página */}
-        <main className="flex-1 pb-24 md:pb-0">
+        <main className="flex-1 pb-20 md:pb-0">
           {children}
         </main>
 
         {/* Bottom nav mobile */}
         <nav className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg md:hidden z-50">
-          <div className="flex justify-around items-center py-2">
+          <div className="flex justify-around items-center py-1 px-1">
             {navItems.map(item => (
               <BottomNavLink key={item.href} {...item} active={pathname === item.href} />
             ))}
