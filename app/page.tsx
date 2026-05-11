@@ -30,6 +30,7 @@ export default function Login() {
       setErro('Email ou senha incorretos')
       setLoading(false)
     } else {
+      router.refresh()
       router.push('/dashboard')
     }
   }
