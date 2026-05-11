@@ -52,9 +52,10 @@ export default async function Hospitais() {
             </div>
 
             <div className="flex gap-2 mt-2">
-              <button className="flex-1 text-sm text-blue-600 border border-blue-200 rounded-lg py-1.5 hover:bg-blue-50 transition">
+              <a href={`/dashboard/hospitais/${hospital.id}/editar`}
+                className="flex-1 text-center text-sm text-blue-600 border border-blue-200 rounded-lg py-1.5 hover:bg-blue-50 transition">
                 ✏️ Editar
-              </button>
+              </a>
               <button className="flex-1 text-sm text-gray-600 border border-gray-200 rounded-lg py-1.5 hover:bg-gray-50 transition">
                 📅 Ver Escalas
               </button>
