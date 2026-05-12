@@ -79,6 +79,12 @@ export default function Login() {
             className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 text-sm">
             {loading ? 'Entrando...' : 'Entrar'}
           </button>
+
+          <div className="text-center">
+            <a href="/solicitar-acesso" className="text-sm text-blue-600 hover:underline">
+              Não tem acesso? Solicitar acesso
+            </a>
+          </div>
         </form>
       </div>
     </div>
