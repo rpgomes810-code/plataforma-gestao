@@ -11,15 +11,14 @@ export default function SolicitarAcesso() {
   const [enviado, setEnviado] = useState(false)
   const [form, setForm] = useState({
     nome: '',
-    email: '',
     telefone: '',
-    grupo: '',
-    tipo: '',
+    data_nascimento: '',
+    comum: '',
+    cidade: '',
     instrumento: '',
-    mensagem: '',
   })
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
@@ -80,46 +79,40 @@ export default function SolicitarAcesso() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className={labelClass}>E-mail *</label>
-              <input name="email" type="email" required value={form.email} onChange={handleChange}
-                placeholder="seu@email.com" className={inputClass}/>
-            </div>
-            <div>
               <label className={labelClass}>Telefone / WhatsApp *</label>
               <input name="telefone" type="text" required value={form.telefone} onChange={handleChange}
                 placeholder="(11) 99999-0000" className={inputClass}/>
+            </div>
+            <div>
+              <label className={labelClass}>Data de nascimento *</label>
+              <input name="data_nascimento" type="date" required value={form.data_nascimento} onChange={handleChange}
+                className={inputClass}/>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className={labelClass}>Grupo</label>
-              <input name="grupo" type="text" value={form.grupo} onChange={handleChange}
-                placeholder="Ex: Grupo 3" className={inputClass}/>
+              <label className={labelClass}>Comum *</label>
+              <input name="comum" type="text" required value={form.comum} onChange={handleChange}
+                placeholder="Nome da sua comunidade" className={inputClass}/>
             </div>
             <div>
-              <label className={labelClass}>Função</label>
-              <select name="tipo" value={form.tipo} onChange={handleChange} className={inputClass}>
-                <option value="">Selecione...</option>
-                <option value="Músico">Músico</option>
-                <option value="Atendente">Atendente</option>
-                <option value="Organizador">Organizador</option>
-                <option value="Outro">Outro</option>
-              </select>
+              <label className={labelClass}>Cidade *</label>
+              <input name="cidade" type="text" required value={form.cidade} onChange={handleChange}
+                placeholder="Sua cidade" className={inputClass}/>
             </div>
           </div>
 
           <div>
-            <label className={labelClass}>Instrumento (se músico)</label>
-            <input name="instrumento" type="text" value={form.instrumento} onChange={handleChange}
-              placeholder="Ex: Violão, Teclado, Voz..." className={inputClass}/>
-          </div>
-
-          <div>
-            <label className={labelClass}>Mensagem (opcional)</label>
-            <textarea name="mensagem" rows={3} value={form.mensagem} onChange={handleChange}
-              placeholder="Alguma informação adicional..."
-              className={inputClass}/>
+            <label className={labelClass}>Instrumento</label>
+            <select name="instrumento" value={form.instrumento} onChange={handleChange} className={inputClass}>
+              <option value="">Selecione...</option>
+              <option value="Violino">Violino</option>
+              <option value="Viola">Viola</option>
+              <option value="Violoncelo">Violoncelo</option>
+              <option value="Canto">Canto</option>
+              <option value="Nenhum">Nenhum</option>
+            </select>
           </div>
 
           <button type="submit" disabled={loading}
