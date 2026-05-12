@@ -11,6 +11,8 @@ export default function SolicitarAcesso() {
   const [enviado, setEnviado] = useState(false)
   const [form, setForm] = useState({
     nome: '',
+    email: '',
+    senha: '',
     telefone: '',
     data_nascimento: '',
     comum: '',
@@ -113,6 +115,22 @@ export default function SolicitarAcesso() {
               <option value="Canto">Canto</option>
               <option value="Nenhum">Nenhum</option>
             </select>
+          </div>
+
+          <div className="border-t pt-4">
+            <p className="text-sm font-medium text-gray-700 mb-3">Dados de acesso</p>
+            <div className="space-y-4">
+              <div>
+                <label className={labelClass}>E-mail *</label>
+                <input name="email" type="email" required value={form.email} onChange={handleChange}
+                  placeholder="seu@email.com" className={inputClass}/>
+              </div>
+              <div>
+                <label className={labelClass}>Senha *</label>
+                <input name="senha" type="password" required minLength={6} value={form.senha} onChange={handleChange}
+                  placeholder="Mínimo 6 caracteres" className={inputClass}/>
+              </div>
+            </div>
           </div>
 
           <button type="submit" disabled={loading}
