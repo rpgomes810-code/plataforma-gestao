@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import BotaoExcluirEscala from './BotaoExcluirEscala'
 
 type Escala = {
   id: string
@@ -23,6 +24,15 @@ export default function Escalas() {
   const [ano, setAno] = useState(hoje.getFullYear())
   const [escalas, setEscalas] = useState<Escala[]>([])
   const [loading, setLoading] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/membros/eu')
+      .then(res => res.json())
+      .then(data => {
+        if (data?.nivel_acesso === 'Administrador') setIsAdmin(true)
+      })
+  }, [])
 
   useEffect(() => {
     setLoading(true)
@@ -51,7 +61,6 @@ export default function Escalas() {
   return (
     <div className="p-4 md:p-6">
 
-      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
           <h2 className="text-xl font-bold text-gray-800">Escalas</h2>
@@ -74,7 +83,6 @@ export default function Escalas() {
         </div>
       </div>
 
-      {/* Conteúdo */}
       {loading ? (
         <div className="text-center py-12 text-gray-500">Carregando...</div>
       ) : escalas.length === 0 ? (
@@ -113,9 +121,10 @@ export default function Escalas() {
                           <td className="px-4 py-3 text-sm text-gray-600">{escala.local_texto}</td>
                           <td className="px-4 py-3 text-sm text-gray-600">🕐 {escala.hora_inicio}</td>
                           <td className="px-4 py-3 text-sm text-gray-600">👤 {escala.atendentes}</td>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-3 flex items-center gap-1">
                             <a href={`/dashboard/escalas/${escala.id}/editar`}
                               className="text-xs text-blue-600 hover:underline">Editar</a>
+                            {isAdmin && <BotaoExcluirEscala id={escala.id} />}
                           </td>
                         </tr>
                       ))}

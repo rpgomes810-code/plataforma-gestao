@@ -1,6 +1,33 @@
-import { supabase } from '../../lib/supabase'
+export const dynamic = 'force-dynamic'
+
+import { cookies } from 'next/headers'
+import { createServerClient } from '@supabase/ssr'
+import BotaoExcluirHospital from './BotaoExcluirHospital'
 
 export default async function Hospitais() {
+  const cookieStore = await cookies()
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() { return cookieStore.getAll() },
+        setAll() {},
+      },
+    }
+  )
+
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const { data: usuarioLogado } = await supabase
+    .from('membros')
+    .select('nivel_acesso')
+    .eq('user_id', user?.id)
+    .single()
+
+  const isAdmin = usuarioLogado?.nivel_acesso === 'Administrador'
+
   const { data: hospitais } = await supabase
     .from('hospitais')
     .select('*')
@@ -56,9 +83,7 @@ export default async function Hospitais() {
                 className="flex-1 text-center text-sm text-blue-600 border border-blue-200 rounded-lg py-1.5 hover:bg-blue-50 transition">
                 ✏️ Editar
               </a>
-              <button className="flex-1 text-sm text-gray-600 border border-gray-200 rounded-lg py-1.5 hover:bg-gray-50 transition">
-                📅 Ver Escalas
-              </button>
+              {isAdmin && <BotaoExcluirHospital id={hospital.id} nome={hospital.nome} />}
             </div>
           </div>
         ))}
