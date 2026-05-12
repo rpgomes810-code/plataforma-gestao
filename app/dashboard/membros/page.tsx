@@ -7,6 +7,7 @@ export default async function Membros() {
     .order('nome', { ascending: true })
 
   const grupos = [...new Set(membros?.map(m => m.grupo).filter(Boolean))]
+  const semGrupo = membros?.filter(m => !m.grupo) || []
 
   return (
     <div className="p-4 md:p-6">
@@ -50,7 +51,7 @@ export default async function Membros() {
                     membro.nivel_acesso === 'Auxiliar' ? 'bg-yellow-100 text-yellow-700' :
                     'bg-gray-100 text-gray-600'
                   }`}>
-                    {membro.nivel_acesso}
+                    {membro.nivel_acesso || '—'}
                   </span>
                 </div>
               </div>
@@ -58,6 +59,34 @@ export default async function Membros() {
           </div>
         </div>
       ))}
+
+      {semGrupo.length > 0 && (
+        <div className="mb-8">
+          <h3 className="text-lg font-bold text-gray-700 mb-4">⏳ Sem grupo definido</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {semGrupo.map(membro => (
+              <div key={membro.id} className="bg-white rounded-2xl shadow p-5 flex flex-col gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-full bg-gray-400 flex items-center justify-center text-white font-bold text-lg">
+                    {membro.nome.charAt(0)}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-bold text-gray-800">{membro.nome}</p>
+                    <p className="text-sm text-gray-500">{membro.instrumento || 'Sem instrumento'}</p>
+                  </div>
+                  <span className="text-xs font-semibold px-2 py-1 rounded-full bg-yellow-100 text-yellow-700">
+                    Pendente
+                  </span>
+                </div>
+                <div className="border-t pt-3 flex justify-between text-sm text-gray-500">
+                  <span>📱 {membro.telefone || '—'}</span>
+                  <span>📍 {membro.cidade || '—'}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
     </div>
   )
