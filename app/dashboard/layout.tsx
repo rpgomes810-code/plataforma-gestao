@@ -8,6 +8,7 @@ const navItems = [
   { href: '/dashboard/hospitais',  icon: '🏥', label: 'Hospitais' },
   { href: '/dashboard/escalas',    icon: '📅', label: 'Escalas' },
   { href: '/dashboard/registros',  icon: '📋', label: 'Registros' },
+  { href: '/dashboard/solicitacoes', icon: '📩', label: 'Solicitações' },
   { href: '/dashboard/relatorios', icon: '📈', label: 'Relatórios' },
 ]
 
