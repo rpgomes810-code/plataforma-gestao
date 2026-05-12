@@ -66,6 +66,18 @@ export default function Solicitacoes() {
     setProcessando(null)
   }
 
+  const calcularIdade = (dataNascimento: string) => {
+    if (!dataNascimento) return '—'
+    const hoje = new Date()
+    const nascimento = new Date(dataNascimento + 'T12:00:00')
+    let idade = hoje.getFullYear() - nascimento.getFullYear()
+    const mes = hoje.getMonth() - nascimento.getMonth()
+    if (mes < 0 || (mes === 0 && hoje.getDate() < nascimento.getDate())) {
+      idade--
+    }
+    return `${idade} anos`
+  }
+
   const formatarData = (data: string) => {
     if (!data) return '—'
     return new Date(data + 'T12:00:00').toLocaleDateString('pt-BR')
@@ -132,8 +144,8 @@ export default function Solicitacoes() {
                       <p className="text-gray-700 font-medium">✉️ {s.email || '—'}</p>
                     </div>
                     <div>
-                      <p className="text-gray-400 text-xs">Nascimento</p>
-                      <p className="text-gray-700 font-medium">🎂 {formatarData(s.data_nascimento)}</p>
+                      <p className="text-gray-400 text-xs">Nascimento / Idade</p>
+                      <p className="text-gray-700 font-medium">🎂 {formatarData(s.data_nascimento)} — {calcularIdade(s.data_nascimento)}</p>
                     </div>
                     <div>
                       <p className="text-gray-400 text-xs">Comum</p>
