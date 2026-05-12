@@ -94,7 +94,7 @@ export default function SolicitarAcesso() {
             <div>
               <label className={labelClass}>Comum *</label>
               <input name="comum" type="text" required value={form.comum} onChange={handleChange}
-                placeholder="Nome da sua comunidade" className={inputClass}/>
+                placeholder="Nome da sua comum Congregacao" className={inputClass}/>
             </div>
             <div>
               <label className={labelClass}>Cidade *</label>
