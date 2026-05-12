@@ -10,9 +10,12 @@ export default function BotaoExcluirHospital({ id, nome }: { id: string, nome: s
     if (!confirmado) return
 
     const res = await fetch(`/api/hospitais/${id}`, { method: 'DELETE' })
+    const data = await res.json()
 
     if (res.ok) {
       router.refresh()
+    } else if (data.error?.includes('violates foreign key') || data.error?.includes('foreign key constraint')) {
+      alert(`Não é possível excluir "${nome}" pois ele possui escalas vinculadas. Exclua as escalas primeiro.`)
     } else {
       alert('Erro ao excluir hospital')
     }
