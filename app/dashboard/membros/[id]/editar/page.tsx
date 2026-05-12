@@ -14,11 +14,12 @@ export default function EditarMembro() {
   const [form, setForm] = useState({
     nome: '',
     telefone: '',
+    email: '',
     data_nascimento: '',
     comum: '',
     cidade: '',
-    tipo: '',
     instrumento: '',
+    tipo: '',
     grupo: '',
     nivel_acesso: '',
     cargo: '',
@@ -33,14 +34,15 @@ export default function EditarMembro() {
         setForm({
           nome:            data.nome || '',
           telefone:        data.telefone || '',
+          email:           data.email || '',
           data_nascimento: data.data_nascimento || '',
           comum:           data.comum || '',
           cidade:          data.cidade || '',
-          tipo:            data.tipo || '',
           instrumento:     data.instrumento || '',
+          tipo:            data.tipo || '',
           grupo:           data.grupo || '',
           nivel_acesso:    data.nivel_acesso || '',
-          cargo:           data.cargo || '',
+          cargo:           data.cargo || 'Nenhum',
           status:          data.status || '',
           observacoes:     data.observacoes || '',
         })
@@ -83,105 +85,118 @@ export default function EditarMembro() {
       </div>
 
       <div className="bg-white rounded-2xl shadow p-4 md:p-8 w-full">
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
 
+          {/* Dados pessoais */}
           <div>
-            <label className={labelClass}>Nome completo *</label>
-            <input name="nome" type="text" required value={form.nome} onChange={handleChange} className={inputClass} placeholder="Nome do membro" />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>Telefone</label>
-              <input name="telefone" type="text" value={form.telefone} onChange={handleChange} className={inputClass} placeholder="(11) 99999-0000" />
-            </div>
-            <div>
-              <label className={labelClass}>Data de Nascimento</label>
-              <input name="data_nascimento" type="date" value={form.data_nascimento} onChange={handleChange} className={inputClass} />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>Comum</label>
-              <input name="comum" type="text" value={form.comum} onChange={handleChange} className={inputClass} placeholder="Ex: Vila Arens, Jundiaí" />
-            </div>
-            <div>
-              <label className={labelClass}>Cidade</label>
-              <input name="cidade" type="text" value={form.cidade} onChange={handleChange} className={inputClass} placeholder="Ex: Jundiaí" />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>Tipo *</label>
-              <select name="tipo" required value={form.tipo} onChange={handleChange} className={inputClass}>
-                <option value="">Selecione...</option>
-                <option value="Músico">Músico</option>
-                <option value="Vocal">Vocal</option>
-                <option value="Atendente">Atendente</option>
-                <option value="Organizador">Organizador</option>
-              </select>
-            </div>
-            <div>
-              <label className={labelClass}>Instrumento</label>
-              <select name="instrumento" value={form.instrumento} onChange={handleChange} className={inputClass}>
-                <option value="Nenhum">Nenhum</option>
-                <option value="Violino">Violino</option>
-                <option value="Viola">Viola</option>
-                <option value="Violoncelo">Violoncelo</option>
-                <option value="Voz">Voz</option>
-              </select>
+            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">Dados pessoais</h3>
+            <div className="space-y-4">
+              <div>
+                <label className={labelClass}>Nome completo *</label>
+                <input name="nome" type="text" required value={form.nome} onChange={handleChange} className={inputClass} placeholder="Nome do membro" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className={labelClass}>Telefone</label>
+                  <input name="telefone" type="text" value={form.telefone} onChange={handleChange} className={inputClass} placeholder="(11) 99999-0000" />
+                </div>
+                <div>
+                  <label className={labelClass}>E-mail</label>
+                  <input name="email" type="email" value={form.email} onChange={handleChange} className={inputClass} placeholder="email@exemplo.com" />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className={labelClass}>Data de nascimento</label>
+                  <input name="data_nascimento" type="date" value={form.data_nascimento} onChange={handleChange} className={inputClass} />
+                </div>
+                <div>
+                  <label className={labelClass}>Comum</label>
+                  <input name="comum" type="text" value={form.comum} onChange={handleChange} className={inputClass} placeholder="Ex: Vila Arens, Jundiaí" />
+                </div>
+                <div>
+                  <label className={labelClass}>Cidade</label>
+                  <input name="cidade" type="text" value={form.cidade} onChange={handleChange} className={inputClass} placeholder="Ex: Jundiaí" />
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>Grupo *</label>
-              <select name="grupo" required value={form.grupo} onChange={handleChange} className={inputClass}>
-                <option value="">Selecione...</option>
-                <option value="Grupo 1">Grupo 1</option>
-                <option value="Grupo 2">Grupo 2</option>
-                <option value="Grupo 3">Grupo 3</option>
-                <option value="Grupo 4">Grupo 4</option>
-              </select>
-            </div>
-            <div>
-              <label className={labelClass}>Nível de acesso *</label>
-              <select name="nivel_acesso" required value={form.nivel_acesso} onChange={handleChange} className={inputClass}>
-                <option value="">Selecione...</option>
-                <option value="Colaborador">Colaborador</option>
-                <option value="Auxiliar">Auxiliar</option>
-                <option value="Administrador">Administrador</option>
-                <option value="Ministério">Ministério</option>
-              </select>
-            </div>
-          </div>
+          <hr className="border-gray-100" />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>Cargo</label>
-              <select name="cargo" value={form.cargo} onChange={handleChange} className={inputClass}>
-                <option value="Nenhum">Nenhum</option>
-                <option value="Ancião">Ancião</option>
-                <option value="Diácono">Diácono</option>
-                <option value="Secretário">Secretário</option>
-                <option value="Gestor">Gestor</option>
-              </select>
-            </div>
-            <div>
-              <label className={labelClass}>Status</label>
-              <select name="status" value={form.status} onChange={handleChange} className={inputClass}>
-                <option value="">Selecione...</option>
-                <option value="Ativo">Ativo</option>
-                <option value="Inativo">Inativo</option>
-              </select>
-            </div>
-          </div>
-
+          {/* Dados do ministério */}
           <div>
-            <label className={labelClass}>Observações</label>
-            <textarea name="observacoes" rows={3} value={form.observacoes} onChange={handleChange} className={inputClass} placeholder="Observações sobre o membro..." />
+            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">Dados do ministério</h3>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className={labelClass}>Tipo *</label>
+                  <select name="tipo" required value={form.tipo} onChange={handleChange} className={inputClass}>
+                    <option value="">Selecione...</option>
+                    <option value="Músico">Músico</option>
+                    <option value="Vocal">Vocal</option>
+                    <option value="Atendente">Atendente</option>
+                    <option value="Organizador">Organizador</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClass}>Instrumento</label>
+                  <select name="instrumento" value={form.instrumento} onChange={handleChange} className={inputClass}>
+                    <option value="Nenhum">Nenhum</option>
+                    <option value="Violino">Violino</option>
+                    <option value="Viola">Viola</option>
+                    <option value="Violoncelo">Violoncelo</option>
+                    <option value="Voz">Voz</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className={labelClass}>Grupo *</label>
+                  <select name="grupo" required value={form.grupo} onChange={handleChange} className={inputClass}>
+                    <option value="">Selecione...</option>
+                    <option value="Grupo 1">Grupo 1</option>
+                    <option value="Grupo 2">Grupo 2</option>
+                    <option value="Grupo 3">Grupo 3</option>
+                    <option value="Grupo 4">Grupo 4</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClass}>Nível de acesso *</label>
+                  <select name="nivel_acesso" required value={form.nivel_acesso} onChange={handleChange} className={inputClass}>
+                    <option value="">Selecione...</option>
+                    <option value="Colaborador">Colaborador</option>
+                    <option value="Auxiliar">Auxiliar</option>
+                    <option value="Ministério">Ministério</option>
+                    <option value="Administrador">Administrador</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className={labelClass}>Cargo</label>
+                  <select name="cargo" value={form.cargo} onChange={handleChange} className={inputClass}>
+                    <option value="Nenhum">Nenhum</option>
+                    <option value="Ancião">Ancião</option>
+                    <option value="Diácono">Diácono</option>
+                    <option value="Secretário">Secretário</option>
+                    <option value="Gestor">Gestor</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClass}>Status</label>
+                  <select name="status" value={form.status} onChange={handleChange} className={inputClass}>
+                    <option value="">Selecione...</option>
+                    <option value="Ativo">Ativo</option>
+                    <option value="Inativo">Inativo</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className={labelClass}>Observações</label>
+                <textarea name="observacoes" rows={3} value={form.observacoes} onChange={handleChange} className={inputClass} placeholder="Observações sobre o membro..." />
+              </div>
+            </div>
           </div>
 
           <div className="flex flex-col md:flex-row gap-3 pt-2">
