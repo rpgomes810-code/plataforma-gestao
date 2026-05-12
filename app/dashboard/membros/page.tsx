@@ -43,16 +43,22 @@ export default async function Membros() {
                     {membro.status}
                   </span>
                 </div>
-                <div className="border-t pt-3 flex justify-between text-sm text-gray-500">
+                <div className="border-t pt-3 flex justify-between items-center text-sm text-gray-500">
                   <span>📱 {membro.telefone || '—'}</span>
-                  <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                    membro.nivel_acesso === 'Ministério' ? 'bg-purple-100 text-purple-700' :
-                    membro.nivel_acesso === 'Administrador' ? 'bg-blue-100 text-blue-700' :
-                    membro.nivel_acesso === 'Auxiliar' ? 'bg-yellow-100 text-yellow-700' :
-                    'bg-gray-100 text-gray-600'
-                  }`}>
-                    {membro.nivel_acesso || '—'}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                      membro.nivel_acesso === 'Ministério' ? 'bg-purple-100 text-purple-700' :
+                      membro.nivel_acesso === 'Administrador' ? 'bg-blue-100 text-blue-700' :
+                      membro.nivel_acesso === 'Auxiliar' ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-gray-100 text-gray-600'
+                    }`}>
+                      {membro.nivel_acesso || '—'}
+                    </span>
+                    <a href={`/dashboard/membros/${membro.id}/editar`}
+                      className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition">
+                      Editar
+                    </a>
+                  </div>
                 </div>
               </div>
             ))}
@@ -78,9 +84,15 @@ export default async function Membros() {
                     Pendente
                   </span>
                 </div>
-                <div className="border-t pt-3 flex justify-between text-sm text-gray-500">
+                <div className="border-t pt-3 flex justify-between items-center text-sm text-gray-500">
                   <span>📱 {membro.telefone || '—'}</span>
-                  <span>📍 {membro.cidade || '—'}</span>
+                  <div className="flex items-center gap-2">
+                    <span>📍 {membro.cidade || '—'}</span>
+                    <a href={`/dashboard/membros/${membro.id}/editar`}
+                      className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition">
+                      Editar
+                    </a>
+                  </div>
                 </div>
               </div>
             ))}
