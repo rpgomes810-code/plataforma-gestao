@@ -7,6 +7,7 @@ type Solicitacao = {
   id: string
   nome: string
   telefone: string
+  email: string
   data_nascimento: string
   comum: string
   cidade: string
@@ -19,6 +20,7 @@ export default function Solicitacoes() {
   const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>([])
   const [loading, setLoading] = useState(true)
   const [filtro, setFiltro] = useState('pendente')
+  const [processando, setProcessando] = useState<string | null>(null)
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -40,9 +42,28 @@ export default function Solicitacoes() {
 
   useEffect(() => { carregar() }, [filtro])
 
-  const atualizar = async (id: string, status: string) => {
-    await supabase.from('solicitacoes').update({ status }).eq('id', id)
+  const aprovar = async (id: string) => {
+    setProcessando(id)
+    const res = await fetch('/api/aprovar-solicitacao', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    })
+
+    if (res.ok) {
+      carregar()
+    } else {
+      const data = await res.json()
+      alert('Erro ao aprovar: ' + data.error)
+    }
+    setProcessando(null)
+  }
+
+  const rejeitar = async (id: string) => {
+    setProcessando(id)
+    await supabase.from('solicitacoes').update({ status: 'rejeitado' }).eq('id', id)
     carregar()
+    setProcessando(null)
   }
 
   const formatarData = (data: string) => {
@@ -68,7 +89,7 @@ export default function Solicitacoes() {
         <div className="flex gap-2">
           {['pendente', 'aprovado', 'rejeitado'].map(f => (
             <button key={f} onClick={() => setFiltro(f)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
                 filtro === f
                   ? 'bg-blue-600 text-white'
                   : 'bg-white text-gray-600 border hover:bg-gray-50'
@@ -107,6 +128,10 @@ export default function Solicitacoes() {
                       <p className="text-gray-700 font-medium">📱 {s.telefone || '—'}</p>
                     </div>
                     <div>
+                      <p className="text-gray-400 text-xs">E-mail</p>
+                      <p className="text-gray-700 font-medium">✉️ {s.email || '—'}</p>
+                    </div>
+                    <div>
                       <p className="text-gray-400 text-xs">Nascimento</p>
                       <p className="text-gray-700 font-medium">🎂 {formatarData(s.data_nascimento)}</p>
                     </div>
@@ -127,12 +152,12 @@ export default function Solicitacoes() {
 
                 {filtro === 'pendente' && (
                   <div className="flex md:flex-col gap-2 justify-end">
-                    <button onClick={() => atualizar(s.id, 'aprovado')}
-                      className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-600 transition">
-                      ✅ Aprovar
+                    <button onClick={() => aprovar(s.id)} disabled={processando === s.id}
+                      className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-600 transition disabled:opacity-50">
+                      {processando === s.id ? 'Processando...' : '✅ Aprovar'}
                     </button>
-                    <button onClick={() => atualizar(s.id, 'rejeitado')}
-                      className="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-100 transition">
+                    <button onClick={() => rejeitar(s.id)} disabled={processando === s.id}
+                      className="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-100 transition disabled:opacity-50">
                       ❌ Rejeitar
                     </button>
                   </div>
