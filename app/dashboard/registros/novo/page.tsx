@@ -15,6 +15,7 @@ export default function NovoRegistro() {
   const [hospitais, setHospitais] = useState<Hospital[]>([])
   const [membros, setMembros] = useState<Membro[]>([])
   const [membrosSelecionados, setMembrosSelecionados] = useState<string[]>([])
+  const [erro, setErro] = useState('')
   const [form, setForm] = useState({
     hospital_id: '',
     data: '',
@@ -29,11 +30,19 @@ export default function NovoRegistro() {
   useEffect(() => {
     fetch('/api/hospitais')
       .then(res => res.json())
-      .then(setHospitais)
+      .then(data => {
+        if (Array.isArray(data)) setHospitais(data)
+        else setErro('Erro ao carregar hospitais: ' + JSON.stringify(data))
+      })
+      .catch(e => setErro('Erro hospitais: ' + e.message))
 
     fetch('/api/membros')
       .then(res => res.json())
-      .then(setMembros)
+      .then(data => {
+        if (Array.isArray(data)) setMembros(data)
+        else setErro('Erro ao carregar membros: ' + JSON.stringify(data))
+      })
+      .catch(e => setErro('Erro membros: ' + e.message))
   }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -68,6 +77,14 @@ export default function NovoRegistro() {
       setLoading(false)
     }
   }
+
+  if (erro) return (
+    <div className="p-8">
+      <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm">
+        {erro}
+      </div>
+    </div>
+  )
 
   return (
     <div className="p-4 md:p-6">
