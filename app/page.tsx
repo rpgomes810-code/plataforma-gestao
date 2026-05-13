@@ -43,9 +43,7 @@ export default function Login() {
     setErro('')
     setMensagem('')
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/redefinir-senha`,
-    })
+    const { error } = await supabase.auth.resetPasswordForEmail(email)
 
     if (error) {
       setErro('Erro ao enviar e-mail. Verifique o endereço informado.')
