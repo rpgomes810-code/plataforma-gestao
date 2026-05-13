@@ -1,6 +1,16 @@
 import { supabase } from '../../lib/supabase'
 import { NextRequest, NextResponse } from 'next/server'
 
+export async function GET() {
+  const { data, error } = await supabase
+    .from('membros')
+    .select('id, nome')
+    .order('nome', { ascending: true })
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data)
+}
+
 export async function POST(request: NextRequest) {
   const formData = await request.formData()
 
