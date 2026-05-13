@@ -46,7 +46,7 @@ export default function Login() {
     const { error } = await supabase.auth.resetPasswordForEmail(email)
 
     if (error) {
-      setErro('Erro ao enviar e-mail. Verifique o endereço informado.')
+      setErro(error.message)
     } else {
       setMensagem('E-mail enviado! Verifique sua caixa de entrada para redefinir a senha.')
     }
