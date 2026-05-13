@@ -6,6 +6,16 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+export async function GET() {
+  const { data, error } = await supabase
+    .from('hospitais')
+    .select('id, nome')
+    .order('nome', { ascending: true })
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data)
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -21,17 +31,4 @@ export async function POST(request: NextRequest) {
     console.error('Erro ao salvar hospital:', error)
     return NextResponse.json({ error: 'Erro ao salvar hospital' }, { status: 500 })
   }
-}
-
-export async function GET() {
-  const { data, error } = await supabase
-    .from('hospitais')
-    .select('*')
-    .order('created_at', { ascending: false })
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
-
-  return NextResponse.json(data)
 }
