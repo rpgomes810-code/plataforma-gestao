@@ -14,8 +14,8 @@ export default function NovoRegistro() {
   const [loading, setLoading] = useState(false)
   const [hospitais, setHospitais] = useState<Hospital[]>([])
   const [membros, setMembros] = useState<Membro[]>([])
+  const [busca, setBusca] = useState('')
   const [membrosSelecionados, setMembrosSelecionados] = useState<string[]>([])
-  const [erro, setErro] = useState('')
   const [form, setForm] = useState({
     hospital_id: '',
     data: '',
@@ -30,30 +30,33 @@ export default function NovoRegistro() {
   useEffect(() => {
     fetch('/api/hospitais')
       .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) setHospitais(data)
-        else setErro('Erro ao carregar hospitais: ' + JSON.stringify(data))
-      })
-      .catch(e => setErro('Erro hospitais: ' + e.message))
+      .then(data => { if (Array.isArray(data)) setHospitais(data) })
 
     fetch('/api/membros')
       .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) setMembros(data)
-        else setErro('Erro ao carregar membros: ' + JSON.stringify(data))
-      })
-      .catch(e => setErro('Erro membros: ' + e.message))
+      .then(data => { if (Array.isArray(data)) setMembros(data) })
   }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
-  const toggleMembro = (nome: string) => {
-    setMembrosSelecionados(prev =>
-      prev.includes(nome) ? prev.filter(n => n !== nome) : [...prev, nome]
-    )
+  const adicionarMembro = (nome: string) => {
+    if (!membrosSelecionados.includes(nome)) {
+      setMembrosSelecionados(prev => [...prev, nome])
+    }
+    setBusca('')
   }
+
+  const removerMembro = (nome: string) => {
+    setMembrosSelecionados(prev => prev.filter(n => n !== nome))
+  }
+
+  const membrosFiltrados = membros.filter(m =>
+    busca.length > 0 &&
+    m.nome.toLowerCase().includes(busca.toLowerCase()) &&
+    !membrosSelecionados.includes(m.nome)
+  )
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -77,14 +80,6 @@ export default function NovoRegistro() {
       setLoading(false)
     }
   }
-
-  if (erro) return (
-    <div className="p-8">
-      <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm">
-        {erro}
-      </div>
-    </div>
-  )
 
   return (
     <div className="p-4 md:p-6">
@@ -136,24 +131,44 @@ export default function NovoRegistro() {
 
           <div>
             <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">Membros presentes</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2">
-              {membros.map(membro => (
-                <button
-                  key={membro.id}
-                  type="button"
-                  onClick={() => toggleMembro(membro.nome)}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium border transition text-left ${
-                    membrosSelecionados.includes(membro.nome)
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                  }`}
-                >
-                  {membrosSelecionados.includes(membro.nome) ? '✓ ' : ''}{membro.nome}
-                </button>
-              ))}
+
+            {/* Campo de busca */}
+            <div className="relative mb-3">
+              <input
+                type="text"
+                value={busca}
+                onChange={e => setBusca(e.target.value)}
+                className={inputClass}
+                placeholder="Digite o nome para buscar e adicionar..."
+              />
+              {membrosFiltrados.length > 0 && (
+                <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto">
+                  {membrosFiltrados.map(m => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => adicionarMembro(m.nome)}
+                      className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition"
+                    >
+                      {m.nome}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-            {membrosSelecionados.length > 0 && (
-              <p className="text-xs text-gray-400 mt-2">{membrosSelecionados.length} membro(s) selecionado(s)</p>
+
+            {/* Membros selecionados */}
+            {membrosSelecionados.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {membrosSelecionados.map(nome => (
+                  <span key={nome} className="flex items-center gap-1 bg-blue-50 text-blue-700 text-sm font-medium px-3 py-1 rounded-full">
+                    {nome}
+                    <button type="button" onClick={() => removerMembro(nome)} className="text-blue-400 hover:text-blue-700 ml-1 font-bold">×</button>
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-400">Nenhum membro adicionado ainda</p>
             )}
           </div>
 

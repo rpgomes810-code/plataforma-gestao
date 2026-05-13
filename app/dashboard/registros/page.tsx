@@ -35,10 +35,6 @@ export default async function Registros() {
         <div className="text-center py-12 bg-white rounded-2xl shadow">
           <p className="text-4xl mb-3">📋</p>
           <p className="text-gray-500">Nenhum registro cadastrado ainda</p>
-          <a href="/dashboard/registros/novo"
-            className="mt-4 inline-block bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700">
-            + Adicionar registro
-          </a>
         </div>
       ) : (
         <div className="space-y-4">
