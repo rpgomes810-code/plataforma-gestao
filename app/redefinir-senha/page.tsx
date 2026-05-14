@@ -11,11 +11,28 @@ export default function RedefinirSenha() {
   const [erro, setErro] = useState('')
   const [loading, setLoading] = useState(false)
   const [mensagem, setMensagem] = useState('')
+  const [pronto, setPronto] = useState(false)
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
+
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get('code')
+
+    if (code) {
+      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+        if (error) {
+          setErro('Link inválido ou expirado. Solicite um novo.')
+        } else {
+          setPronto(true)
+        }
+      })
+    } else {
+      setErro('Link inválido. Solicite um novo e-mail de recuperação.')
+    }
+  }, [])
 
   const handleRedefinir = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -53,39 +70,52 @@ export default function RedefinirSenha() {
           <p className="text-sm text-gray-500 mt-1">Digite sua nova senha</p>
         </div>
 
-        <form onSubmit={handleRedefinir} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nova senha</label>
-            <input
-              type="password"
-              required
-              value={senha}
-              onChange={e => setSenha(e.target.value)}
-              placeholder="••••••••"
-              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-            />
+        {!pronto && !erro && (
+          <p className="text-center text-sm text-gray-500">Verificando link...</p>
+        )}
+
+        {erro && (
+          <div className="text-center">
+            <p className="text-red-500 text-sm mb-4">{erro}</p>
+            <a href="/" className="text-blue-600 text-sm hover:underline">← Voltar para o login</a>
           </div>
+        )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Confirmar nova senha</label>
-            <input
-              type="password"
-              required
-              value={confirmar}
-              onChange={e => setConfirmar(e.target.value)}
-              placeholder="••••••••"
-              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-            />
-          </div>
+        {pronto && (
+          <form onSubmit={handleRedefinir} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Nova senha</label>
+              <input
+                type="password"
+                required
+                value={senha}
+                onChange={e => setSenha(e.target.value)}
+                placeholder="••••••••"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              />
+            </div>
 
-          {erro && <p className="text-red-500 text-sm text-center">{erro}</p>}
-          {mensagem && <p className="text-green-600 text-sm text-center">{mensagem}</p>}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Confirmar nova senha</label>
+              <input
+                type="password"
+                required
+                value={confirmar}
+                onChange={e => setConfirmar(e.target.value)}
+                placeholder="••••••••"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              />
+            </div>
 
-          <button type="submit" disabled={loading}
-            className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 text-sm">
-            {loading ? 'Salvando...' : 'Salvar nova senha'}
-          </button>
-        </form>
+            {erro && <p className="text-red-500 text-sm text-center">{erro}</p>}
+            {mensagem && <p className="text-green-600 text-sm text-center">{mensagem}</p>}
+
+            <button type="submit" disabled={loading}
+              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 text-sm">
+              {loading ? 'Salvando...' : 'Salvar nova senha'}
+            </button>
+          </form>
+        )}
       </div>
     </div>
   )
