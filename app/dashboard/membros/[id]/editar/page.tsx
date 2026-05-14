@@ -67,10 +67,16 @@ export default function EditarMembro() {
     e.preventDefault()
     setLoading(true)
 
+    const dadosParaEnviar = {
+      ...form,
+      data_nascimento: form.data_nascimento || null,
+      data_inscricao_darpe: form.data_inscricao_darpe || null,
+    }
+
     const res = await fetch(`/api/membros/${params.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
+      body: JSON.stringify(dadosParaEnviar),
     })
 
     if (res.ok) {
@@ -83,12 +89,13 @@ export default function EditarMembro() {
           tabela: 'membros',
           registro_id: params.id,
           dados_antes: dadosOriginais,
-          dados_depois: form,
+          dados_depois: dadosParaEnviar,
         }),
       })
       router.push('/dashboard/membros')
     } else {
-      alert('Erro ao atualizar membro')
+      const erro = await res.json()
+      alert('Erro ao atualizar membro: ' + (erro.error || 'Erro desconhecido'))
       setLoading(false)
     }
   }
