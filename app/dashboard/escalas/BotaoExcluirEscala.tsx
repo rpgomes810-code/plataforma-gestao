@@ -15,6 +15,10 @@ export default function BotaoExcluirEscala({ id }: { id: string }) {
     const confirmado = confirm('Tem certeza que deseja excluir esta escala?')
     if (!confirmado) return
 
+    // Busca dados da escala antes de excluir
+    const dadosRes = await fetch(`/api/escalas/${id}`)
+    const dadosAntes = dadosRes.ok ? await dadosRes.json() : { id }
+
     const res = await fetch(`/api/escalas/${id}`, { method: 'DELETE' })
 
     if (res.ok) {
@@ -26,7 +30,7 @@ export default function BotaoExcluirEscala({ id }: { id: string }) {
           acao: 'Excluiu escala',
           tabela: 'escalas',
           registro_id: id,
-          dados_antes: { id },
+          dados_antes: dadosAntes,
           dados_depois: { excluido: true },
         }),
       })
