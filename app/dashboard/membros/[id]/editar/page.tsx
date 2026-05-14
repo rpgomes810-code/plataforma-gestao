@@ -124,26 +124,26 @@ export default function EditarMembro() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className={labelClass}>Telefone</label>
-                  <input name="telefone" type="text" value={form.telefone} onChange={handleChange} className={inputClass} />
+                  <label className={labelClass}>Telefone *</label>
+                  <input name="telefone" type="text" required value={form.telefone} onChange={handleChange} className={inputClass} />
                 </div>
                 <div>
-                  <label className={labelClass}>E-mail</label>
-                  <input name="email" type="email" value={form.email} onChange={handleChange} className={inputClass} />
+                  <label className={labelClass}>E-mail *</label>
+                  <input name="email" type="email" required value={form.email} onChange={handleChange} className={inputClass} />
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className={labelClass}>Data de nascimento</label>
-                  <input name="data_nascimento" type="date" value={form.data_nascimento} onChange={handleChange} className={inputClass} />
+                  <label className={labelClass}>Data de nascimento *</label>
+                  <input name="data_nascimento" type="date" required value={form.data_nascimento} onChange={handleChange} className={inputClass} />
                 </div>
                 <div>
-                  <label className={labelClass}>Comum</label>
-                  <input name="comum" type="text" value={form.comum} onChange={handleChange} className={inputClass} />
+                  <label className={labelClass}>Comum *</label>
+                  <input name="comum" type="text" required value={form.comum} onChange={handleChange} className={inputClass} />
                 </div>
                 <div>
-                  <label className={labelClass}>Cidade</label>
-                  <input name="cidade" type="text" value={form.cidade} onChange={handleChange} className={inputClass} />
+                  <label className={labelClass}>Cidade *</label>
+                  <input name="cidade" type="text" required value={form.cidade} onChange={handleChange} className={inputClass} />
                 </div>
               </div>
             </div>
@@ -166,8 +166,9 @@ export default function EditarMembro() {
                   </select>
                 </div>
                 <div>
-                  <label className={labelClass}>Instrumento</label>
-                  <select name="instrumento" value={form.instrumento} onChange={handleChange} className={inputClass}>
+                  <label className={labelClass}>Instrumento *</label>
+                  <select name="instrumento" required value={form.instrumento} onChange={handleChange} className={inputClass}>
+                    <option value="">Selecione...</option>
                     <option value="Nenhum">Nenhum</option>
                     <option value="Violino">Violino</option>
                     <option value="Viola">Viola</option>
@@ -200,8 +201,9 @@ export default function EditarMembro() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className={labelClass}>Cargo</label>
-                  <select name="cargo" value={form.cargo} onChange={handleChange} className={inputClass}>
+                  <label className={labelClass}>Cargo *</label>
+                  <select name="cargo" required value={form.cargo} onChange={handleChange} className={inputClass}>
+                    <option value="">Selecione...</option>
                     <option value="Nenhum">Nenhum</option>
                     <option value="Ancião">Ancião</option>
                     <option value="Diácono">Diácono</option>
@@ -210,16 +212,16 @@ export default function EditarMembro() {
                   </select>
                 </div>
                 <div>
-                  <label className={labelClass}>Status</label>
-                  <select name="status" value={form.status} onChange={handleChange} className={inputClass}>
+                  <label className={labelClass}>Status *</label>
+                  <select name="status" required value={form.status} onChange={handleChange} className={inputClass}>
                     <option value="">Selecione...</option>
                     <option value="Ativo">Ativo</option>
                     <option value="Inativo">Inativo</option>
                   </select>
                 </div>
                 <div>
-                  <label className={labelClass}>Data de inscrição no DARPE</label>
-                  <input name="data_inscricao_darpe" type="date" value={form.data_inscricao_darpe} onChange={handleChange} className={inputClass} />
+                  <label className={labelClass}>Data de inscrição no DARPE *</label>
+                  <input name="data_inscricao_darpe" type="date" required value={form.data_inscricao_darpe} onChange={handleChange} className={inputClass} />
                 </div>
               </div>
               <div>
