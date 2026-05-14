@@ -60,10 +60,10 @@ export default async function Logs() {
   }
 
   const podeReverter = (log: any) => {
-    return log.acao.includes('Excluiu') &&
+    return log.acao.includes('Excluiu membro') &&
       !log.acao.includes('[REVERTIDO]') &&
       log.dados_antes &&
-      log.tabela
+      log.tabela === 'membros'
   }
 
   return (
