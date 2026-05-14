@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: erroAuth.message }, { status: 500 })
     }
 
-    const hoje = new Date().toISOString().split('T')[0]
+    const hoje = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }).split('/').reverse().join('-')
 
     const { error: erroMembro } = await supabase
       .from('membros')
