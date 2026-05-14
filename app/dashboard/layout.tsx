@@ -10,6 +10,7 @@ const navItems = [
   { href: '/dashboard/registros',  icon: '📋', label: 'Registros' },
   { href: '/dashboard/solicitacoes', icon: '📩', label: 'Solicitações' },
   { href: '/dashboard/relatorios', icon: '📈', label: 'Relatórios' },
+  { href: '/dashboard/logs', icon: '📋', label: 'Logs' },
 ]
 
 function NavLink({ href, icon, label, active }: { href: string; icon: string; label: string; active: boolean }) {
