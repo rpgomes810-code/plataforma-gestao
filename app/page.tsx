@@ -43,7 +43,9 @@ export default function Login() {
     setErro('')
     setMensagem('')
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email)
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://darpe-jundiai.vercel.app/redefinir-senha',
+    })
 
     if (error) {
       setErro(error.message)
