@@ -2,16 +2,33 @@
 
 import { useRouter } from 'next/navigation'
 
-export default function BotaoExcluir({ id, nome }: { id: string, nome: string }) {
+export default function BotaoExcluir({ id, nome, usuarioNome }: { id: string, nome: string, usuarioNome?: string }) {
   const router = useRouter()
 
   const excluir = async () => {
     const confirmado = confirm(`Tem certeza que deseja excluir "${nome}"?`)
     if (!confirmado) return
 
+    // Busca dados antes de excluir
+    const dadosRes = await fetch(`/api/membros/${id}`)
+    const dadosAntes = await dadosRes.json()
+
     const res = await fetch(`/api/membros/${id}`, { method: 'DELETE' })
 
     if (res.ok) {
+      // Registra o log
+      await fetch('/api/logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          usuario_nome: usuarioNome || 'Administrador',
+          acao: 'Excluiu membro',
+          tabela: 'membros',
+          registro_id: id,
+          dados_antes: dadosAntes,
+          dados_depois: null,
+        }),
+      })
       router.refresh()
     } else {
       alert('Erro ao excluir membro')

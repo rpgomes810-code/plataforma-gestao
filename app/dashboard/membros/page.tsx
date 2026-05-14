@@ -18,19 +18,16 @@ export default async function Membros() {
     }
   )
 
-  // Busca o usuário logado
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Busca os dados do usuário logado na tabela membros
   const { data: usuarioLogado } = await supabase
     .from('membros')
-    .select('nivel_acesso')
+    .select('nivel_acesso, nome')
     .eq('user_id', user?.id)
     .single()
 
   const isAdmin = usuarioLogado?.nivel_acesso === 'Administrador'
 
-  // Busca todos os membros
   const { data: membros } = await supabase
     .from('membros')
     .select('*')
@@ -88,7 +85,7 @@ export default async function Membros() {
                       className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition">
                       Editar
                     </a>
-                    {isAdmin && <BotaoExcluir id={membro.id} nome={membro.nome} />}
+                    {isAdmin && <BotaoExcluir id={membro.id} nome={membro.nome} usuarioNome={usuarioLogado?.nome} />}
                   </div>
                 </div>
               </div>
@@ -123,7 +120,7 @@ export default async function Membros() {
                       className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition">
                       Editar
                     </a>
-                    {isAdmin && <BotaoExcluir id={membro.id} nome={membro.nome} />}
+                    {isAdmin && <BotaoExcluir id={membro.id} nome={membro.nome} usuarioNome={usuarioLogado?.nome} />}
                   </div>
                 </div>
               </div>
