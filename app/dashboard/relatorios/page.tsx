@@ -1,20 +1,72 @@
 export const dynamic = 'force-dynamic'
 
 import { createClient } from '@supabase/supabase-js'
+import FiltroRelatorio from './FiltroRelatorio'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
-export default async function Relatorios() {
-  // Busca todos os registros
+function getPeriodo(periodo: string) {
+  const hoje = new Date()
+  const fim = new Date(hoje)
+  fim.setHours(23, 59, 59, 999)
+  let inicio = new Date(hoje)
+
+  switch (periodo) {
+    case 'mes_atual':
+      inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1)
+      break
+    case 'mes_anterior':
+      inicio = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1)
+      fim.setTime(new Date(hoje.getFullYear(), hoje.getMonth(), 0).getTime())
+      break
+    case 'bimestre':
+      inicio.setMonth(hoje.getMonth() - 2)
+      break
+    case 'trimestre':
+      inicio.setMonth(hoje.getMonth() - 3)
+      break
+    case 'semestre':
+      inicio.setMonth(hoje.getMonth() - 6)
+      break
+    case 'ano':
+      inicio.setFullYear(hoje.getFullYear() - 1)
+      break
+    default:
+      inicio = new Date(0)
+  }
+
+  return {
+    inicio: inicio.toISOString().split('T')[0],
+    fim: fim.toISOString().split('T')[0],
+  }
+}
+
+export default async function Relatorios({ searchParams }: { searchParams: Promise<{ periodo?: string, inicio?: string, fim?: string }> }) {
+  const params = await searchParams
+  const periodo = params.periodo || 'mes_atual'
+
+  let dataInicio: string
+  let dataFim: string
+
+  if (periodo === 'personalizado' && params.inicio && params.fim) {
+    dataInicio = params.inicio
+    dataFim = params.fim
+  } else {
+    const datas = getPeriodo(periodo)
+    dataInicio = datas.inicio
+    dataFim = datas.fim
+  }
+
   const { data: registros } = await supabase
     .from('registros')
     .select('*, hospitais(nome)')
+    .gte('data', dataInicio)
+    .lte('data', dataFim)
     .order('data', { ascending: false })
 
-  // Busca todos os membros
   const { data: membros } = await supabase
     .from('membros')
     .select('*')
@@ -25,7 +77,6 @@ export default async function Relatorios() {
   const totalHinos = registros?.reduce((acc, r) => acc + (r.hinos_executados || 0), 0) || 0
   const totalOracoes = registros?.filter(r => r.teve_oracao).length || 0
 
-  // Atendimentos por hospital
   const porHospital: Record<string, number> = {}
   registros?.forEach(r => {
     const nome = r.hospitais?.nome || 'Desconhecido'
@@ -33,7 +84,6 @@ export default async function Relatorios() {
   })
   const hospitalOrdenado = Object.entries(porHospital).sort((a, b) => b[1] - a[1])
 
-  // Presença dos membros
   const presenca: Record<string, number> = {}
   registros?.forEach(r => {
     if (!r.membros_presentes) return
@@ -43,42 +93,50 @@ export default async function Relatorios() {
     })
   })
   const presencaOrdenada = Object.entries(presenca).sort((a, b) => b[1] - a[1])
-  const maisPresenteS = presencaOrdenada.slice(0, 5)
+  const maisPresentes = presencaOrdenada.slice(0, 5)
   const menosPresentes = [...presencaOrdenada].reverse().slice(0, 5)
 
-  // Membros por grupo
   const porGrupo: Record<string, number> = {}
   membros?.forEach(m => {
     const g = m.grupo || 'Sem grupo'
     porGrupo[g] = (porGrupo[g] || 0) + 1
   })
 
-  // Membros por tipo
   const porTipo: Record<string, number> = {}
   membros?.forEach(m => {
     const t = m.tipo || 'Sem tipo'
     porTipo[t] = (porTipo[t] || 0) + 1
   })
 
-  // Membros adicionados nos últimos 30 dias
-  const trintaDiasAtras = new Date()
-  trintaDiasAtras.setDate(trintaDiasAtras.getDate() - 30)
   const novosNoPeriodo = membros?.filter(m => {
     if (!m.criado_em) return false
-    return new Date(m.criado_em) >= trintaDiasAtras
+    const d = m.criado_em.split('T')[0]
+    return d >= dataInicio && d <= dataFim
   }) || []
 
-  const maxPresenca = maisPresenteS[0]?.[1] || 1
+  const maxPresenca = maisPresentes[0]?.[1] || 1
+
+  const nomePeriodo: Record<string, string> = {
+    mes_atual: 'Mês atual',
+    mes_anterior: 'Mês anterior',
+    bimestre: 'Último bimestre',
+    trimestre: 'Último trimestre',
+    semestre: 'Último semestre',
+    ano: 'Último ano',
+    personalizado: 'Período personalizado',
+  }
 
   return (
     <div className="p-4 md:p-6">
 
-      <div className="mb-6">
-        <h2 className="text-xl font-bold text-gray-800">Relatórios</h2>
-        <p className="text-sm text-gray-500">Dados reais do sistema</p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div>
+          <h2 className="text-xl font-bold text-gray-800">Relatórios</h2>
+          <p className="text-sm text-gray-500">{nomePeriodo[periodo]} · {dataInicio} até {dataFim}</p>
+        </div>
+        <FiltroRelatorio periodoAtual={periodo} inicioAtual={params.inicio} fimAtual={params.fim} />
       </div>
 
-      {/* Cards de resumo */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-2xl shadow p-5 text-center">
           <p className="text-3xl font-bold text-blue-600">{totalRegistros}</p>
@@ -99,12 +157,10 @@ export default async function Relatorios() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-
-        {/* Atendimentos por hospital */}
         <div className="bg-white rounded-2xl shadow p-6">
           <h3 className="text-base font-bold text-gray-800 mb-4">🏥 Atendimentos por hospital</h3>
           {hospitalOrdenado.length === 0 ? (
-            <p className="text-sm text-gray-400">Nenhum atendimento registrado ainda</p>
+            <p className="text-sm text-gray-400">Nenhum atendimento no período</p>
           ) : (
             <div className="space-y-3">
               {hospitalOrdenado.map(([nome, total]) => (
@@ -123,7 +179,6 @@ export default async function Relatorios() {
           )}
         </div>
 
-        {/* Membros por grupo */}
         <div className="bg-white rounded-2xl shadow p-6">
           <h3 className="text-base font-bold text-gray-800 mb-4">🎻 Membros por grupo</h3>
           <div className="space-y-3">
@@ -135,19 +190,16 @@ export default async function Relatorios() {
             ))}
           </div>
         </div>
-
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-
-        {/* Mais presentes */}
         <div className="bg-white rounded-2xl shadow p-6">
           <h3 className="text-base font-bold text-gray-800 mb-4">⭐ Membros mais presentes</h3>
-          {maisPresenteS.length === 0 ? (
-            <p className="text-sm text-gray-400">Nenhum atendimento registrado ainda</p>
+          {maisPresentes.length === 0 ? (
+            <p className="text-sm text-gray-400">Nenhum atendimento no período</p>
           ) : (
             <div className="space-y-3">
-              {maisPresenteS.map(([nome, total]) => (
+              {maisPresentes.map(([nome, total]) => (
                 <div key={nome}>
                   <div className="flex justify-between text-sm mb-1">
                     <span className="font-medium text-gray-700">{nome}</span>
@@ -163,11 +215,10 @@ export default async function Relatorios() {
           )}
         </div>
 
-        {/* Menos presentes */}
         <div className="bg-white rounded-2xl shadow p-6">
           <h3 className="text-base font-bold text-gray-800 mb-4">⚠️ Membros menos frequentes</h3>
           {menosPresentes.length === 0 ? (
-            <p className="text-sm text-gray-400">Nenhum atendimento registrado ainda</p>
+            <p className="text-sm text-gray-400">Nenhum atendimento no período</p>
           ) : (
             <div className="space-y-3">
               {menosPresentes.map(([nome, total]) => (
@@ -185,12 +236,9 @@ export default async function Relatorios() {
             </div>
           )}
         </div>
-
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-        {/* Membros por tipo */}
         <div className="bg-white rounded-2xl shadow p-6">
           <h3 className="text-base font-bold text-gray-800 mb-4">👥 Membros por tipo</h3>
           <div className="space-y-3">
@@ -203,11 +251,10 @@ export default async function Relatorios() {
           </div>
         </div>
 
-        {/* Novos membros nos últimos 30 dias */}
         <div className="bg-white rounded-2xl shadow p-6">
-          <h3 className="text-base font-bold text-gray-800 mb-4">🆕 Novos membros (últimos 30 dias)</h3>
+          <h3 className="text-base font-bold text-gray-800 mb-4">🆕 Novos membros no período</h3>
           {novosNoPeriodo.length === 0 ? (
-            <p className="text-sm text-gray-400">Nenhum membro adicionado nos últimos 30 dias</p>
+            <p className="text-sm text-gray-400">Nenhum membro adicionado no período</p>
           ) : (
             <div className="space-y-2">
               {novosNoPeriodo.map(m => (
@@ -221,7 +268,6 @@ export default async function Relatorios() {
             </div>
           )}
         </div>
-
       </div>
 
     </div>
