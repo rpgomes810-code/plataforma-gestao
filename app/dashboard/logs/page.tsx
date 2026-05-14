@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { createClient } from '@supabase/supabase-js'
+import BotaoReverter from './BotaoReverter'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -23,10 +24,18 @@ export default async function Logs() {
   }
 
   const corAcao = (acao: string) => {
+    if (acao.includes('[REVERTIDO]')) return 'bg-orange-50 text-orange-700'
     if (acao.includes('Excluiu')) return 'bg-red-50 text-red-700'
     if (acao.includes('Criou') || acao.includes('Aprovou') || acao.includes('Registrou')) return 'bg-green-50 text-green-700'
     if (acao.includes('Editou') || acao.includes('Atualizou')) return 'bg-yellow-50 text-yellow-700'
     return 'bg-gray-50 text-gray-700'
+  }
+
+  const podeReverter = (log: any) => {
+    return log.acao.includes('Excluiu') &&
+      !log.acao.includes('[REVERTIDO]') &&
+      log.dados_antes &&
+      log.tabela
   }
 
   return (
@@ -52,6 +61,7 @@ export default async function Logs() {
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Ação</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Tabela</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Detalhes</th>
+                  <th className="px-4 py-3"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -66,22 +76,25 @@ export default async function Logs() {
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-500">{log.tabela || '—'}</td>
                     <td className="px-4 py-3 text-xs text-gray-400 max-w-xs">
-                      {log.dados_depois && (
+                      {log.dados_antes && (
                         <details>
                           <summary className="cursor-pointer text-blue-600 hover:underline">Ver detalhes</summary>
                           <div className="mt-2 space-y-1">
-                            {log.dados_antes && (
-                              <div className="bg-red-50 rounded p-2">
-                                <p className="font-semibold text-red-600 mb-1">Antes:</p>
-                                <pre className="text-xs text-red-700 whitespace-pre-wrap">{JSON.stringify(log.dados_antes, null, 2)}</pre>
-                              </div>
-                            )}
-                            <div className="bg-green-50 rounded p-2">
-                              <p className="font-semibold text-green-600 mb-1">Depois:</p>
-                              <pre className="text-xs text-green-700 whitespace-pre-wrap">{JSON.stringify(log.dados_depois, null, 2)}</pre>
+                            <div className="bg-red-50 rounded p-2">
+                              <p className="font-semibold text-red-600 mb-1">Dados antes:</p>
+                              <pre className="text-xs text-red-700 whitespace-pre-wrap">{JSON.stringify(log.dados_antes, null, 2)}</pre>
                             </div>
                           </div>
                         </details>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {podeReverter(log) && (
+                        <BotaoReverter
+                          logId={log.id}
+                          tabela={log.tabela}
+                          dadosAntes={log.dados_antes}
+                        />
                       )}
                     </td>
                   </tr>
