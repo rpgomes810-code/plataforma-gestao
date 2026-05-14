@@ -11,6 +11,8 @@ export default function EditarMembro() {
   const params = useParams()
   const [loading, setLoading] = useState(false)
   const [loadingData, setLoadingData] = useState(true)
+  const [dadosOriginais, setDadosOriginais] = useState<any>(null)
+  const [usuarioNome, setUsuarioNome] = useState('')
   const [form, setForm] = useState({
     nome: '',
     telefone: '',
@@ -32,6 +34,7 @@ export default function EditarMembro() {
     fetch(`/api/membros/${params.id}`)
       .then(res => res.json())
       .then(data => {
+        setDadosOriginais(data)
         setForm({
           nome:                 data.nome || '',
           telefone:             data.telefone || '',
@@ -50,6 +53,10 @@ export default function EditarMembro() {
         })
         setLoadingData(false)
       })
+
+    fetch('/api/membros/eu')
+      .then(res => res.json())
+      .then(data => { if (data?.nome) setUsuarioNome(data.nome) })
   }, [params.id])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -67,6 +74,18 @@ export default function EditarMembro() {
     })
 
     if (res.ok) {
+      await fetch('/api/logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          usuario_nome: usuarioNome || 'Administrador',
+          acao: `Editou membro: ${form.nome}`,
+          tabela: 'membros',
+          registro_id: params.id,
+          dados_antes: dadosOriginais,
+          dados_depois: form,
+        }),
+      })
       router.push('/dashboard/membros')
     } else {
       alert('Erro ao atualizar membro')
@@ -89,7 +108,6 @@ export default function EditarMembro() {
       <div className="bg-white rounded-2xl shadow p-4 md:p-8 w-full">
         <form onSubmit={handleSubmit} className="space-y-6">
 
-          {/* Dados pessoais */}
           <div>
             <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">Dados pessoais</h3>
             <div className="space-y-4">
@@ -126,7 +144,6 @@ export default function EditarMembro() {
 
           <hr className="border-gray-100" />
 
-          {/* Dados do ministério */}
           <div>
             <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">Dados do ministério</h3>
             <div className="space-y-4">
