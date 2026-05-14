@@ -89,10 +89,6 @@ export default function Escalas() {
         <div className="text-center py-12 bg-white rounded-2xl shadow">
           <p className="text-4xl mb-3">📅</p>
           <p className="text-gray-500">Nenhuma escala em {meses[mes]} {ano}</p>
-          <a href="/dashboard/escalas/nova"
-            className="mt-4 inline-block bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700">
-            + Adicionar escala
-          </a>
         </div>
       ) : (
         <div className="space-y-6">
