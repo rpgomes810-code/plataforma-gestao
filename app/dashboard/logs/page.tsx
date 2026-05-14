@@ -8,6 +8,31 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+function DiffView({ antes, depois }: { antes: any, depois: any }) {
+  if (!antes || !depois) return null
+
+  const campos = new Set([...Object.keys(antes), ...Object.keys(depois)])
+  const alterados = Array.from(campos).filter(campo => {
+    const a = JSON.stringify(antes[campo])
+    const d = JSON.stringify(depois[campo])
+    return a !== d
+  })
+
+  if (alterados.length === 0) return <p className="text-xs text-gray-400">Nenhuma alteração detectada</p>
+
+  return (
+    <div className="space-y-2 mt-2">
+      {alterados.map(campo => (
+        <div key={campo} className="text-xs rounded-lg overflow-hidden border border-gray-100">
+          <div className="bg-gray-50 px-2 py-1 font-semibold text-gray-600">{campo}</div>
+          <div className="bg-red-50 px-2 py-1 text-red-700">— {String(antes[campo] ?? '—')}</div>
+          <div className="bg-green-50 px-2 py-1 text-green-700">+ {String(depois[campo] ?? '—')}</div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default async function Logs() {
   const { data: logs } = await supabase
     .from('logs')
@@ -60,13 +85,13 @@ export default async function Logs() {
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Usuário</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Ação</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Tabela</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Detalhes</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Alterações</th>
                   <th className="px-4 py-3"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {logs?.map(log => (
-                  <tr key={log.id} className="hover:bg-gray-50">
+                  <tr key={log.id} className="hover:bg-gray-50 align-top">
                     <td className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">{formatarDataHora(log.criado_em)}</td>
                     <td className="px-4 py-3 text-sm font-medium text-gray-700">{log.usuario_nome || '—'}</td>
                     <td className="px-4 py-3">
@@ -75,15 +100,17 @@ export default async function Logs() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-500">{log.tabela || '—'}</td>
-                    <td className="px-4 py-3 text-xs text-gray-400 max-w-xs">
-                      {log.dados_antes && (
+                    <td className="px-4 py-3 max-w-sm">
+                      {log.dados_antes && log.dados_depois && !log.dados_depois.excluido ? (
                         <details>
-                          <summary className="cursor-pointer text-blue-600 hover:underline">Ver detalhes</summary>
-                          <div className="mt-2 space-y-1">
-                            <div className="bg-red-50 rounded p-2">
-                              <p className="font-semibold text-red-600 mb-1">Dados antes:</p>
-                              <pre className="text-xs text-red-700 whitespace-pre-wrap">{JSON.stringify(log.dados_antes, null, 2)}</pre>
-                            </div>
+                          <summary className="cursor-pointer text-blue-600 hover:underline text-xs">Ver o que mudou</summary>
+                          <DiffView antes={log.dados_antes} depois={log.dados_depois} />
+                        </details>
+                      ) : log.dados_antes && (
+                        <details>
+                          <summary className="cursor-pointer text-blue-600 hover:underline text-xs">Ver dados</summary>
+                          <div className="mt-2 bg-red-50 rounded p-2">
+                            <pre className="text-xs text-red-700 whitespace-pre-wrap">{JSON.stringify(log.dados_antes, null, 2)}</pre>
                           </div>
                         </details>
                       )}
