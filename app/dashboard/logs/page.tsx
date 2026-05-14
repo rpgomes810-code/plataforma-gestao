@@ -8,11 +8,14 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+const CAMPOS_IGNORAR = ['id', 'user_id', 'aprovado', 'criado_em']
+
 function DiffView({ antes, depois }: { antes: any, depois: any }) {
   if (!antes || !depois) return null
 
   const campos = new Set([...Object.keys(antes), ...Object.keys(depois)])
   const alterados = Array.from(campos).filter(campo => {
+    if (CAMPOS_IGNORAR.includes(campo)) return false
     const a = JSON.stringify(antes[campo])
     const d = JSON.stringify(depois[campo])
     return a !== d
