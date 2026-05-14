@@ -32,6 +32,7 @@ export default function Escalas() {
       .then(data => {
         if (data?.nivel_acesso === 'Administrador') setIsAdmin(true)
       })
+      .catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -39,7 +40,11 @@ export default function Escalas() {
     fetch(`/api/escalas?mes=${mes + 1}&ano=${ano}`)
       .then(res => res.json())
       .then(data => {
-        setEscalas(data)
+        setEscalas(Array.isArray(data) ? data : [])
+        setLoading(false)
+      })
+      .catch(() => {
+        setEscalas([])
         setLoading(false)
       })
   }, [mes, ano])
