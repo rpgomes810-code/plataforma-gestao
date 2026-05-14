@@ -1,6 +1,16 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+
 export default function BotaoExcluirEscala({ id }: { id: string }) {
+  const [usuarioNome, setUsuarioNome] = useState('Administrador')
+
+  useEffect(() => {
+    fetch('/api/membros/eu')
+      .then(res => res.json())
+      .then(data => { if (data?.nome) setUsuarioNome(data.nome) })
+  }, [])
+
   const excluir = async () => {
     const confirmado = confirm('Tem certeza que deseja excluir esta escala?')
     if (!confirmado) return
@@ -8,6 +18,18 @@ export default function BotaoExcluirEscala({ id }: { id: string }) {
     const res = await fetch(`/api/escalas/${id}`, { method: 'DELETE' })
 
     if (res.ok) {
+      await fetch('/api/logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          usuario_nome: usuarioNome,
+          acao: 'Excluiu escala',
+          tabela: 'escalas',
+          registro_id: id,
+          dados_antes: { id },
+          dados_depois: { excluido: true },
+        }),
+      })
       window.location.reload()
     } else {
       alert('Erro ao excluir escala')

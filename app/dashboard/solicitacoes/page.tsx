@@ -21,6 +21,7 @@ export default function Solicitacoes() {
   const [loading, setLoading] = useState(true)
   const [filtro, setFiltro] = useState('pendente')
   const [processando, setProcessando] = useState<string | null>(null)
+  const [usuarioNome, setUsuarioNome] = useState('Administrador')
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -42,12 +43,18 @@ export default function Solicitacoes() {
 
   useEffect(() => { carregar() }, [filtro])
 
+  useEffect(() => {
+    fetch('/api/membros/eu')
+      .then(res => res.json())
+      .then(data => { if (data?.nome) setUsuarioNome(data.nome) })
+  }, [])
+
   const aprovar = async (id: string) => {
     setProcessando(id)
     const res = await fetch('/api/aprovar-solicitacao', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id }),
+      body: JSON.stringify({ id, aprovadoPor: usuarioNome }),
     })
 
     if (res.ok) {
@@ -62,6 +69,20 @@ export default function Solicitacoes() {
   const rejeitar = async (id: string) => {
     setProcessando(id)
     await supabase.from('solicitacoes').update({ status: 'rejeitado' }).eq('id', id)
+
+    await fetch('/api/logs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        usuario_nome: usuarioNome,
+        acao: `Rejeitou solicitação`,
+        tabela: 'solicitacoes',
+        registro_id: id,
+        dados_antes: { status: 'pendente' },
+        dados_depois: { status: 'rejeitado' },
+      }),
+    })
+
     carregar()
     setProcessando(null)
   }
