@@ -25,6 +25,7 @@ export default function EditarMembro() {
     cargo: '',
     status: '',
     observacoes: '',
+    data_inscricao_darpe: '',
   })
 
   useEffect(() => {
@@ -32,19 +33,20 @@ export default function EditarMembro() {
       .then(res => res.json())
       .then(data => {
         setForm({
-          nome:            data.nome || '',
-          telefone:        data.telefone || '',
-          email:           data.email || '',
-          data_nascimento: data.data_nascimento || '',
-          comum:           data.comum || '',
-          cidade:          data.cidade || '',
-          instrumento:     data.instrumento || '',
-          tipo:            data.tipo || '',
-          grupo:           data.grupo || '',
-          nivel_acesso:    data.nivel_acesso || '',
-          cargo:           data.cargo || 'Nenhum',
-          status:          data.status || '',
-          observacoes:     data.observacoes || '',
+          nome:                 data.nome || '',
+          telefone:             data.telefone || '',
+          email:                data.email || '',
+          data_nascimento:      data.data_nascimento || '',
+          comum:                data.comum || '',
+          cidade:               data.cidade || '',
+          instrumento:          data.instrumento || '',
+          tipo:                 data.tipo || '',
+          grupo:                data.grupo || '',
+          nivel_acesso:         data.nivel_acesso || '',
+          cargo:                data.cargo || 'Nenhum',
+          status:               data.status || '',
+          observacoes:          data.observacoes || '',
+          data_inscricao_darpe: data.data_inscricao_darpe || '',
         })
         setLoadingData(false)
       })
@@ -93,16 +95,16 @@ export default function EditarMembro() {
             <div className="space-y-4">
               <div>
                 <label className={labelClass}>Nome completo *</label>
-                <input name="nome" type="text" required value={form.nome} onChange={handleChange} className={inputClass} placeholder="Nome do membro" />
+                <input name="nome" type="text" required value={form.nome} onChange={handleChange} className={inputClass} />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className={labelClass}>Telefone</label>
-                  <input name="telefone" type="text" value={form.telefone} onChange={handleChange} className={inputClass} placeholder="(11) 99999-0000" />
+                  <input name="telefone" type="text" value={form.telefone} onChange={handleChange} className={inputClass} />
                 </div>
                 <div>
                   <label className={labelClass}>E-mail</label>
-                  <input name="email" type="email" value={form.email} onChange={handleChange} className={inputClass} placeholder="email@exemplo.com" />
+                  <input name="email" type="email" value={form.email} onChange={handleChange} className={inputClass} />
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -112,11 +114,11 @@ export default function EditarMembro() {
                 </div>
                 <div>
                   <label className={labelClass}>Comum</label>
-                  <input name="comum" type="text" value={form.comum} onChange={handleChange} className={inputClass} placeholder="Ex: Vila Arens, Jundiaí" />
+                  <input name="comum" type="text" value={form.comum} onChange={handleChange} className={inputClass} />
                 </div>
                 <div>
                   <label className={labelClass}>Cidade</label>
-                  <input name="cidade" type="text" value={form.cidade} onChange={handleChange} className={inputClass} placeholder="Ex: Jundiaí" />
+                  <input name="cidade" type="text" value={form.cidade} onChange={handleChange} className={inputClass} />
                 </div>
               </div>
             </div>
@@ -172,7 +174,7 @@ export default function EditarMembro() {
                   </select>
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className={labelClass}>Cargo</label>
                   <select name="cargo" value={form.cargo} onChange={handleChange} className={inputClass}>
@@ -191,10 +193,14 @@ export default function EditarMembro() {
                     <option value="Inativo">Inativo</option>
                   </select>
                 </div>
+                <div>
+                  <label className={labelClass}>Data de inscrição no DARPE</label>
+                  <input name="data_inscricao_darpe" type="date" value={form.data_inscricao_darpe} onChange={handleChange} className={inputClass} />
+                </div>
               </div>
               <div>
                 <label className={labelClass}>Observações</label>
-                <textarea name="observacoes" rows={3} value={form.observacoes} onChange={handleChange} className={inputClass} placeholder="Observações sobre o membro..." />
+                <textarea name="observacoes" rows={3} value={form.observacoes} onChange={handleChange} className={inputClass} />
               </div>
             </div>
           </div>
