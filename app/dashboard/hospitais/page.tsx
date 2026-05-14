@@ -22,7 +22,7 @@ export default async function Hospitais() {
 
   const { data: usuarioLogado } = await supabase
     .from('membros')
-    .select('nivel_acesso')
+    .select('nivel_acesso, nome')
     .eq('user_id', user?.id)
     .single()
 
@@ -83,7 +83,7 @@ export default async function Hospitais() {
                 className="flex-1 text-center text-sm text-blue-600 border border-blue-200 rounded-lg py-1.5 hover:bg-blue-50 transition">
                 ✏️ Editar
               </a>
-              {isAdmin && <BotaoExcluirHospital id={hospital.id} nome={hospital.nome} />}
+              {isAdmin && <BotaoExcluirHospital id={hospital.id} nome={hospital.nome} usuarioNome={usuarioLogado?.nome} />}
             </div>
           </div>
         ))}
