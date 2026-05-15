@@ -11,6 +11,7 @@ type Escala = {
   hora_inicio: string
   atendentes: string
   observacoes: string
+  confirmacao_aberta: boolean
 }
 
 const meses = [
@@ -35,7 +36,7 @@ export default function Escalas() {
       .catch(() => {})
   }, [])
 
-  useEffect(() => {
+  const carregarEscalas = () => {
     setLoading(true)
     fetch(`/api/escalas?mes=${mes + 1}&ano=${ano}`)
       .then(res => res.json())
@@ -47,7 +48,18 @@ export default function Escalas() {
         setEscalas([])
         setLoading(false)
       })
-  }, [mes, ano])
+  }
+
+  useEffect(() => { carregarEscalas() }, [mes, ano])
+
+  const toggleConfirmacao = async (id: string, aberta: boolean) => {
+    await fetch(`/api/escalas/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ confirmacao_aberta: !aberta }),
+    })
+    carregarEscalas()
+  }
 
   const datasPorSemana = escalas.reduce((acc, escala) => {
     const data = escala.data
@@ -122,9 +134,20 @@ export default function Escalas() {
                           <td className="px-4 py-3 text-sm text-gray-600">{escala.local_texto}</td>
                           <td className="px-4 py-3 text-sm text-gray-600">🕐 {escala.hora_inicio}</td>
                           <td className="px-4 py-3 text-sm text-gray-600">👤 {escala.atendentes}</td>
-                          <td className="px-4 py-3 flex items-center gap-1">
+                          <td className="px-4 py-3 flex items-center gap-2 flex-wrap">
                             <a href={`/dashboard/escalas/${escala.id}/editar`}
                               className="text-xs text-blue-600 hover:underline">Editar</a>
+                            {isAdmin && (
+                              <button
+                                onClick={() => toggleConfirmacao(escala.id, escala.confirmacao_aberta)}
+                                className={`text-xs font-semibold px-2 py-1 rounded-full transition ${
+                                  escala.confirmacao_aberta
+                                    ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                }`}>
+                                {escala.confirmacao_aberta ? '✅ Confirmações abertas' : 'Abrir confirmações'}
+                              </button>
+                            )}
                             {isAdmin && <BotaoExcluirEscala id={escala.id} />}
                           </td>
                         </tr>
