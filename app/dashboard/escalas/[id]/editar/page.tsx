@@ -7,10 +7,8 @@ import { createBrowserClient } from '@supabase/ssr'
 const inputClass = "w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
 const labelClass = "block text-sm font-medium text-gray-700 mb-1"
 
-type Hospital = {
-  id: string
-  nome: string
-}
+type Hospital = { id: string; nome: string }
+type Grupo = { id: string; nome: string }
 
 export default function EditarEscala() {
   const router = useRouter()
@@ -18,6 +16,7 @@ export default function EditarEscala() {
   const [loading, setLoading] = useState(false)
   const [loadingData, setLoadingData] = useState(true)
   const [hospitais, setHospitais] = useState<Hospital[]>([])
+  const [grupos, setGrupos] = useState<Grupo[]>([])
   const [form, setForm] = useState({
     data: '',
     grupo: '',
@@ -34,14 +33,16 @@ export default function EditarEscala() {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
 
-    // Busca hospitais
     supabase
       .from('hospitais')
       .select('id, nome')
       .order('nome', { ascending: true })
       .then(({ data }) => setHospitais(data || []))
 
-    // Busca dados da escala
+    fetch('/api/grupos')
+      .then(res => res.json())
+      .then(data => { if (Array.isArray(data)) setGrupos(data) })
+
     supabase
       .from('escalas')
       .select('*')
@@ -138,7 +139,12 @@ export default function EditarEscala() {
             </div>
             <div>
               <label className={labelClass}>Grupo *</label>
-              <input name="grupo" type="text" required value={form.grupo} onChange={handleChange} className={inputClass}/>
+              <select name="grupo" required value={form.grupo} onChange={handleChange} className={inputClass}>
+                <option value="">Selecione o grupo...</option>
+                {grupos.map(g => (
+                  <option key={g.id} value={g.nome}>{g.nome}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className={labelClass}>Hora de início *</label>
