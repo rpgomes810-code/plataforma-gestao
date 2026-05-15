@@ -141,13 +141,13 @@ export default function NovoRegistro() {
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             <div className="md:col-span-2">
-              <label className={labelClass}>Quem autorizou a entrada</label>
-              <input name="quem_autorizou" type="text" value={form.quem_autorizou} onChange={handleChange} className={inputClass} placeholder="Nome do responsável" />
-            </div>
-            <div>
-              <label className={labelClass}>Hinos executados</label>
-              <input name="hinos_executados" type="number" min="0" value={form.hinos_executados} onChange={handleChange} className={inputClass} />
-            </div>
+  <label className={labelClass}>Quem autorizou a entrada *</label>
+  <input name="quem_autorizou" type="text" required value={form.quem_autorizou} onChange={handleChange} className={inputClass} placeholder="Nome do responsável" />
+</div>
+<div>
+  <label className={labelClass}>Hinos executados *</label>
+  <input name="hinos_executados" type="number" required min="0" value={form.hinos_executados} onChange={handleChange} className={inputClass} />
+</div>
             <div>
               <label className={labelClass}>Houve oração?</label>
               <select name="teve_oracao" value={form.teve_oracao} onChange={handleChange} className={inputClass}>
