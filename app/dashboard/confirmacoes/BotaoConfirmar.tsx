@@ -1,14 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 
 export default function BotaoConfirmar({ escalaid, membroid, confirmacaoAtual }: {
   escalaid: string
   membroid: string
   confirmacaoAtual: string | null
 }) {
-  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [motivo, setMotivo] = useState('')
   const [mostraMotivo, setMostraMotivo] = useState(false)
@@ -23,31 +21,22 @@ export default function BotaoConfirmar({ escalaid, membroid, confirmacaoAtual }:
     setLoading(true)
     setErro('')
 
-    try {
-      const res = await fetch('/api/confirmacoes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          escala_id: escalaid,
-          membro_id: membroid,
-          status,
-          motivo: status === 'ausente' ? motivo : null,
-        }),
-      })
+    const res = await fetch('/api/confirmacoes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        escala_id: escalaid,
+        membro_id: membroid,
+        status,
+        motivo: status === 'ausente' ? motivo : null,
+      }),
+    })
 
+    if (res.ok) {
+      window.location.reload()
+    } else {
       const data = await res.json()
-
-      if (!res.ok) {
-        setErro(data.error || 'Erro ao confirmar')
-        setLoading(false)
-        return
-      }
-
-      setLoading(false)
-      setMostraMotivo(false)
-      router.refresh()
-    } catch (e: any) {
-      setErro(e.message)
+      setErro(data.error || 'Erro ao confirmar')
       setLoading(false)
     }
   }
@@ -85,7 +74,7 @@ export default function BotaoConfirmar({ escalaid, membroid, confirmacaoAtual }:
           <div className="flex gap-2">
             <button onClick={() => confirmar('ausente')} disabled={loading}
               className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-600 transition disabled:opacity-50">
-              Confirmar ausência
+              {loading ? 'Salvando...' : 'Confirmar ausência'}
             </button>
             <button onClick={() => setMostraMotivo(false)}
               className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-200 transition">
