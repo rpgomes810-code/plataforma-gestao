@@ -73,10 +73,16 @@ export default async function Registros() {
                       </div>
                     </div>
                     {isAdmin && (
-                      <BotaoExcluirRegistro
-                        id={registro.id}
-                        hospital={registro.hospitais?.nome || '—'}
-                      />
+                      <div className="flex items-center gap-2">
+                        <a href={`/dashboard/registros/${registro.id}/editar`}
+                          className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition">
+                          Editar
+                        </a>
+                        <BotaoExcluirRegistro
+                          id={registro.id}
+                          hospital={registro.hospitais?.nome || '—'}
+                        />
+                      </div>
                     )}
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
