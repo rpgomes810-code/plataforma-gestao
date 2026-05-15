@@ -34,19 +34,20 @@ export default function NovoHospital() {
     const formData = new FormData(e.currentTarget)
 
     const hospital = {
-      nome:        formData.get('nome'),
-      endereco:    formData.get('endereco'),
-      numero:      formData.get('numero'),
-      bairro:      formData.get('bairro'),
-      cidade:      formData.get('cidade'),
-      estado:      formData.get('estado'),
-      contato:     formData.get('contato'),
-      turno:       formData.get('turno'),
-      responsavel: formData.get('responsavel'),
-      dia_semana:  formData.get('dia_semana'),
-      site:        formatUrl(formData.get('site') as string),
-      localizacao: formatUrl(formData.get('localizacao') as string),
-      observacoes: formData.get('observacoes'),
+      nome:                  formData.get('nome'),
+      endereco:              formData.get('endereco'),
+      numero:                formData.get('numero'),
+      bairro:                formData.get('bairro'),
+      cidade:                formData.get('cidade'),
+      estado:                formData.get('estado'),
+      contato:               formData.get('contato'),
+      turno:                 formData.get('turno'),
+      responsavel:           formData.get('responsavel'),
+      dia_semana:            formData.get('dia_semana'),
+      site:                  formatUrl(formData.get('site') as string),
+      localizacao:           formatUrl(formData.get('localizacao') as string),
+      observacoes:           formData.get('observacoes'),
+      data_inicio_atividade: formData.get('data_inicio_atividade') || null,
     }
 
     const res = await fetch('/api/hospitais', {
@@ -77,43 +78,40 @@ export default function NovoHospital() {
       <div className="bg-white rounded-2xl shadow p-4 md:p-8 w-full">
         <form onSubmit={handleSubmit} className="space-y-4">
 
-          {/* Nome + Contato */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="md:col-span-3">
               <label className={labelClass}>Nome do hospital *</label>
               <input name="nome" type="text" required placeholder="Ex: Hospital Santa Casa" className={inputClass}/>
             </div>
             <div>
-              <label className={labelClass}>Contato</label>
-              <input name="contato" type="text" placeholder="(11) 4521-0000" className={inputClass}/>
+              <label className={labelClass}>Contato *</label>
+              <input name="contato" type="text" required placeholder="(11) 4521-0000" className={inputClass}/>
             </div>
           </div>
 
-          {/* Endereço, Número, Bairro, Cidade */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
             <div className="md:col-span-5">
-              <label className={labelClass}>Endereço</label>
-              <input name="endereco" type="text" placeholder="Ex: Rua das Flores" className={inputClass}/>
+              <label className={labelClass}>Endereço *</label>
+              <input name="endereco" type="text" required placeholder="Ex: Rua das Flores" className={inputClass}/>
             </div>
             <div className="md:col-span-1">
-              <label className={labelClass}>Número</label>
-              <input name="numero" type="text" placeholder="Nº" className={inputClass}/>
+              <label className={labelClass}>Número *</label>
+              <input name="numero" type="text" required placeholder="Nº" className={inputClass}/>
             </div>
             <div className="md:col-span-3">
-              <label className={labelClass}>Bairro</label>
-              <input name="bairro" type="text" placeholder="Ex: Centro" className={inputClass}/>
+              <label className={labelClass}>Bairro *</label>
+              <input name="bairro" type="text" required placeholder="Ex: Centro" className={inputClass}/>
             </div>
             <div className="md:col-span-3">
-              <label className={labelClass}>Cidade</label>
-              <input name="cidade" type="text" placeholder="Ex: Jundiaí" className={inputClass}/>
+              <label className={labelClass}>Cidade *</label>
+              <input name="cidade" type="text" required placeholder="Ex: Jundiaí" className={inputClass}/>
             </div>
           </div>
 
-          {/* Estado, Turno, Dia, Responsável */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div>
-              <label className={labelClass}>Estado</label>
-              <select name="estado" className={inputClass}>
+              <label className={labelClass}>Estado *</label>
+              <select name="estado" required className={inputClass}>
                 <option value="">Selecione...</option>
                 {estados.map(uf => <option key={uf} value={uf}>{uf}</option>)}
               </select>
@@ -124,21 +122,26 @@ export default function NovoHospital() {
                 <option value="">Selecione...</option>
                 <option value="Manhã">Manhã</option>
                 <option value="Tarde">Tarde</option>
+                <option value="Manhã e Tarde">Manhã e Tarde</option>
               </select>
             </div>
             <div>
-              <label className={labelClass}>Dia da semana</label>
-              <select name="dia_semana" className={inputClass}>
+              <label className={labelClass}>Dia da semana *</label>
+              <select name="dia_semana" required className={inputClass}>
+                <option value="">Selecione...</option>
                 {diasSemana.map(dia => <option key={dia} value={dia}>{dia}</option>)}
               </select>
             </div>
             <div>
-              <label className={labelClass}>Responsável</label>
-              <input name="responsavel" type="text" placeholder="Nome do responsável" className={inputClass}/>
+              <label className={labelClass}>Responsável *</label>
+              <input name="responsavel" type="text" required placeholder="Nome do responsável" className={inputClass}/>
+            </div>
+            <div>
+              <label className={labelClass}>Início das atividades *</label>
+              <input name="data_inicio_atividade" type="date" required className={inputClass}/>
             </div>
           </div>
 
-          {/* Site e Localização */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className={labelClass}>Site da instituição</label>
@@ -150,7 +153,6 @@ export default function NovoHospital() {
             </div>
           </div>
 
-          {/* Observações */}
           <div>
             <label className={labelClass}>Observações / Regras específicas</label>
             <textarea name="observacoes" rows={3}
@@ -158,7 +160,6 @@ export default function NovoHospital() {
               className={inputClass}/>
           </div>
 
-          {/* Botões */}
           <div className="flex flex-col md:flex-row gap-3 pt-2">
             <button type="submit" disabled={loading}
               className="w-full md:w-auto bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 text-sm">

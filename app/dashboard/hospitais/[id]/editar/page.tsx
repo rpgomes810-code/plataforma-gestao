@@ -25,7 +25,8 @@ export default function EditarHospital() {
   const [form, setForm] = useState({
     nome: '', endereco: '', numero: '', bairro: '', cidade: '',
     estado: '', contato: '', turno: '', responsavel: '',
-    dia_semana: '', site: '', localizacao: '', observacoes: ''
+    dia_semana: '', site: '', localizacao: '', observacoes: '',
+    data_inicio_atividade: ''
   })
 
   useEffect(() => {
@@ -33,19 +34,20 @@ export default function EditarHospital() {
       .then(res => res.json())
       .then(data => {
         setForm({
-          nome:        data.nome || '',
-          endereco:    data.endereco || '',
-          numero:      data.numero || '',
-          bairro:      data.bairro || '',
-          cidade:      data.cidade || '',
-          estado:      data.estado || '',
-          contato:     data.contato || '',
-          turno:       data.turno || '',
-          responsavel: data.responsavel || '',
-          dia_semana:  data.dia_semana || '',
-          site:        data.site || '',
-          localizacao: data.localizacao || '',
-          observacoes: data.observacoes || '',
+          nome:                  data.nome || '',
+          endereco:              data.endereco || '',
+          numero:                data.numero || '',
+          bairro:                data.bairro || '',
+          cidade:                data.cidade || '',
+          estado:                data.estado || '',
+          contato:               data.contato || '',
+          turno:                 data.turno || '',
+          responsavel:           data.responsavel || '',
+          dia_semana:            data.dia_semana || '',
+          site:                  data.site || '',
+          localizacao:           data.localizacao || '',
+          observacoes:           data.observacoes || '',
+          data_inicio_atividade: data.data_inicio_atividade || '',
         })
         setLoadingData(false)
       })
@@ -59,10 +61,15 @@ export default function EditarHospital() {
     e.preventDefault()
     setLoading(true)
 
+    const dadosParaEnviar = {
+      ...form,
+      data_inicio_atividade: form.data_inicio_atividade || null,
+    }
+
     const res = await fetch(`/api/hospitais/${params.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
+      body: JSON.stringify(dadosParaEnviar),
     })
 
     if (res.ok) {
@@ -94,34 +101,34 @@ export default function EditarHospital() {
               <input name="nome" type="text" required value={form.nome} onChange={handleChange} className={inputClass}/>
             </div>
             <div>
-              <label className={labelClass}>Contato</label>
-              <input name="contato" type="text" value={form.contato} onChange={handleChange} className={inputClass}/>
+              <label className={labelClass}>Contato *</label>
+              <input name="contato" type="text" required value={form.contato} onChange={handleChange} className={inputClass}/>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
             <div className="md:col-span-4">
-              <label className={labelClass}>Endereço</label>
-              <input name="endereco" type="text" value={form.endereco} onChange={handleChange} className={inputClass}/>
+              <label className={labelClass}>Endereço *</label>
+              <input name="endereco" type="text" required value={form.endereco} onChange={handleChange} className={inputClass}/>
             </div>
             <div className="md:col-span-1">
-              <label className={labelClass}>Número</label>
-              <input name="numero" type="text" value={form.numero} onChange={handleChange} className={inputClass}/>
+              <label className={labelClass}>Número *</label>
+              <input name="numero" type="text" required value={form.numero} onChange={handleChange} className={inputClass}/>
             </div>
             <div className="md:col-span-3">
-              <label className={labelClass}>Bairro</label>
-              <input name="bairro" type="text" value={form.bairro} onChange={handleChange} className={inputClass}/>
+              <label className={labelClass}>Bairro *</label>
+              <input name="bairro" type="text" required value={form.bairro} onChange={handleChange} className={inputClass}/>
             </div>
             <div className="md:col-span-2">
-              <label className={labelClass}>Cidade</label>
-              <input name="cidade" type="text" value={form.cidade} onChange={handleChange} className={inputClass}/>
+              <label className={labelClass}>Cidade *</label>
+              <input name="cidade" type="text" required value={form.cidade} onChange={handleChange} className={inputClass}/>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div>
-              <label className={labelClass}>Estado</label>
-              <select name="estado" value={form.estado} onChange={handleChange} className={inputClass}>
+              <label className={labelClass}>Estado *</label>
+              <select name="estado" required value={form.estado} onChange={handleChange} className={inputClass}>
                 <option value="">Selecione...</option>
                 {estados.map(uf => <option key={uf} value={uf}>{uf}</option>)}
               </select>
@@ -132,17 +139,23 @@ export default function EditarHospital() {
                 <option value="">Selecione...</option>
                 <option value="Manhã">Manhã</option>
                 <option value="Tarde">Tarde</option>
+                <option value="Manhã e Tarde">Manhã e Tarde</option>
               </select>
             </div>
             <div>
-              <label className={labelClass}>Dia da semana</label>
-              <select name="dia_semana" value={form.dia_semana} onChange={handleChange} className={inputClass}>
+              <label className={labelClass}>Dia da semana *</label>
+              <select name="dia_semana" required value={form.dia_semana} onChange={handleChange} className={inputClass}>
+                <option value="">Selecione...</option>
                 {diasSemana.map(dia => <option key={dia} value={dia}>{dia}</option>)}
               </select>
             </div>
             <div>
-              <label className={labelClass}>Responsável</label>
-              <input name="responsavel" type="text" value={form.responsavel} onChange={handleChange} className={inputClass}/>
+              <label className={labelClass}>Responsável *</label>
+              <input name="responsavel" type="text" required value={form.responsavel} onChange={handleChange} className={inputClass}/>
+            </div>
+            <div>
+              <label className={labelClass}>Início das atividades *</label>
+              <input name="data_inicio_atividade" type="date" required value={form.data_inicio_atividade} onChange={handleChange} className={inputClass}/>
             </div>
           </div>
 
