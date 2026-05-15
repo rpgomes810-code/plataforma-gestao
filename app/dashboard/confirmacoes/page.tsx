@@ -35,17 +35,19 @@ export default async function Confirmacoes() {
 
   const isAdmin = membroLogado?.nivel_acesso === 'Administrador'
 
-  const { data: escalas, error } = await supabaseAdmin
+  // Busca escalas abertas sem join
+  const { data: escalas } = await supabaseAdmin
     .from('escalas')
-    .select(`
-      *,
-      confirmacoes(
-        id, status, membro_id,
-        membros(nome, instrumento, tipo)
-      )
-    `)
+    .select('*')
     .eq('confirmacao_aberta', true)
     .order('data', { ascending: true })
+
+  // Busca confirmações separadamente
+  const escalasIds = escalas?.map(e => e.id) || []
+  const { data: confirmacoes } = escalasIds.length > 0 ? await supabaseAdmin
+    .from('confirmacoes')
+    .select('*, membros(nome, instrumento, tipo)')
+    .in('escala_id', escalasIds) : { data: [] }
 
   const { data: todosMembros } = await supabaseAdmin
     .from('membros')
@@ -75,11 +77,12 @@ export default async function Confirmacoes() {
       ) : (
         <div className="space-y-6">
           {escalas.map(escala => {
+            const confirmacoesEscala = confirmacoes?.filter((c: any) => c.escala_id === escala.id) || []
             const membrosDoGrupo = todosMembros?.filter(m => m.grupo === escala.grupo) || []
             const totalGrupo = membrosDoGrupo.length
-            const confirmados = escala.confirmacoes?.filter((c: any) => c.status === 'confirmado') || []
-            const ausentes = escala.confirmacoes?.filter((c: any) => c.status === 'ausente') || []
-            const minhaConfirmacao = escala.confirmacoes?.find((c: any) => c.membro_id === membroLogado?.id)
+            const confirmados = confirmacoesEscala.filter((c: any) => c.status === 'confirmado')
+            const ausentes = confirmacoesEscala.filter((c: any) => c.status === 'ausente')
+            const minhaConfirmacao = confirmacoesEscala.find((c: any) => c.membro_id === membroLogado?.id)
             const euSouDoGrupo = membroLogado?.grupo === escala.grupo
 
             const vagasAbertas = ausentes.map((a: any) => ({
