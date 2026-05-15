@@ -12,6 +12,7 @@ export default function BotaoConfirmar({ escalaid, membroid, confirmacaoAtual }:
   const [loading, setLoading] = useState(false)
   const [motivo, setMotivo] = useState('')
   const [mostraMotivo, setMostraMotivo] = useState(false)
+  const [erro, setErro] = useState('')
 
   const confirmar = async (status: string) => {
     if (status === 'ausente' && !mostraMotivo) {
@@ -20,19 +21,35 @@ export default function BotaoConfirmar({ escalaid, membroid, confirmacaoAtual }:
     }
 
     setLoading(true)
-    await fetch('/api/confirmacoes', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        escala_id: escalaid,
-        membro_id: membroid,
-        status,
-        motivo: status === 'ausente' ? motivo : null,
-      }),
-    })
-    setLoading(false)
-    setMostraMotivo(false)
-    router.refresh()
+    setErro('')
+
+    try {
+      const res = await fetch('/api/confirmacoes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          escala_id: escalaid,
+          membro_id: membroid,
+          status,
+          motivo: status === 'ausente' ? motivo : null,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        setErro(data.error || 'Erro ao confirmar')
+        setLoading(false)
+        return
+      }
+
+      setLoading(false)
+      setMostraMotivo(false)
+      router.refresh()
+    } catch (e: any) {
+      setErro(e.message)
+      setLoading(false)
+    }
   }
 
   if (confirmacaoAtual === 'confirmado') {
@@ -55,6 +72,7 @@ export default function BotaoConfirmar({ escalaid, membroid, confirmacaoAtual }:
 
   return (
     <div className="space-y-3">
+      {erro && <p className="text-xs text-red-500">{erro}</p>}
       {mostraMotivo ? (
         <div className="space-y-2">
           <input
@@ -79,7 +97,7 @@ export default function BotaoConfirmar({ escalaid, membroid, confirmacaoAtual }:
         <div className="flex gap-2">
           <button onClick={() => confirmar('confirmado')} disabled={loading}
             className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-600 transition disabled:opacity-50">
-            ✅ Confirmar presença
+            {loading ? 'Salvando...' : '✅ Confirmar presença'}
           </button>
           <button onClick={() => confirmar('ausente')} disabled={loading}
             className="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-100 transition disabled:opacity-50">
