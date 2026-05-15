@@ -18,6 +18,8 @@ function mascaraTelefone(valor: string) {
     .replace(/(\d{5})(\d)/, '$1-$2')
 }
 
+type Grupo = { id: string; nome: string }
+
 export default function EditarMembro() {
   const router = useRouter()
   const params = useParams()
@@ -25,6 +27,7 @@ export default function EditarMembro() {
   const [loadingData, setLoadingData] = useState(true)
   const [dadosOriginais, setDadosOriginais] = useState<any>(null)
   const [usuarioNome, setUsuarioNome] = useState('')
+  const [grupos, setGrupos] = useState<Grupo[]>([])
   const [form, setForm] = useState({
     nome: '',
     telefone: '',
@@ -69,6 +72,10 @@ export default function EditarMembro() {
     fetch('/api/membros/eu')
       .then(res => res.json())
       .then(data => { if (data?.nome) setUsuarioNome(data.nome) })
+
+    fetch('/api/grupos')
+      .then(res => res.json())
+      .then(data => { if (Array.isArray(data)) setGrupos(data) })
   }, [params.id])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -198,10 +205,9 @@ export default function EditarMembro() {
                   <label className={labelClass}>Grupo *</label>
                   <select name="grupo" required value={form.grupo} onChange={handleChange} className={inputClass}>
                     <option value="">Selecione...</option>
-                    <option value="Grupo 1">Grupo 1</option>
-                    <option value="Grupo 2">Grupo 2</option>
-                    <option value="Grupo 3">Grupo 3</option>
-                    <option value="Grupo 4">Grupo 4</option>
+                    {grupos.map(g => (
+                      <option key={g.id} value={g.nome}>{g.nome}</option>
+                    ))}
                   </select>
                 </div>
                 <div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 const inputClass = "w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
@@ -18,9 +18,12 @@ function mascaraTelefone(valor: string) {
     .replace(/(\d{5})(\d)/, '$1-$2')
 }
 
+type Grupo = { id: string; nome: string }
+
 export default function NovoMembro() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [grupos, setGrupos] = useState<Grupo[]>([])
   const [form, setForm] = useState({
     nome: '',
     telefone: '',
@@ -34,6 +37,12 @@ export default function NovoMembro() {
     cargo: 'Nenhum',
     observacoes: '',
   })
+
+  useEffect(() => {
+    fetch('/api/grupos')
+      .then(res => res.json())
+      .then(data => { if (Array.isArray(data)) setGrupos(data) })
+  }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     if (e.target.name === 'telefone') {
@@ -139,10 +148,9 @@ export default function NovoMembro() {
                   <label className={labelClass}>Grupo *</label>
                   <select name="grupo" required value={form.grupo} onChange={handleChange} className={inputClass}>
                     <option value="">Selecione...</option>
-                    <option value="Grupo 1">Grupo 1</option>
-                    <option value="Grupo 2">Grupo 2</option>
-                    <option value="Grupo 3">Grupo 3</option>
-                    <option value="Grupo 4">Grupo 4</option>
+                    {grupos.map(g => (
+                      <option key={g.id} value={g.nome}>{g.nome}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
