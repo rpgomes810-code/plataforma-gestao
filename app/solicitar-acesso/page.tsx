@@ -6,6 +6,18 @@ import { createBrowserClient } from '@supabase/ssr'
 const inputClass = "w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
 const labelClass = "block text-sm font-medium text-gray-700 mb-1"
 
+function mascaraTelefone(valor: string) {
+  const numeros = valor.replace(/\D/g, '').slice(0, 11)
+  if (numeros.length <= 10) {
+    return numeros
+      .replace(/(\d{2})(\d)/, '($1) $2')
+      .replace(/(\d{4})(\d)/, '$1-$2')
+  }
+  return numeros
+    .replace(/(\d{2})(\d)/, '($1) $2')
+    .replace(/(\d{5})(\d)/, '$1-$2')
+}
+
 export default function SolicitarAcesso() {
   const [loading, setLoading] = useState(false)
   const [enviado, setEnviado] = useState(false)
@@ -21,7 +33,11 @@ export default function SolicitarAcesso() {
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
+    if (e.target.name === 'telefone') {
+      setForm({ ...form, telefone: mascaraTelefone(e.target.value) })
+    } else {
+      setForm({ ...form, [e.target.name]: e.target.value })
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -83,7 +99,7 @@ export default function SolicitarAcesso() {
             <div>
               <label className={labelClass}>Telefone / WhatsApp *</label>
               <input name="telefone" type="text" required value={form.telefone} onChange={handleChange}
-                placeholder="(11) 99999-0000" className={inputClass}/>
+                placeholder="(11) 99999-0000" maxLength={15} className={inputClass}/>
             </div>
             <div>
               <label className={labelClass}>Data de nascimento *</label>

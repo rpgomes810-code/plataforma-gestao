@@ -146,7 +146,7 @@ export default function NovoRegistro() {
 </div>
 <div>
   <label className={labelClass}>Hinos executados *</label>
-  <input name="hinos_executados" type="number" required min="0" value={form.hinos_executados} onChange={handleChange} className={inputClass} />
+  <input name="hinos_executados" type="number" required min="1" value={form.hinos_executados} onChange={handleChange} className={inputClass} />
 </div>
             <div>
               <label className={labelClass}>Houve oração?</label>
