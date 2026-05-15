@@ -1,12 +1,14 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function BotaoConfirmar({ escalaid, membroid, confirmacaoAtual }: {
   escalaid: string
   membroid: string
   confirmacaoAtual: string | null
 }) {
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [motivo, setMotivo] = useState('')
   const [mostraMotivo, setMostraMotivo] = useState(false)
@@ -33,12 +35,13 @@ export default function BotaoConfirmar({ escalaid, membroid, confirmacaoAtual }:
     })
 
     if (res.ok) {
-      window.location.reload()
+      router.refresh()
     } else {
       const data = await res.json()
       setErro(data.error || 'Erro ao confirmar')
-      setLoading(false)
     }
+
+    setLoading(false)
   }
 
   if (confirmacaoAtual === 'confirmado') {
