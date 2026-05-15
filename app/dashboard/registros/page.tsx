@@ -1,13 +1,33 @@
 export const dynamic = 'force-dynamic'
 
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+import { cookies } from 'next/headers'
+import { createServerClient } from '@supabase/ssr'
+import BotaoExcluirRegistro from './BotaoExcluirRegistro'
 
 export default async function Registros() {
+  const cookieStore = await cookies()
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() { return cookieStore.getAll() },
+        setAll() {},
+      },
+    }
+  )
+
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const { data: usuarioLogado } = await supabase
+    .from('membros')
+    .select('nivel_acesso')
+    .eq('user_id', user?.id)
+    .single()
+
+  const isAdmin = usuarioLogado?.nivel_acesso === 'Administrador'
+
   const { data: registros } = await supabase
     .from('registros')
     .select('*, hospitais(nome)')
@@ -42,14 +62,22 @@ export default async function Registros() {
             <div key={registro.id} className="bg-white rounded-2xl shadow p-5">
               <div className="flex flex-col md:flex-row justify-between gap-4">
                 <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white text-lg">
-                      🏥
+                  <div className="flex items-center justify-between gap-3 mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white text-lg">
+                        🏥
+                      </div>
+                      <div>
+                        <p className="font-bold text-gray-800">{registro.hospitais?.nome || '—'}</p>
+                        <p className="text-xs text-gray-400">{formatarData(registro.data)} · {registro.hora_inicio} às {registro.hora_termino}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-bold text-gray-800">{registro.hospitais?.nome || '—'}</p>
-                      <p className="text-xs text-gray-400">{formatarData(registro.data)} · {registro.hora_inicio} às {registro.hora_termino}</p>
-                    </div>
+                    {isAdmin && (
+                      <BotaoExcluirRegistro
+                        id={registro.id}
+                        hospital={registro.hospitais?.nome || '—'}
+                      />
+                    )}
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                     <div>
