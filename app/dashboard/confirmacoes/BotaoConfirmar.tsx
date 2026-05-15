@@ -13,6 +13,7 @@ export default function BotaoConfirmar({ escalaid, membroid, confirmacaoAtual }:
   const [motivo, setMotivo] = useState('')
   const [mostraMotivo, setMostraMotivo] = useState(false)
   const [erro, setErro] = useState('')
+  const [statusAtual, setStatusAtual] = useState(confirmacaoAtual) // ← novo
 
   const confirmar = async (status: string) => {
     if (status === 'ausente' && !mostraMotivo) {
@@ -35,6 +36,9 @@ export default function BotaoConfirmar({ escalaid, membroid, confirmacaoAtual }:
     })
 
     if (res.ok) {
+      setStatusAtual(status) // ← atualiza na hora
+      setMostraMotivo(false)
+      setMotivo('')
       router.refresh()
     } else {
       const data = await res.json()
@@ -44,7 +48,7 @@ export default function BotaoConfirmar({ escalaid, membroid, confirmacaoAtual }:
     setLoading(false)
   }
 
-  if (confirmacaoAtual === 'confirmado') {
+  if (statusAtual === 'confirmado') {
     return (
       <div className="flex items-center gap-3">
         <span className="text-sm text-green-600 font-semibold">✅ Você confirmou presença</span>
@@ -53,7 +57,7 @@ export default function BotaoConfirmar({ escalaid, membroid, confirmacaoAtual }:
     )
   }
 
-  if (confirmacaoAtual === 'ausente') {
+  if (statusAtual === 'ausente') {
     return (
       <div className="flex items-center gap-3">
         <span className="text-sm text-red-600 font-semibold">❌ Você informou ausência</span>
