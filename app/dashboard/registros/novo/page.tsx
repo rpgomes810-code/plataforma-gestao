@@ -16,6 +16,7 @@ export default function NovoRegistro() {
   const [membros, setMembros] = useState<Membro[]>([])
   const [busca, setBusca] = useState('')
   const [membrosSelecionados, setMembrosSelecionados] = useState<string[]>([])
+  const [usuarioNome, setUsuarioNome] = useState('Atendente')
   const [form, setForm] = useState({
     hospital_id: '',
     data: '',
@@ -35,6 +36,10 @@ export default function NovoRegistro() {
     fetch('/api/membros')
       .then(res => res.json())
       .then(data => { if (Array.isArray(data)) setMembros(data) })
+
+    fetch('/api/membros/eu')
+      .then(res => res.json())
+      .then(data => { if (data?.nome) setUsuarioNome(data.nome) })
   }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -62,18 +67,34 @@ export default function NovoRegistro() {
     e.preventDefault()
     setLoading(true)
 
+    const dadosRegistro = {
+      ...form,
+      hinos_executados: parseInt(form.hinos_executados),
+      teve_oracao: form.teve_oracao === 'true',
+      membros_presentes: membrosSelecionados.join(', '),
+    }
+
     const res = await fetch('/api/registros', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...form,
-        hinos_executados: parseInt(form.hinos_executados),
-        teve_oracao: form.teve_oracao === 'true',
-        membros_presentes: membrosSelecionados.join(', '),
-      }),
+      body: JSON.stringify(dadosRegistro),
     })
 
     if (res.ok) {
+      const hospitalNome = hospitais.find(h => h.id === form.hospital_id)?.nome || form.hospital_id
+
+      await fetch('/api/logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          usuario_nome: usuarioNome,
+          acao: `Registrou atendimento: ${hospitalNome}`,
+          tabela: 'registros',
+          dados_antes: null,
+          dados_depois: dadosRegistro,
+        }),
+      })
+
       router.push('/dashboard/registros')
     } else {
       alert('Erro ao salvar registro')
