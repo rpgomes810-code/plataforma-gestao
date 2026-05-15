@@ -1,9 +1,15 @@
 export const dynamic = 'force-dynamic'
 
+import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 import BotaoConfirmar from './BotaoConfirmar'
 import BotaoAbrirConfirmacao from './BotaoAbrirConfirmacao'
+
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
 export default async function Confirmacoes() {
   const cookieStore = await cookies()
@@ -21,7 +27,7 @@ export default async function Confirmacoes() {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: membroLogado } = await supabase
+  const { data: membroLogado } = await supabaseAdmin
     .from('membros')
     .select('id, nome, grupo, instrumento, tipo, nivel_acesso')
     .eq('user_id', user?.id)
@@ -29,8 +35,7 @@ export default async function Confirmacoes() {
 
   const isAdmin = membroLogado?.nivel_acesso === 'Administrador'
 
-  // Busca escalas com confirmação aberta
-  const { data: escalas } = await supabase
+  const { data: escalas, error } = await supabaseAdmin
     .from('escalas')
     .select(`
       *,
@@ -42,8 +47,7 @@ export default async function Confirmacoes() {
     .eq('confirmacao_aberta', true)
     .order('data', { ascending: true })
 
-  // Busca membros por grupo para calcular total
-  const { data: todosMembros } = await supabase
+  const { data: todosMembros } = await supabaseAdmin
     .from('membros')
     .select('id, nome, grupo, instrumento, tipo, status')
     .eq('status', 'Ativo')
@@ -63,14 +67,14 @@ export default async function Confirmacoes() {
         </div>
       </div>
 
-      {escalas?.length === 0 ? (
+      {!escalas || escalas.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-2xl shadow">
           <p className="text-4xl mb-3">✅</p>
           <p className="text-gray-500">Nenhuma escala aguardando confirmação</p>
         </div>
       ) : (
         <div className="space-y-6">
-          {escalas?.map(escala => {
+          {escalas.map(escala => {
             const membrosDoGrupo = todosMembros?.filter(m => m.grupo === escala.grupo) || []
             const totalGrupo = membrosDoGrupo.length
             const confirmados = escala.confirmacoes?.filter((c: any) => c.status === 'confirmado') || []
@@ -78,7 +82,6 @@ export default async function Confirmacoes() {
             const minhaConfirmacao = escala.confirmacoes?.find((c: any) => c.membro_id === membroLogado?.id)
             const euSouDoGrupo = membroLogado?.grupo === escala.grupo
 
-            // Vagas abertas por instrumento
             const vagasAbertas = ausentes.map((a: any) => ({
               nome: a.membros?.nome,
               instrumento: a.membros?.instrumento,
@@ -100,7 +103,6 @@ export default async function Confirmacoes() {
                 </div>
 
                 <div className="p-6 space-y-4">
-                  {/* Progresso */}
                   <div>
                     <div className="flex justify-between text-sm mb-2">
                       <span className="font-medium text-gray-700">Confirmações</span>
@@ -112,7 +114,6 @@ export default async function Confirmacoes() {
                     </div>
                   </div>
 
-                  {/* Confirmados */}
                   {confirmados.length > 0 && (
                     <div>
                       <p className="text-xs font-semibold text-gray-400 uppercase mb-2">✅ Confirmados ({confirmados.length})</p>
@@ -126,7 +127,6 @@ export default async function Confirmacoes() {
                     </div>
                   )}
 
-                  {/* Ausentes e vagas */}
                   {ausentes.length > 0 && (
                     <div>
                       <p className="text-xs font-semibold text-gray-400 uppercase mb-2">⚠️ Vagas abertas ({ausentes.length})</p>
@@ -143,7 +143,6 @@ export default async function Confirmacoes() {
                     </div>
                   )}
 
-                  {/* Botão de confirmação para o membro do grupo */}
                   {euSouDoGrupo && (
                     <div className="border-t pt-4">
                       <p className="text-sm font-medium text-gray-700 mb-3">Sua confirmação:</p>
