@@ -21,6 +21,25 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
     })
   }
 
+  const cancelarConfirmacao = async () => {
+    setLoading(true)
+    const res = await fetch('/api/confirmacoes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        escala_id: escala.id,
+        membro_id: membroLogado?.id,
+        status: 'pendente',
+        motivo: null,
+      }),
+    })
+    if (res.ok) {
+      setConfirmacoes((prev: any[]) => prev.filter((c: any) => c.membro_id !== membroLogado?.id))
+      onAtualizar()
+    }
+    setLoading(false)
+  }
+
   const confirmar = async (status: string) => {
     if (status === 'ausente' && !mostraMotivo) {
       setMostraMotivo(true)
@@ -42,7 +61,6 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
     })
 
     if (res.ok) {
-      // Atualiza local imediatamente
       setConfirmacoes((prev: any[]) => {
         const semMinha = prev.filter((c: any) => c.membro_id !== membroLogado?.id)
         return [...semMinha, {
@@ -55,7 +73,6 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
       })
       setMostraMotivo(false)
       setMotivo('')
-      // Busca dados frescos do banco em segundo plano
       onAtualizar()
     } else {
       const data = await res.json()
@@ -136,14 +153,18 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
             {statusAtual === 'confirmado' && (
               <div className="flex items-center gap-3">
                 <span className="text-sm text-green-600 font-semibold">✅ Você confirmou presença</span>
-                <button onClick={() => confirmar('ausente')} className="text-xs text-gray-400 hover:text-gray-600">Cancelar</button>
+                <button onClick={cancelarConfirmacao} disabled={loading} className="text-xs text-gray-400 hover:text-gray-600">
+                  {loading ? 'Aguarde...' : 'Cancelar'}
+                </button>
               </div>
             )}
 
             {statusAtual === 'ausente' && (
               <div className="flex items-center gap-3">
                 <span className="text-sm text-red-600 font-semibold">❌ Você informou ausência</span>
-                <button onClick={() => confirmar('confirmado')} className="text-xs text-gray-400 hover:text-gray-600">Confirmar presença</button>
+                <button onClick={cancelarConfirmacao} disabled={loading} className="text-xs text-gray-400 hover:text-gray-600">
+                  {loading ? 'Aguarde...' : 'Cancelar'}
+                </button>
               </div>
             )}
 
