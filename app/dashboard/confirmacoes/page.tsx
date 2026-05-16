@@ -49,6 +49,7 @@ export default function Confirmacoes() {
                 confirmacoesIniciais={confirmacoesEscala}
                 membroLogado={membroLogado}
                 totalGrupo={totalGrupo}
+                membrosDoGrupo={membrosDoGrupo}
                 isAdmin={isAdmin}
                 onAtualizar={carregar}
               />

@@ -2,12 +2,13 @@
 
 import { useState } from 'react'
 
-export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLogado, totalGrupo, isAdmin, onAtualizar }: any) {
+export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLogado, totalGrupo, membrosDoGrupo, isAdmin, onAtualizar }: any) {
   const [confirmacoes, setConfirmacoes] = useState(confirmacoesIniciais)
   const [loading, setLoading] = useState(false)
   const [motivo, setMotivo] = useState('')
   const [mostraMotivo, setMostraMotivo] = useState(false)
   const [erro, setErro] = useState('')
+  const [mostraDetalhes, setMostraDetalhes] = useState(false)
 
   const confirmados = confirmacoes.filter((c: any) => c.status === 'confirmado')
   const ausentes = confirmacoes.filter((c: any) => c.status === 'ausente')
@@ -113,6 +114,44 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
               style={{ width: `${totalGrupo > 0 ? (confirmados.length / totalGrupo) * 100 : 0}%` }} />
           </div>
         </div>
+
+        {/* Botão Ver Detalhes — só para admin */}
+        {isAdmin && (
+          <div>
+            <button
+              onClick={() => setMostraDetalhes(!mostraDetalhes)}
+              className="text-xs text-blue-600 hover:text-blue-800 font-semibold"
+            >
+              {mostraDetalhes ? '▲ Ocultar detalhes' : '▼ Ver detalhes'}
+            </button>
+
+            {mostraDetalhes && (
+              <div className="mt-3 space-y-2">
+                {membrosDoGrupo.map((membro: any) => {
+                  const confirmacao = confirmacoes.find((c: any) => c.membro_id === membro.id)
+                  const status = confirmacao?.status || 'pendente'
+                  return (
+                    <div key={membro.id} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">{membro.nome}</p>
+                        <p className="text-xs text-gray-400">{membro.instrumento || membro.tipo}</p>
+                      </div>
+                      <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                        status === 'confirmado' ? 'bg-green-100 text-green-700' :
+                        status === 'ausente' ? 'bg-red-100 text-red-700' :
+                        'bg-gray-100 text-gray-500'
+                      }`}>
+                        {status === 'confirmado' ? '✅ Confirmado' :
+                         status === 'ausente' ? '❌ Ausente' :
+                         '⏳ Pendente'}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         {confirmados.length > 0 && (
           <div>
