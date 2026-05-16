@@ -1,13 +1,27 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+
 export default function Dashboard() {
+  const [membro, setMembro] = useState<any>(null)
+
+  useEffect(() => {
+    fetch('/api/confirmacoes/pagina')
+      .then(r => r.json())
+      .then(d => setMembro(d.membroLogado))
+  }, [])
+
+  const inicial = membro?.nome?.charAt(0).toUpperCase() || '?'
+
   return (
     <div className="p-4 md:p-8">
 
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-gray-800">Dashboard</h2>
         <div className="flex items-center gap-3">
-          <span className="text-gray-600 text-sm">Olá, Rene!</span>
+          <span className="text-gray-600 text-sm">Olá, {membro?.nome || '...'}!</span>
           <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
-            R
+            {inicial}
           </div>
         </div>
       </div>
