@@ -1,10 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 
-export default function BotaoExcluirRegistro({ id, hospital }: { id: string, hospital: string }) {
-  const router = useRouter()
+export default function BotaoExcluirRegistro({ id, hospital, onExcluir }: { id: string, hospital: string, onExcluir?: () => void }) {
   const [usuarioNome, setUsuarioNome] = useState('Administrador')
 
   useEffect(() => {
@@ -35,7 +33,8 @@ export default function BotaoExcluirRegistro({ id, hospital }: { id: string, hos
           dados_depois: { excluido: true },
         }),
       })
-      router.refresh()
+      if (onExcluir) onExcluir()
+      else window.location.reload()
     } else {
       alert('Erro ao excluir registro')
     }
