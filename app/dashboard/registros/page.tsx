@@ -48,10 +48,18 @@ export default function Registros() {
     return new Date(data + 'T12:00:00').toLocaleDateString('pt-BR')
   }
 
+  const montarUrlRegistro = (escala: any) => {
+    const params = new URLSearchParams({
+      escala_id: escala.id,
+      hospital_id: escala.hospital_id,
+      data: escala.data,
+    })
+    return `/dashboard/registros/novo?${params.toString()}`
+  }
+
   return (
     <div className="p-4 md:p-6">
 
-      {/* Pendentes de registro */}
       {pendentes.length > 0 && (
         <div className="mb-8">
           <h3 className="text-base font-bold text-red-600 mb-3">⚠️ Escalas pendentes de registro ({pendentes.length})</h3>
@@ -63,7 +71,7 @@ export default function Registros() {
                   <p className="text-xs text-gray-500">{formatarData(escala.data)} · {escala.hora_inicio}</p>
                 </div>
                 
-                  href={`/dashboard/registros/novo?escala_id=${escala.id}&hospital_id=${escala.hospital_id}&data=${escala.data}`}
+                  href={montarUrlRegistro(escala)}
                   className="bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-red-700 transition"
                 >
                   Registrar
