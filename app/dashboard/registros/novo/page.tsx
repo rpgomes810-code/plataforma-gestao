@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 const inputClass = "w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
@@ -9,7 +9,7 @@ const labelClass = "block text-sm font-medium text-gray-700 mb-1"
 type Hospital = { id: string; nome: string }
 type Membro = { id: string; nome: string }
 
-export default function NovoRegistro() {
+function NovoRegistroForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const escala_id = searchParams.get('escala_id') || ''
@@ -115,9 +115,7 @@ export default function NovoRegistro() {
             <div className="md:col-span-2">
               <label className={labelClass}>Hospital *</label>
               {hospitalPreenchido ? (
-                <div className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-700">
-                  🏥 {hospitalPreenchido.nome}
-                </div>
+                <div className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-700">🏥 {hospitalPreenchido.nome}</div>
               ) : (
                 <select name="hospital_id" required value={form.hospital_id} onChange={handleChange} className={inputClass}>
                   <option value="">Selecione...</option>
@@ -212,5 +210,13 @@ export default function NovoRegistro() {
         </form>
       </div>
     </div>
+  )
+}
+
+export default function NovoRegistro() {
+  return (
+    <Suspense fallback={<div className="p-6 text-gray-500">Carregando...</div>}>
+      <NovoRegistroForm />
+    </Suspense>
   )
 }
