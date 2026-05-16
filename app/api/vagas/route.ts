@@ -7,18 +7,15 @@ const supabase = createClient(
 )
 
 export async function GET() {
-  // Busca escalas abertas com ausências
-  const { data: ausentes } = await supabase
+  const { data: ausentes, error } = await supabase
     .from('confirmacoes')
-    .select('*, escalas(id, data, grupo, local_texto, hora_inicio), membros!confirmacoes_membro_id_fkey(nome, instrumento, tipo)')
+    .select('*, escalas!confirmacoes_escala_id_fkey(id, data, grupo, local_texto, hora_inicio, confirmacao_aberta), membros!confirmacoes_membro_id_fkey(nome, instrumento, tipo)')
     .eq('status', 'ausente')
-    .not('escalas', 'is', null)
 
-  // Filtra só escalas com confirmacao_aberta = true e data futura ou hoje
-  const hoje = new Date().toISOString().split('T')[0]
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
   const vagas = ausentes?.filter((a: any) =>
-    a.escalas?.confirmacao_aberta === true &&
-    a.escalas?.data >= hoje
+    a.escalas?.confirmacao_aberta === true
   ) || []
 
   return NextResponse.json(vagas)
