@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLogado, totalGrupo, isAdmin }: any) {
@@ -10,11 +10,6 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
   const [motivo, setMotivo] = useState('')
   const [mostraMotivo, setMostraMotivo] = useState(false)
   const [erro, setErro] = useState('')
-
-  // Sincroniza com dados do servidor quando a página recarrega
-  useEffect(() => {
-    setConfirmacoes(confirmacoesIniciais)
-  }, [confirmacoesIniciais])
 
   const confirmados = confirmacoes.filter((c: any) => c.status === 'confirmado')
   const ausentes = confirmacoes.filter((c: any) => c.status === 'ausente')
@@ -60,7 +55,6 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
       })
       setMostraMotivo(false)
       setMotivo('')
-      router.refresh()
     } else {
       const data = await res.json()
       setErro(data.error || 'Erro ao confirmar')
