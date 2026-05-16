@@ -99,7 +99,7 @@ export default function Dashboard() {
                       {formatarData(vaga.escalas?.data)} · {vaga.escalas?.hora_inicio}
                     </p>
                     <p className="text-xs text-orange-600 mt-1">
-                      Vaga de: {vaga.membros?.instrumento || vaga.membros?.tipo} ({vaga.membros?.nome})
+                       Vaga de: {vaga.membros?.instrumento || vaga.membros?.tipo}
                     </p>
                   </div>
                   {!eDoGrupo && (
