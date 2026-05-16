@@ -50,6 +50,7 @@ export default function Confirmacoes() {
                 membroLogado={membroLogado}
                 totalGrupo={totalGrupo}
                 membrosDoGrupo={membrosDoGrupo}
+                todosMembros={todosMembros}
                 isAdmin={isAdmin}
                 onAtualizar={carregar}
               />

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLogado, totalGrupo, membrosDoGrupo, isAdmin, onAtualizar }: any) {
+export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLogado, totalGrupo, membrosDoGrupo, todosMembros, isAdmin, onAtualizar }: any) {
   const [confirmacoes, setConfirmacoes] = useState(confirmacoesIniciais)
   const [loading, setLoading] = useState(false)
   const [motivo, setMotivo] = useState('')
@@ -12,14 +12,20 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
 
   const confirmados = confirmacoes.filter((c: any) => c.status === 'confirmado')
   const ausentes = confirmacoes.filter((c: any) => c.status === 'ausente')
+  const avulsos = confirmacoes.filter((c: any) => c.tipo === 'avulso' && c.status === 'confirmado')
   const minhaConfirmacao = confirmacoes.find((c: any) => c.membro_id === membroLogado?.id)
   const euSouDoGrupo = membroLogado?.grupo === escala.grupo
   const statusAtual = minhaConfirmacao?.status || null
+  const souAvulso = !euSouDoGrupo && minhaConfirmacao?.tipo === 'avulso'
 
   const formatarData = (data: string) => {
     return new Date(data + 'T12:00:00').toLocaleDateString('pt-BR', {
       weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric'
     })
+  }
+
+  const getNomeMembro = (membro_id: string) => {
+    return todosMembros?.find((m: any) => m.id === membro_id)?.nome || '—'
   }
 
   const cancelarConfirmacao = async () => {
@@ -148,6 +154,23 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
                     </div>
                   )
                 })}
+
+                {avulsos.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-xs font-semibold text-blue-400 uppercase mb-2">🔄 Avulsos</p>
+                    {avulsos.map((c: any) => (
+                      <div key={c.id} className="flex items-center justify-between bg-blue-50 rounded-lg px-3 py-2">
+                        <div>
+                          <p className="text-sm font-medium text-gray-700">{getNomeMembro(c.membro_id)}</p>
+                          <p className="text-xs text-gray-400">Avulso</p>
+                        </div>
+                        <span className="text-xs font-semibold px-2 py-1 rounded-full bg-blue-100 text-blue-700">
+                          ✅ Confirmado
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -159,18 +182,18 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
             <div className="flex flex-wrap gap-2">
               {confirmados.map((c: any) => (
                 <span key={c.id} className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full">
-                  {c.membros?.nome}
+                  {c.tipo === 'avulso' ? `${getNomeMembro(c.membro_id)} (avulso)` : c.membros?.nome}
                 </span>
               ))}
             </div>
           </div>
         )}
 
-        {ausentes.length > 0 && (
+        {ausentes.filter((a: any) => !a.substituto_id).length > 0 && (
           <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase mb-2">⚠️ Vagas abertas ({ausentes.length})</p>
+            <p className="text-xs font-semibold text-gray-400 uppercase mb-2">⚠️ Vagas abertas ({ausentes.filter((a: any) => !a.substituto_id).length})</p>
             <div className="space-y-2">
-              {ausentes.map((a: any, i: number) => (
+              {ausentes.filter((a: any) => !a.substituto_id).map((a: any, i: number) => (
                 <div key={i} className="flex items-center justify-between bg-yellow-50 rounded-lg px-3 py-2">
                   <div>
                     <p className="text-sm font-medium text-gray-700">{a.membros?.instrumento || a.membros?.tipo}</p>
@@ -182,6 +205,17 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
           </div>
         )}
 
+        {souAvulso && (
+          <div className="border-t pt-4">
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-blue-600 font-semibold">✅ Você confirmou presença como avulso</span>
+              <button onClick={cancelarConfirmacao} disabled={loading} className="text-xs text-gray-400 hover:text-gray-600">
+                {loading ? 'Aguarde...' : 'Cancelar'}
+              </button>
+            </div>
+          </div>
+        )}
+
         {euSouDoGrupo && (
           <div className="border-t pt-4">
             <p className="text-sm font-medium text-gray-700 mb-3">Sua confirmação:</p>
@@ -189,9 +223,7 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
 
             {statusAtual === 'confirmado' && (
               <div className="flex items-center gap-3">
-                <span className="text-sm text-green-600 font-semibold">
-                  {minhaConfirmacao?.tipo === 'avulso' ? '✅ Você confirmou presença como avulso' : '✅ Você confirmou presença'}
-                </span>
+                <span className="text-sm text-green-600 font-semibold">✅ Você confirmou presença</span>
                 <button onClick={cancelarConfirmacao} disabled={loading} className="text-xs text-gray-400 hover:text-gray-600">
                   {loading ? 'Aguarde...' : 'Cancelar'}
                 </button>
