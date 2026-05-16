@@ -25,3 +25,16 @@ export async function POST(req: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })
 }
+
+export async function DELETE(req: Request) {
+  const { escala_id, membro_id } = await req.json()
+
+  const { error } = await supabase
+    .from('confirmacoes')
+    .delete()
+    .eq('escala_id', escala_id)
+    .eq('membro_id', membro_id)
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ ok: true })
+}
