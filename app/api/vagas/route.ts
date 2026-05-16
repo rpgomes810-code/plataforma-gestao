@@ -11,6 +11,7 @@ export async function GET() {
     .from('confirmacoes')
     .select('*, escalas!confirmacoes_escala_id_fkey(id, data, grupo, local_texto, hora_inicio, confirmacao_aberta), membros!confirmacoes_membro_id_fkey(nome, instrumento, tipo)')
     .eq('status', 'ausente')
+    .is('substituto_id', null)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
@@ -22,9 +23,10 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const { escala_id, membro_id } = await req.json()
+  const { escala_id, membro_id, confirmacao_id } = await req.json()
 
-  const { error } = await supabase
+  // Cria confirmação do substituto
+  const { error: erroConfirmacao } = await supabase
     .from('confirmacoes')
     .upsert([{
       escala_id,
@@ -33,6 +35,15 @@ export async function POST(req: Request) {
       tipo: 'avulso',
     }], { onConflict: 'escala_id,membro_id' })
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (erroConfirmacao) return NextResponse.json({ error: erroConfirmacao.message }, { status: 500 })
+
+  // Atualiza o registro do ausente com o substituto_id
+  const { error: erroSubstituto } = await supabase
+    .from('confirmacoes')
+    .update({ substituto_id: membro_id })
+    .eq('id', confirmacao_id)
+
+  if (erroSubstituto) return NextResponse.json({ error: erroSubstituto.message }, { status: 500 })
+
   return NextResponse.json({ ok: true })
 }

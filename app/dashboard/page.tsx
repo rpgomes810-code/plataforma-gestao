@@ -25,13 +25,17 @@ export default function Dashboard() {
 
   useEffect(() => { carregarDados() }, [])
 
-  const preencherVaga = async (escala_id: string) => {
+  const preencherVaga = async (escala_id: string, confirmacao_id: string) => {
     if (!membro?.id) return
     setLoadingVaga(escala_id)
     const res = await fetch('/api/vagas', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ escala_id, membro_id: membro.id }),
+      body: JSON.stringify({
+        escala_id,
+        membro_id: membro.id,
+        confirmacao_id,
+      }),
     })
     if (res.ok) carregarDados()
     setLoadingVaga(null)
@@ -48,7 +52,6 @@ export default function Dashboard() {
   return (
     <div className="p-4 md:p-8">
 
-      {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-gray-800">Dashboard</h2>
         <div className="flex items-center gap-3">
@@ -59,7 +62,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Cards de resumo */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <a href="/dashboard/membros" className="bg-white rounded-2xl shadow p-5 text-center hover:shadow-md transition">
           <p className="text-3xl font-bold text-blue-600">{stats?.totalMembros || '—'}</p>
@@ -79,7 +81,6 @@ export default function Dashboard() {
         </a>
       </div>
 
-      {/* Vagas abertas */}
       <div className="bg-white rounded-2xl shadow p-6 mb-6">
         <h3 className="text-base font-bold text-gray-800 mb-4">⚠️ Vagas abertas — precisamos de voluntários!</h3>
         {vagas.length === 0 ? (
@@ -87,7 +88,6 @@ export default function Dashboard() {
         ) : (
           <div className="space-y-3">
             {vagas.map((vaga: any) => {
-              const jaPreencheu = vaga.membro_id === membro?.id
               const eDoGrupo = membro?.grupo === vaga.escalas?.grupo
               return (
                 <div key={vaga.id} className="flex items-center justify-between bg-yellow-50 rounded-xl px-4 py-3">
@@ -99,12 +99,12 @@ export default function Dashboard() {
                       {formatarData(vaga.escalas?.data)} · {vaga.escalas?.hora_inicio}
                     </p>
                     <p className="text-xs text-orange-600 mt-1">
-                       Vaga de: {vaga.membros?.instrumento || vaga.membros?.tipo}
+                      Vaga de: {vaga.membros?.instrumento || vaga.membros?.tipo}
                     </p>
                   </div>
                   {!eDoGrupo && (
                     <button
-                      onClick={() => preencherVaga(vaga.escala_id)}
+                      onClick={() => preencherVaga(vaga.escala_id, vaga.id)}
                       disabled={loadingVaga === vaga.escala_id}
                       className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-blue-700 transition disabled:opacity-50"
                     >
@@ -118,7 +118,6 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Atalhos rápidos */}
       <div className="bg-white rounded-2xl shadow p-6">
         <h3 className="text-base font-bold text-gray-800 mb-4">🚀 Atalhos rápidos</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
