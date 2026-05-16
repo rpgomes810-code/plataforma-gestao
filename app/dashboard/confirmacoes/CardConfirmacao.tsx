@@ -24,13 +24,11 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
   const cancelarConfirmacao = async () => {
     setLoading(true)
     const res = await fetch('/api/confirmacoes', {
-      method: 'POST',
+      method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         escala_id: escala.id,
         membro_id: membroLogado?.id,
-        status: 'pendente',
-        motivo: null,
       }),
     })
     if (res.ok) {
