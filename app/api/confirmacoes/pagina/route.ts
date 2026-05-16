@@ -33,12 +33,15 @@ export async function GET() {
     .order('data', { ascending: true })
 
   const escalasIds = escalas?.map((e: any) => e.id) || []
-  const { data: confirmacoes } = escalasIds.length > 0
-    ? await supabaseAdmin
-        .from('confirmacoes')
-        .select('*, membros(nome, instrumento, tipo)')
-        .in('escala_id', escalasIds)
-    : { data: [] }
+
+  let confirmacoes: any[] = []
+  if (escalasIds.length > 0) {
+    const { data, error } = await supabaseAdmin
+      .from('confirmacoes')
+      .select('*, membros(nome, instrumento, tipo)')
+      .in('escala_id', escalasIds)
+    if (!error && data) confirmacoes = data
+  }
 
   const { data: todosMembros } = await supabaseAdmin
     .from('membros')
