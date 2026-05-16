@@ -33,7 +33,11 @@ export default async function Membros() {
     .select('*')
     .order('nome', { ascending: true })
 
-  const grupos = [...new Set(membros?.map(m => m.grupo).filter(Boolean))]
+  const grupos = [...new Set(membros?.map(m => m.grupo).filter(Boolean))].sort((a, b) => {
+  const numA = parseInt(a.replace(/\D/g, '')) || 0
+  const numB = parseInt(b.replace(/\D/g, '')) || 0
+  return numA - numB
+})
   const semGrupo = membros?.filter(m => !m.grupo) || []
 
   return (
