@@ -18,13 +18,15 @@ export default function Registros() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [isAtendente, setIsAtendente] = useState(false)
   const [meuGrupo, setMeuGrupo] = useState('')
+  const [carregouUsuario, setCarregouUsuario] = useState(false)
 
   useEffect(() => {
     fetch('/api/membros/eu').then(res => res.json()).then(data => {
       if (data?.nivel_acesso === 'Administrador') setIsAdmin(true)
       if (data?.tipo === 'Atendente') setIsAtendente(true)
       if (data?.grupo) setMeuGrupo(data.grupo)
-    }).catch(() => {})
+      setCarregouUsuario(true)
+    }).catch(() => setCarregouUsuario(true))
 
     fetch('/api/escalas/pendentes').then(res => res.json()).then(data => setPendentes(Array.isArray(data) ? data : []))
   }, [])
@@ -45,8 +47,24 @@ export default function Registros() {
     window.location.href = `/dashboard/registros/novo?${params.toString()}`
   }
 
-  // Filtra pendentes por grupo para atendente
-  const pendentesFiltrados = isAdmin ? pendentes : pendentes.filter((e: any) => e.grupo === meuGrupo)
+  const pendentesFiltrados = isAdmin
+    ? pendentes
+    : isAtendente
+      ? pendentes.filter((e: any) => e.grupo === meuGrupo)
+      : []
+
+  if (!carregouUsuario) return <div className="p-6 text-gray-500">Carregando...</div>
+
+  if (!isAdmin && !isAtendente) {
+    return (
+      <div className="p-4 md:p-6">
+        <div className="text-center py-12 bg-white rounded-2xl shadow">
+          <p className="text-4xl mb-3">🔒</p>
+          <p className="text-gray-500">Você não tem acesso a esta página</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="p-4 md:p-6">
@@ -141,7 +159,7 @@ export default function Registros() {
         </>
       )}
 
-      {!isAdmin && pendentesFiltrados.length === 0 && (
+      {!isAdmin && isAtendente && pendentesFiltrados.length === 0 && (
         <div className="text-center py-12 bg-white rounded-2xl shadow">
           <p className="text-4xl mb-3">✅</p>
           <p className="text-gray-500">Nenhuma escala pendente de registro</p>
