@@ -1,28 +1,19 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 
-export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLogado, totalGrupo, isAdmin }: any) {
+export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLogado, totalGrupo, isAdmin, onAtualizar }: any) {
   const [confirmacoes, setConfirmacoes] = useState(confirmacoesIniciais)
   const [loading, setLoading] = useState(false)
   const [motivo, setMotivo] = useState('')
   const [mostraMotivo, setMostraMotivo] = useState(false)
   const [erro, setErro] = useState('')
 
-  // Busca confirmações frescas do banco ao carregar
-  useEffect(() => {
-    fetch('/api/confirmacoes')
-      .then(r => r.json())
-      .then(todas => {
-        const daEscala = todas.filter((c: any) => c.escala_id === escala.id)
-        if (daEscala.length > 0) setConfirmacoes(daEscala)
-      })
-  }, [escala.id])
-
   const confirmados = confirmacoes.filter((c: any) => c.status === 'confirmado')
   const ausentes = confirmacoes.filter((c: any) => c.status === 'ausente')
   const minhaConfirmacao = confirmacoes.find((c: any) => c.membro_id === membroLogado?.id)
   const euSouDoGrupo = membroLogado?.grupo === escala.grupo
+  const statusAtual = minhaConfirmacao?.status || null
 
   const formatarData = (data: string) => {
     return new Date(data + 'T12:00:00').toLocaleDateString('pt-BR', {
@@ -51,18 +42,9 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
     })
 
     if (res.ok) {
-      setConfirmacoes((prev: any[]) => {
-        const semMinha = prev.filter((c: any) => c.membro_id !== membroLogado?.id)
-        return [...semMinha, {
-          id: Date.now(),
-          escala_id: escala.id,
-          membro_id: membroLogado?.id,
-          status,
-          membros: { nome: membroLogado?.nome, instrumento: membroLogado?.instrumento, tipo: membroLogado?.tipo }
-        }]
-      })
       setMostraMotivo(false)
       setMotivo('')
+      onAtualizar() // busca dados frescos do banco
     } else {
       const data = await res.json()
       setErro(data.error || 'Erro ao confirmar')
@@ -70,8 +52,6 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
 
     setLoading(false)
   }
-
-  const statusAtual = minhaConfirmacao?.status || null
 
   return (
     <div className="bg-white rounded-2xl shadow overflow-hidden">
@@ -85,7 +65,7 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
             <button
               onClick={async () => {
                 await fetch(`/api/escalas/${escala.id}/confirmacao`, { method: 'PATCH' })
-                window.location.reload()
+                onAtualizar()
               }}
               className="text-xs bg-white/20 text-white px-3 py-1 rounded-full hover:bg-white/30 transition"
             >

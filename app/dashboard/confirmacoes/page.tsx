@@ -1,55 +1,25 @@
-export const dynamic = 'force-dynamic'
+'use client'
 
-import { createClient } from '@supabase/supabase-js'
-import { cookies } from 'next/headers'
-import { createServerClient } from '@supabase/ssr'
+import { useState, useEffect } from 'react'
 import CardConfirmacao from './CardConfirmacao'
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+export default function Confirmacoes() {
+  const [dados, setDados] = useState<any>(null)
 
-export default async function Confirmacoes() {
-  const cookieStore = await cookies()
+  const carregar = () => {
+    fetch('/api/confirmacoes/pagina')
+      .then(r => r.json())
+      .then(setDados)
+  }
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll() },
-        setAll() {},
-      },
-    }
-  )
+  useEffect(() => {
+    carregar()
+  }, [])
 
-  const { data: { user } } = await supabase.auth.getUser()
+  if (!dados) return <div className="p-6 text-gray-500">Carregando...</div>
 
-  const { data: membroLogado } = await supabaseAdmin
-    .from('membros')
-    .select('id, nome, grupo, instrumento, tipo, nivel_acesso')
-    .eq('user_id', user?.id)
-    .single()
-
+  const { membroLogado, escalas, confirmacoes, todosMembros } = dados
   const isAdmin = membroLogado?.nivel_acesso === 'Administrador'
-
-  const { data: escalas } = await supabaseAdmin
-    .from('escalas')
-    .select('*')
-    .eq('confirmacao_aberta', true)
-    .order('data', { ascending: true })
-
-  const escalasIds = escalas?.map(e => e.id) || []
-  const { data: confirmacoes } = escalasIds.length > 0 ? await supabaseAdmin
-    .from('confirmacoes')
-    .select('*, membros(nome, instrumento, tipo)')
-    .in('escala_id', escalasIds) : { data: [] }
-
-  const { data: todosMembros } = await supabaseAdmin
-    .from('membros')
-    .select('id, nome, grupo, instrumento, tipo, status')
-    .eq('status', 'Ativo')
 
   return (
     <div className="p-4 md:p-6">
@@ -67,9 +37,9 @@ export default async function Confirmacoes() {
         </div>
       ) : (
         <div className="space-y-6">
-          {escalas.map(escala => {
+          {escalas.map((escala: any) => {
             const confirmacoesEscala = confirmacoes?.filter((c: any) => c.escala_id === escala.id) || []
-            const membrosDoGrupo = todosMembros?.filter(m => m.grupo === escala.grupo) || []
+            const membrosDoGrupo = todosMembros?.filter((m: any) => m.grupo === escala.grupo) || []
             const totalGrupo = membrosDoGrupo.length
 
             return (
@@ -80,6 +50,7 @@ export default async function Confirmacoes() {
                 membroLogado={membroLogado}
                 totalGrupo={totalGrupo}
                 isAdmin={isAdmin}
+                onAtualizar={carregar}
               />
             )
           })}
