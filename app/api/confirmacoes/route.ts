@@ -1,28 +1,52 @@
+export const dynamic = 'force-dynamic'
 
 import { createClient } from '@supabase/supabase-js'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
-const supabase = createClient(
+const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
 export async function GET() {
-  const { data, error } = await supabase
-    .from('confirmacoes')
-    .select('*, membros(nome, instrumento, tipo), escalas(data, grupo, local_texto, hora_inicio)')
+  const cookieStore = await cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll() { return cookieStore.getAll() }, setAll() {} } }
+  )
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data)
-}
+  const { data: { user } } = await supabase.auth.getUser()
 
-export async function POST(req: Request) {
-  const body = await req.json()
+  const { data: membroLogado } = await supabaseAdmin
+    .from('membros')
+    .select('id, nome, grupo, instrumento, tipo, nivel_acesso')
+    .eq('user_id', user?.id)
+    .single()
 
-  const { error } = await supabase
-    .from('confirmacoes')
-    .upsert([body], { onConflict: 'escala_id,membro_id' })
+  const { data: escalas } = await supabaseAdmin
+    .from('escalas')
+    .select('*')
+    .eq('confirmacao_aberta', true)
+    .order('data', { ascending: true })
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ ok: true })
+  const escalasIds = escalas?.map((e: any) => e.id) || []
+
+  let confirmacoes: any[] = []
+  if (escalasIds.length > 0) {
+    const { data, error } = await supabaseAdmin
+      .from('confirmacoes')
+      .select('*, membros!confirmacoes_membro_id_fkey(nome, instrumento, tipo)')
+      .in('escala_id', escalasIds)
+    if (!error && data) confirmacoes = data
+  }
+
+  const { data: todosMembros } = await supabaseAdmin
+    .from('membros')
+    .select('id, nome, grupo, instrumento, tipo, status')
+    .eq('status', 'Ativo')
+
+  return NextResponse.json({ membroLogado, escalas, confirmacoes, todosMembros })
 }
