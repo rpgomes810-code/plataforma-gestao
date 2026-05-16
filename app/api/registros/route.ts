@@ -31,11 +31,21 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const body = await req.json()
+  const { escala_id, ...resto } = body
 
   const { error } = await supabase
     .from('registros')
     .insert([body])
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Marca a escala como registrada
+  if (escala_id) {
+    await supabase
+      .from('escalas')
+      .update({ registrada: true })
+      .eq('id', escala_id)
+  }
+
   return NextResponse.json({ ok: true })
 }

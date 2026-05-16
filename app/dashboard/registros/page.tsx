@@ -13,6 +13,7 @@ export default function Registros() {
   const [mes, setMes] = useState(hoje.getMonth())
   const [ano, setAno] = useState(hoje.getFullYear())
   const [registros, setRegistros] = useState<any[]>([])
+  const [pendentes, setPendentes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
 
@@ -23,6 +24,10 @@ export default function Registros() {
         if (data?.nivel_acesso === 'Administrador') setIsAdmin(true)
       })
       .catch(() => {})
+
+    fetch('/api/escalas/pendentes')
+      .then(res => res.json())
+      .then(data => setPendentes(Array.isArray(data) ? data : []))
   }, [])
 
   useEffect(() => {
@@ -45,6 +50,29 @@ export default function Registros() {
 
   return (
     <div className="p-4 md:p-6">
+
+      {/* Pendentes de registro */}
+      {pendentes.length > 0 && (
+        <div className="mb-8">
+          <h3 className="text-base font-bold text-red-600 mb-3">⚠️ Escalas pendentes de registro ({pendentes.length})</h3>
+          <div className="space-y-3">
+            {pendentes.map((escala: any) => (
+              <div key={escala.id} className="bg-red-50 rounded-2xl p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-gray-800">{escala.grupo} — {escala.hospitais?.nome || escala.local_texto}</p>
+                  <p className="text-xs text-gray-500">{formatarData(escala.data)} · {escala.hora_inicio}</p>
+                </div>
+                
+                  href={`/dashboard/registros/novo?escala_id=${escala.id}&hospital_id=${escala.hospital_id}&data=${escala.data}`}
+                  className="bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-red-700 transition"
+                >
+                  Registrar
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
