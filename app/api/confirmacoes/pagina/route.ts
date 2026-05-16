@@ -39,7 +39,7 @@ export async function GET() {
   if (escalasIds.length > 0) {
     const { data, error } = await supabaseAdmin
       .from('confirmacoes')
-      .select('*, membros(nome, instrumento, tipo)')
+      .select('*')
       .in('escala_id', escalasIds)
     debugErro = error?.message || null
     console.log('escalasIds:', escalasIds)
