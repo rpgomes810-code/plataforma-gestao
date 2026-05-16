@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLogado, totalGrupo, isAdmin }: any) {
@@ -10,6 +10,11 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
   const [motivo, setMotivo] = useState('')
   const [mostraMotivo, setMostraMotivo] = useState(false)
   const [erro, setErro] = useState('')
+
+  // Sincroniza com dados do servidor quando a página recarrega
+  useEffect(() => {
+    setConfirmacoes(confirmacoesIniciais)
+  }, [confirmacoesIniciais])
 
   const confirmados = confirmacoes.filter((c: any) => c.status === 'confirmado')
   const ausentes = confirmacoes.filter((c: any) => c.status === 'ausente')
@@ -43,7 +48,6 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
     })
 
     if (res.ok) {
-      // Atualiza o estado local na hora
       setConfirmacoes((prev: any[]) => {
         const semMinha = prev.filter((c: any) => c.membro_id !== membroLogado?.id)
         return [...semMinha, {
