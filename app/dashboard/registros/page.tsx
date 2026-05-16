@@ -1,37 +1,43 @@
-export const dynamic = 'force-dynamic'
+'use client'
 
-import { cookies } from 'next/headers'
-import { createServerClient } from '@supabase/ssr'
+import { useState, useEffect } from 'react'
 import BotaoExcluirRegistro from './BotaoExcluirRegistro'
 
-export default async function Registros() {
-  const cookieStore = await cookies()
+const meses = [
+  'Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+  'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'
+]
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll() },
-        setAll() {},
-      },
-    }
-  )
+export default function Registros() {
+  const hoje = new Date()
+  const [mes, setMes] = useState(hoje.getMonth())
+  const [ano, setAno] = useState(hoje.getFullYear())
+  const [registros, setRegistros] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false)
 
-  const { data: { user } } = await supabase.auth.getUser()
+  useEffect(() => {
+    fetch('/api/membros/eu')
+      .then(res => res.json())
+      .then(data => {
+        if (data?.nivel_acesso === 'Administrador') setIsAdmin(true)
+      })
+      .catch(() => {})
+  }, [])
 
-  const { data: usuarioLogado } = await supabase
-    .from('membros')
-    .select('nivel_acesso')
-    .eq('user_id', user?.id)
-    .single()
-
-  const isAdmin = usuarioLogado?.nivel_acesso === 'Administrador'
-
-  const { data: registros } = await supabase
-    .from('registros')
-    .select('*, hospitais(nome)')
-    .order('data', { ascending: false })
+  useEffect(() => {
+    setLoading(true)
+    fetch(`/api/registros?mes=${mes + 1}&ano=${ano}`)
+      .then(res => res.json())
+      .then(data => {
+        setRegistros(Array.isArray(data) ? data : [])
+        setLoading(false)
+      })
+      .catch(() => {
+        setRegistros([])
+        setLoading(false)
+      })
+  }, [mes, ano])
 
   const formatarData = (data: string) => {
     return new Date(data + 'T12:00:00').toLocaleDateString('pt-BR')
@@ -40,25 +46,38 @@ export default async function Registros() {
   return (
     <div className="p-4 md:p-6">
 
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
           <h2 className="text-xl font-bold text-gray-800">Registros de Atendimento</h2>
-          <p className="text-sm text-gray-500">{registros?.length} registros cadastrados</p>
+          <p className="text-sm text-gray-500">{registros.length} registros em {meses[mes]} {ano}</p>
         </div>
-        <a href="/dashboard/registros/novo"
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">
-          + Novo Registro
-        </a>
+        <div className="flex gap-2 items-center">
+          <button onClick={() => {
+            if (mes === 0) { setMes(11); setAno(ano - 1) } else setMes(mes - 1)
+          }} className="px-3 py-2 bg-white border rounded-lg text-gray-600 hover:bg-gray-50">←</button>
+          <span className="px-4 py-2 bg-white border rounded-lg font-medium text-gray-700 text-sm">
+            {meses[mes]} {ano}
+          </span>
+          <button onClick={() => {
+            if (mes === 11) { setMes(0); setAno(ano + 1) } else setMes(mes + 1)
+          }} className="px-3 py-2 bg-white border rounded-lg text-gray-600 hover:bg-gray-50">→</button>
+          <a href="/dashboard/registros/novo"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">
+            + Novo Registro
+          </a>
+        </div>
       </div>
 
-      {registros?.length === 0 ? (
+      {loading ? (
+        <div className="text-center py-12 text-gray-500">Carregando...</div>
+      ) : registros.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-2xl shadow">
           <p className="text-4xl mb-3">📋</p>
-          <p className="text-gray-500">Nenhum registro cadastrado ainda</p>
+          <p className="text-gray-500">Nenhum registro em {meses[mes]} {ano}</p>
         </div>
       ) : (
         <div className="space-y-4">
-          {registros?.map(registro => (
+          {registros.map(registro => (
             <div key={registro.id} className="bg-white rounded-2xl shadow p-5">
               <div className="flex flex-col md:flex-row justify-between gap-4">
                 <div className="flex-1">
@@ -78,10 +97,7 @@ export default async function Registros() {
                           className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition">
                           Editar
                         </a>
-                        <BotaoExcluirRegistro
-                          id={registro.id}
-                          hospital={registro.hospitais?.nome || '—'}
-                        />
+                        <BotaoExcluirRegistro id={registro.id} hospital={registro.hospitais?.nome || '—'} />
                       </div>
                     )}
                   </div>
@@ -114,7 +130,6 @@ export default async function Registros() {
           ))}
         </div>
       )}
-
     </div>
   )
 }

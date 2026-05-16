@@ -6,11 +6,24 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
-export async function GET() {
-  const { data, error } = await supabase
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url)
+  const mes = searchParams.get('mes')
+  const ano = searchParams.get('ano')
+
+  let query = supabase
     .from('registros')
     .select('*, hospitais(nome)')
     .order('data', { ascending: false })
+
+  if (mes && ano) {
+    const mesNum = parseInt(mes).toString().padStart(2, '0')
+    const inicio = `${ano}-${mesNum}-01`
+    const fim = `${ano}-${mesNum}-31`
+    query = query.gte('data', inicio).lte('data', fim)
+  }
+
+  const { data, error } = await query
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json(data)
