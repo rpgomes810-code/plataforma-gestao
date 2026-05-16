@@ -29,6 +29,14 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
   const { escala_id, membro_id } = await req.json()
 
+  // Limpa substituto_id no registro do ausente
+  await supabase
+    .from('confirmacoes')
+    .update({ substituto_id: null })
+    .eq('escala_id', escala_id)
+    .eq('substituto_id', membro_id)
+
+  // Apaga a confirmação do membro
   const { error } = await supabase
     .from('confirmacoes')
     .delete()
