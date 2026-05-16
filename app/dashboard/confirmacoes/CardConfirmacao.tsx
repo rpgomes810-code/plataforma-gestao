@@ -42,9 +42,21 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
     })
 
     if (res.ok) {
+      // Atualiza local imediatamente
+      setConfirmacoes((prev: any[]) => {
+        const semMinha = prev.filter((c: any) => c.membro_id !== membroLogado?.id)
+        return [...semMinha, {
+          id: Date.now(),
+          escala_id: escala.id,
+          membro_id: membroLogado?.id,
+          status,
+          membros: { nome: membroLogado?.nome, instrumento: membroLogado?.instrumento, tipo: membroLogado?.tipo }
+        }]
+      })
       setMostraMotivo(false)
       setMotivo('')
-      onAtualizar() // busca dados frescos do banco
+      // Busca dados frescos do banco em segundo plano
+      onAtualizar()
     } else {
       const data = await res.json()
       setErro(data.error || 'Erro ao confirmar')
