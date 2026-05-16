@@ -67,6 +67,7 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
           escala_id: escala.id,
           membro_id: membroLogado?.id,
           status,
+          tipo: 'normal',
           membros: { nome: membroLogado?.nome, instrumento: membroLogado?.instrumento, tipo: membroLogado?.tipo }
         }]
       })
@@ -115,7 +116,6 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
           </div>
         </div>
 
-        {/* Botão Ver Detalhes — só para admin */}
         {isAdmin && (
           <div>
             <button
@@ -189,7 +189,9 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
 
             {statusAtual === 'confirmado' && (
               <div className="flex items-center gap-3">
-                <span className="text-sm text-green-600 font-semibold">✅ Você confirmou presença</span>
+                <span className="text-sm text-green-600 font-semibold">
+                  {minhaConfirmacao?.tipo === 'avulso' ? '✅ Você confirmou presença como avulso' : '✅ Você confirmou presença'}
+                </span>
                 <button onClick={cancelarConfirmacao} disabled={loading} className="text-xs text-gray-400 hover:text-gray-600">
                   {loading ? 'Aguarde...' : 'Cancelar'}
                 </button>
