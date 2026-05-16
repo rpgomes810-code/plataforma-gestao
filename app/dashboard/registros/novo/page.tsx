@@ -25,6 +25,7 @@ function NovoRegistroForm() {
   const [form, setForm] = useState({
     hospital_id: hospital_id_param,
     data: data_param,
+    data_registro: '',
     hora_inicio: '',
     hora_termino: '',
     quem_autorizou: '',
@@ -63,11 +64,16 @@ function NovoRegistroForm() {
     setLoading(true)
 
     const dadosRegistro = {
-      ...form,
-      escala_id: escala_id || null,
+      hospital_id: form.hospital_id,
+      data: form.data,
+      hora_inicio: form.hora_inicio,
+      hora_termino: form.hora_termino,
+      quem_autorizou: form.quem_autorizou,
       hinos_executados: parseInt(form.hinos_executados),
       teve_oracao: form.teve_oracao === 'true',
+      observacoes: form.observacoes,
       membros_presentes: membrosSelecionados.join(', '),
+      escala_id: escala_id || null,
     }
 
     const res = await fetch('/api/registros', {
@@ -111,8 +117,8 @@ function NovoRegistroForm() {
       <div className="bg-white rounded-2xl shadow p-4 md:p-6 w-full">
         <form onSubmit={handleSubmit} className="space-y-5">
 
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-            <div className="md:col-span-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
               <label className={labelClass}>Hospital *</label>
               {hospitalPreenchido ? (
                 <div className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-700">🏥 {hospitalPreenchido.nome}</div>
@@ -123,6 +129,13 @@ function NovoRegistroForm() {
                 </select>
               )}
             </div>
+            <div>
+              <label className={labelClass}>Data do registro *</label>
+              <input name="data_registro" type="date" required value={form.data_registro} onChange={handleChange} className={inputClass} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
               <label className={labelClass}>Data do atendimento *</label>
               {data_param ? (
