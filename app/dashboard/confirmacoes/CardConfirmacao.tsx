@@ -1,15 +1,23 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
 
 export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLogado, totalGrupo, isAdmin }: any) {
-  const router = useRouter()
   const [confirmacoes, setConfirmacoes] = useState(confirmacoesIniciais)
   const [loading, setLoading] = useState(false)
   const [motivo, setMotivo] = useState('')
   const [mostraMotivo, setMostraMotivo] = useState(false)
   const [erro, setErro] = useState('')
+
+  // Busca confirmações frescas do banco ao carregar
+  useEffect(() => {
+    fetch('/api/confirmacoes')
+      .then(r => r.json())
+      .then(todas => {
+        const daEscala = todas.filter((c: any) => c.escala_id === escala.id)
+        if (daEscala.length > 0) setConfirmacoes(daEscala)
+      })
+  }, [escala.id])
 
   const confirmados = confirmacoes.filter((c: any) => c.status === 'confirmado')
   const ausentes = confirmacoes.filter((c: any) => c.status === 'ausente')
@@ -77,7 +85,7 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
             <button
               onClick={async () => {
                 await fetch(`/api/escalas/${escala.id}/confirmacao`, { method: 'PATCH' })
-                router.refresh()
+                window.location.reload()
               }}
               className="text-xs bg-white/20 text-white px-3 py-1 rounded-full hover:bg-white/30 transition"
             >
