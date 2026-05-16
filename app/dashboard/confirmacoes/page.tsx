@@ -7,7 +7,7 @@ export default function Confirmacoes() {
   const [dados, setDados] = useState<any>(null)
 
   const carregar = () => {
-    fetch('/api/confirmacoes/pagina')
+    fetch('/api/confirmacoes/pagina', { cache: 'no-store' })
       .then(r => r.json())
       .then(setDados)
   }
