@@ -18,43 +18,25 @@ export default function Registros() {
   const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
-    fetch('/api/membros/eu')
-      .then(res => res.json())
-      .then(data => {
-        if (data?.nivel_acesso === 'Administrador') setIsAdmin(true)
-      })
-      .catch(() => {})
-
-    fetch('/api/escalas/pendentes')
-      .then(res => res.json())
-      .then(data => setPendentes(Array.isArray(data) ? data : []))
+    fetch('/api/membros/eu').then(res => res.json()).then(data => {
+      if (data?.nivel_acesso === 'Administrador') setIsAdmin(true)
+    }).catch(() => {})
+    fetch('/api/escalas/pendentes').then(res => res.json()).then(data => setPendentes(Array.isArray(data) ? data : []))
   }, [])
 
   useEffect(() => {
     setLoading(true)
-    fetch(`/api/registros?mes=${mes + 1}&ano=${ano}`)
-      .then(res => res.json())
-      .then(data => {
-        setRegistros(Array.isArray(data) ? data : [])
-        setLoading(false)
-      })
-      .catch(() => {
-        setRegistros([])
-        setLoading(false)
-      })
+    fetch(`/api/registros?mes=${mes + 1}&ano=${ano}`).then(res => res.json()).then(data => {
+      setRegistros(Array.isArray(data) ? data : [])
+      setLoading(false)
+    }).catch(() => { setRegistros([]); setLoading(false) })
   }, [mes, ano])
 
-  const formatarData = (data: string) => {
-    return new Date(data + 'T12:00:00').toLocaleDateString('pt-BR')
-  }
+  const formatarData = (data: string) => new Date(data + 'T12:00:00').toLocaleDateString('pt-BR')
 
-  const montarUrlRegistro = (escala: any) => {
-    const params = new URLSearchParams({
-      escala_id: escala.id,
-      hospital_id: escala.hospital_id,
-      data: escala.data,
-    })
-    return `/dashboard/registros/novo?${params.toString()}`
+  const irParaRegistro = (escala: any) => {
+    const params = new URLSearchParams({ escala_id: escala.id, hospital_id: escala.hospital_id, data: escala.data })
+    window.location.href = `/dashboard/registros/novo?${params.toString()}`
   }
 
   return (
@@ -70,12 +52,9 @@ export default function Registros() {
                   <p className="text-sm font-semibold text-gray-800">{escala.grupo} — {escala.hospitais?.nome || escala.local_texto}</p>
                   <p className="text-xs text-gray-500">{formatarData(escala.data)} · {escala.hora_inicio}</p>
                 </div>
-                
-                  href={montarUrlRegistro(escala)}
-                  className="bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-red-700 transition"
-                >
+                <button onClick={() => irParaRegistro(escala)} className="bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-red-700 transition">
                   Registrar
-                </a>
+                </button>
               </div>
             ))}
           </div>
@@ -88,19 +67,10 @@ export default function Registros() {
           <p className="text-sm text-gray-500">{registros.length} registros em {meses[mes]} {ano}</p>
         </div>
         <div className="flex gap-2 items-center">
-          <button onClick={() => {
-            if (mes === 0) { setMes(11); setAno(ano - 1) } else setMes(mes - 1)
-          }} className="px-3 py-2 bg-white border rounded-lg text-gray-600 hover:bg-gray-50">←</button>
-          <span className="px-4 py-2 bg-white border rounded-lg font-medium text-gray-700 text-sm">
-            {meses[mes]} {ano}
-          </span>
-          <button onClick={() => {
-            if (mes === 11) { setMes(0); setAno(ano + 1) } else setMes(mes + 1)
-          }} className="px-3 py-2 bg-white border rounded-lg text-gray-600 hover:bg-gray-50">→</button>
-          <a href="/dashboard/registros/novo"
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">
-            + Novo Registro
-          </a>
+          <button onClick={() => { if (mes === 0) { setMes(11); setAno(ano - 1) } else setMes(mes - 1) }} className="px-3 py-2 bg-white border rounded-lg text-gray-600 hover:bg-gray-50">←</button>
+          <span className="px-4 py-2 bg-white border rounded-lg font-medium text-gray-700 text-sm">{meses[mes]} {ano}</span>
+          <button onClick={() => { if (mes === 11) { setMes(0); setAno(ano + 1) } else setMes(mes + 1) }} className="px-3 py-2 bg-white border rounded-lg text-gray-600 hover:bg-gray-50">→</button>
+          <a href="/dashboard/registros/novo" className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">+ Novo Registro</a>
         </div>
       </div>
 
@@ -119,9 +89,7 @@ export default function Registros() {
                 <div className="flex-1">
                   <div className="flex items-center justify-between gap-3 mb-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white text-lg">
-                        🏥
-                      </div>
+                      <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white text-lg">🏥</div>
                       <div>
                         <p className="font-bold text-gray-800">{registro.hospitais?.nome || '—'}</p>
                         <p className="text-xs text-gray-400">{formatarData(registro.data)} · {registro.hora_inicio} às {registro.hora_termino}</p>
@@ -129,10 +97,7 @@ export default function Registros() {
                     </div>
                     {isAdmin && (
                       <div className="flex items-center gap-2">
-                        <a href={`/dashboard/registros/${registro.id}/editar`}
-                          className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition">
-                          Editar
-                        </a>
+                        <a href={`/dashboard/registros/${registro.id}/editar`} className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition">Editar</a>
                         <BotaoExcluirRegistro id={registro.id} hospital={registro.hospitais?.nome || '—'} />
                       </div>
                     )}
@@ -156,9 +121,7 @@ export default function Registros() {
                     </div>
                   </div>
                   {registro.observacoes && (
-                    <div className="mt-3 text-sm text-gray-500 bg-gray-50 rounded-lg p-2">
-                      💬 {registro.observacoes}
-                    </div>
+                    <div className="mt-3 text-sm text-gray-500 bg-gray-50 rounded-lg p-2">💬 {registro.observacoes}</div>
                   )}
                 </div>
               </div>
