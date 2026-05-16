@@ -24,8 +24,8 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
     })
   }
 
-  const getNomeMembro = (membro_id: string) => {
-    return todosMembros?.find((m: any) => m.id === membro_id)?.nome || '—'
+  const getMembro = (membro_id: string) => {
+    return todosMembros?.find((m: any) => m.id === membro_id)
   }
 
   const cancelarConfirmacao = async () => {
@@ -158,17 +158,23 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
                 {avulsos.length > 0 && (
                   <div className="mt-2">
                     <p className="text-xs font-semibold text-blue-400 uppercase mb-2">🔄 Avulsos</p>
-                    {avulsos.map((c: any) => (
-                      <div key={c.id} className="flex items-center justify-between bg-blue-50 rounded-lg px-3 py-2">
-                        <div>
-                          <p className="text-sm font-medium text-gray-700">{getNomeMembro(c.membro_id)}</p>
-                          <p className="text-xs text-gray-400">Avulso</p>
+                    {avulsos.map((c: any) => {
+                      const membroAvulso = getMembro(c.membro_id)
+                      return (
+                        <div key={c.id} className="flex items-center justify-between bg-blue-50 rounded-lg px-3 py-2">
+                          <div>
+                            <p className="text-sm font-medium text-gray-700">{membroAvulso?.nome || '—'}</p>
+                            <p className="text-xs text-gray-400">{membroAvulso?.grupo || '—'}</p>
+                            {membroAvulso?.telefone && (
+                              <p className="text-xs text-blue-600">📱 {membroAvulso.telefone}</p>
+                            )}
+                          </div>
+                          <span className="text-xs font-semibold px-2 py-1 rounded-full bg-blue-100 text-blue-700">
+                            ✅ Avulso
+                          </span>
                         </div>
-                        <span className="text-xs font-semibold px-2 py-1 rounded-full bg-blue-100 text-blue-700">
-                          ✅ Confirmado
-                        </span>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 )}
               </div>
@@ -180,11 +186,14 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
           <div>
             <p className="text-xs font-semibold text-gray-400 uppercase mb-2">✅ Confirmados ({confirmados.length})</p>
             <div className="flex flex-wrap gap-2">
-              {confirmados.map((c: any) => (
-                <span key={c.id} className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full">
-                  {c.tipo === 'avulso' ? `${getNomeMembro(c.membro_id)} (avulso)` : c.membros?.nome}
-                </span>
-              ))}
+              {confirmados.map((c: any) => {
+                const membroAvulso = c.tipo === 'avulso' ? getMembro(c.membro_id) : null
+                return (
+                  <span key={c.id} className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full">
+                    {c.tipo === 'avulso' ? `${membroAvulso?.nome || '—'} (avulso)` : c.membros?.nome}
+                  </span>
+                )
+              })}
             </div>
           </div>
         )}

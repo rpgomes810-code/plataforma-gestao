@@ -35,23 +35,18 @@ export async function GET() {
   const escalasIds = escalas?.map((e: any) => e.id) || []
 
   let confirmacoes: any[] = []
-  let debugErro = null
   if (escalasIds.length > 0) {
     const { data, error } = await supabaseAdmin
       .from('confirmacoes')
       .select('*')
       .in('escala_id', escalasIds)
-    debugErro = error?.message || null
-    console.log('escalasIds:', escalasIds)
-    console.log('confirmacoes data:', data)
-    console.log('confirmacoes error:', error)
     if (!error && data) confirmacoes = data
   }
 
   const { data: todosMembros } = await supabaseAdmin
     .from('membros')
-    .select('id, nome, grupo, instrumento, tipo, status')
+    .select('id, nome, grupo, instrumento, tipo, status, telefone')
     .eq('status', 'Ativo')
 
-  return NextResponse.json({ membroLogado, escalas, confirmacoes, todosMembros, debugErro })
+  return NextResponse.json({ membroLogado, escalas, confirmacoes, todosMembros })
 }
