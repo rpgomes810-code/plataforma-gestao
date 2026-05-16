@@ -13,7 +13,7 @@ export default function BotaoConfirmar({ escalaid, membroid, confirmacaoAtual }:
   const [motivo, setMotivo] = useState('')
   const [mostraMotivo, setMostraMotivo] = useState(false)
   const [erro, setErro] = useState('')
-  const [statusAtual, setStatusAtual] = useState(confirmacaoAtual) // ← novo
+  const [statusAtual, setStatusAtual] = useState(confirmacaoAtual)
 
   const confirmar = async (status: string) => {
     if (status === 'ausente' && !mostraMotivo) {
@@ -36,7 +36,7 @@ export default function BotaoConfirmar({ escalaid, membroid, confirmacaoAtual }:
     })
 
     if (res.ok) {
-      setStatusAtual(status) // ← atualiza na hora
+      setStatusAtual(status)
       setMostraMotivo(false)
       setMotivo('')
       router.refresh()
