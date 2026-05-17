@@ -8,6 +8,23 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+async function getUsuarioLogado() {
+  try {
+    const cookieStore = await cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { cookies: { getAll() { return cookieStore.getAll() }, setAll() {} } }
+    )
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return 'Desconhecido'
+    const { data } = await supabaseAdmin.from('membros').select('nome').eq('user_id', user.id).single()
+    return data?.nome || 'Desconhecido'
+  } catch {
+    return 'Desconhecido'
+  }
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const mes = searchParams.get('mes')
@@ -30,21 +47,13 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const body = await request.json()
-
-  const cookieStore = await cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: { getAll() { return cookieStore.getAll() }, setAll() {} } }
-  )
-  const { data: { user } } = await supabase.auth.getUser()
-  const { data: membroLogado } = await supabaseAdmin.from('membros').select('nome').eq('user_id', user?.id).single()
+  const usuarioNome = await getUsuarioLogado()
 
   const { data, error } = await supabaseAdmin.from('escalas').insert([body]).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   await supabaseAdmin.from('logs').insert([{
-    usuario_nome: membroLogado?.nome || 'Desconhecido',
+    usuario_nome: usuarioNome,
     acao: `Criou escala: ${body.grupo} — ${body.data}`,
     tabela: 'escalas',
     registro_id: data?.id,
