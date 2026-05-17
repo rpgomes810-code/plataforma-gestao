@@ -17,9 +17,8 @@ export async function GET() {
 
 export async function POST(req: Request) {
   const body = await req.json()
-  const { escala_id, membro_id, status, motivo, tipo } = body
+  const { escala_id, membro_id, status, motivo, tipo, status_anterior } = body
 
-  // Verifica se já existe confirmação
   const { data: existente } = await supabase
     .from('confirmacoes')
     .select('id')
@@ -28,18 +27,21 @@ export async function POST(req: Request) {
     .single()
 
   if (existente) {
-    // Atualiza o registro existente
     const { error } = await supabase
       .from('confirmacoes')
-      .update({ status, motivo: motivo || null, tipo: tipo || 'normal' })
+      .update({
+        status,
+        motivo: motivo || null,
+        tipo: tipo || 'normal',
+        ...(status_anterior !== undefined ? { status_anterior } : {})
+      })
       .eq('id', existente.id)
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   } else {
-    // Insere novo registro
     const { error } = await supabase
       .from('confirmacoes')
-      .insert([{ escala_id, membro_id, status, motivo: motivo || null, tipo: tipo || 'normal' }])
+      .insert([{ escala_id, membro_id, status, motivo: motivo || null, tipo: tipo || 'normal', status_anterior: status_anterior || null }])
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   }
