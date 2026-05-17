@@ -52,14 +52,16 @@ export async function POST(request: NextRequest) {
   const { data, error } = await supabaseAdmin.from('escalas').insert([body]).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  await supabaseAdmin.from('logs').insert([{
+  const { error: logError } = await supabaseAdmin.from('logs').insert([{
     usuario_nome: usuarioNome,
     acao: `Criou escala: ${body.grupo} — ${body.data}`,
     tabela: 'escalas',
-    registro_id: data?.id,
+    registro_id: String(data?.id || ''),
     dados_antes: null,
     dados_depois: body,
   }])
+
+  console.log('Log error:', logError)
 
   return NextResponse.json({ success: true })
 }
