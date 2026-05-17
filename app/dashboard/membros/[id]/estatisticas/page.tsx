@@ -1,0 +1,157 @@
+export const dynamic = 'force-dynamic'
+
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
+
+export default async function EstatisticasMembro({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+
+  const { data: membro } = await supabase.from('membros').select('*').eq('id', id).single()
+
+  const { data: escalas } = await supabase
+    .from('escalas')
+    .select('id, data, grupo, local_texto, registrada')
+    .eq('grupo', membro?.grupo || '')
+
+  const escalasIds = escalas?.map(e => e.id) || []
+
+  const { data: confirmacoes } = escalasIds.length > 0 ? await supabase
+    .from('confirmacoes')
+    .select('*')
+    .in('escala_id', escalasIds)
+    .eq('membro_id', id) : { data: [] }
+
+  const { data: registros } = await supabase
+    .from('registros')
+    .select('*')
+    .eq('escala_id', escalasIds[0] || '')
+
+  // Busca todos os registros das escalas do grupo
+  const { data: todosRegistros } = escalasIds.length > 0 ? await supabase
+    .from('registros')
+    .select('*')
+    .in('escala_id', escalasIds) : { data: [] }
+
+  const totalConvocado = escalas?.length || 0
+  const totalConfirmou = (confirmacoes || []).filter(c => c.status === 'confirmado').length
+  const totalAusente = (confirmacoes || []).filter(c => c.status === 'ausente').length
+  const totalDispensado = (confirmacoes || []).filter(c => c.status === 'dispensado').length
+
+  // Avulso — escalas de outros grupos
+  const { data: confirmacoesAvulso } = await supabase
+    .from('confirmacoes')
+    .select('*, escalas!confirmacoes_escala_id_fkey(grupo, local_texto, data)')
+    .eq('membro_id', id)
+    .eq('tipo', 'avulso')
+
+  const totalAvulso = (confirmacoesAvulso || []).length
+
+  // Presença efetiva — aparece nos registros
+  let totalFoi = 0
+  ;(todosRegistros || []).forEach(r => {
+    const presentes = (r.membros_presentes || '').split(',').map((n: string) => n.trim())
+    if (presentes.includes(membro?.nome)) totalFoi++
+  })
+
+  const formatarData = (data: string) => new Date(data + 'T12:00:00').toLocaleDateString('pt-BR')
+
+  return (
+    <div className="p-4 md:p-6 max-w-4xl">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h2 className="text-xl font-bold text-gray-800">📊 Estatísticas</h2>
+          <p className="text-sm text-gray-500">{membro?.nome} · {membro?.grupo}</p>
+        </div>
+        <a href="/dashboard/membros" className="text-gray-500 hover:text-gray-700 text-sm">← Voltar</a>
+      </div>
+
+      {/* Cards de resumo */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+        <div className="bg-white rounded-2xl shadow p-5 text-center">
+          <p className="text-3xl font-bold text-blue-600">{totalConvocado}</p>
+          <p className="text-sm text-gray-500 mt-1">📅 Convocado</p>
+        </div>
+        <div className="bg-white rounded-2xl shadow p-5 text-center">
+          <p className="text-3xl font-bold text-green-600">{totalConfirmou}</p>
+          <p className="text-sm text-gray-500 mt-1">✅ Confirmou</p>
+        </div>
+        <div className="bg-white rounded-2xl shadow p-5 text-center">
+          <p className="text-3xl font-bold text-emerald-600">{totalFoi}</p>
+          <p className="text-sm text-gray-500 mt-1">🏥 Foi efetivamente</p>
+        </div>
+        <div className="bg-white rounded-2xl shadow p-5 text-center">
+          <p className="text-3xl font-bold text-red-600">{totalAusente}</p>
+          <p className="text-sm text-gray-500 mt-1">❌ Ausente</p>
+        </div>
+        <div className="bg-white rounded-2xl shadow p-5 text-center">
+          <p className="text-3xl font-bold text-gray-500">{totalDispensado}</p>
+          <p className="text-sm text-gray-500 mt-1">🔕 Dispensado</p>
+        </div>
+        <div className="bg-white rounded-2xl shadow p-5 text-center">
+          <p className="text-3xl font-bold text-purple-600">{totalAvulso}</p>
+          <p className="text-sm text-gray-500 mt-1">🔄 Avulso</p>
+        </div>
+      </div>
+
+      {/* Histórico de escalas avulsas */}
+      {totalAvulso > 0 && (
+        <div className="bg-white rounded-2xl shadow p-6 mb-6">
+          <h3 className="text-base font-bold text-gray-800 mb-4">🔄 Participações como avulso</h3>
+          <div className="space-y-2">
+            {(confirmacoesAvulso || []).map((c: any) => (
+              <div key={c.id} className="flex items-center justify-between bg-purple-50 rounded-lg px-4 py-2">
+                <p className="text-sm font-medium text-gray-700">{c.escalas?.grupo} — {c.escalas?.local_texto}</p>
+                <span className="text-xs text-purple-600 font-semibold">{formatarData(c.escalas?.data)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Histórico de escalas */}
+      <div className="bg-white rounded-2xl shadow p-6">
+        <h3 className="text-base font-bold text-gray-800 mb-4">📋 Histórico de escalas</h3>
+        {escalas?.length === 0 ? (
+          <p className="text-sm text-gray-400">Nenhuma escala encontrada</p>
+        ) : (
+          <div className="space-y-2">
+            {escalas?.map(escala => {
+              const confirmacao = (confirmacoes || []).find(c => c.escala_id === escala.id)
+              const registro = (todosRegistros || []).find(r => r.escala_id === escala.id)
+              const foi = registro ? (registro.membros_presentes || '').split(',').map((n: string) => n.trim()).includes(membro?.nome) : null
+              const status = confirmacao?.status || 'pendente'
+
+              return (
+                <div key={escala.id} className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-2">
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">{escala.local_texto}</p>
+                    <p className="text-xs text-gray-400">{formatarData(escala.data)}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                      status === 'confirmado' ? 'bg-green-100 text-green-700' :
+                      status === 'ausente' ? 'bg-red-100 text-red-700' :
+                      status === 'dispensado' ? 'bg-gray-100 text-gray-500' :
+                      'bg-yellow-100 text-yellow-700'
+                    }`}>
+                      {status === 'confirmado' ? '✅' : status === 'ausente' ? '❌' : status === 'dispensado' ? '🔕' : '⏳'}
+                    </span>
+                    {escala.registrada && foi !== null && (
+                      <span className={`text-xs font-semibold px-2 py-1 rounded-full ${foi ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                        {foi ? '🏥 Foi' : '🚫 Não foi'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}

@@ -34,10 +34,10 @@ export default async function Membros() {
     .order('nome', { ascending: true })
 
   const grupos = [...new Set(membros?.map(m => m.grupo).filter(Boolean))].sort((a, b) => {
-  const numA = parseInt(a.replace(/\D/g, '')) || 0
-  const numB = parseInt(b.replace(/\D/g, '')) || 0
-  return numA - numB
-})
+    const numA = parseInt(a.replace(/\D/g, '')) || 0
+    const numB = parseInt(b.replace(/\D/g, '')) || 0
+    return numA - numB
+  })
   const semGrupo = membros?.filter(m => !m.grupo) || []
 
   return (
@@ -85,6 +85,10 @@ export default async function Membros() {
                     }`}>
                       {membro.nivel_acesso || '—'}
                     </span>
+                    <a href={`/dashboard/membros/${membro.id}/estatisticas`}
+                      className="text-xs font-semibold px-3 py-1 rounded-full bg-purple-50 text-purple-600 hover:bg-purple-100 transition">
+                      📊
+                    </a>
                     <a href={`/dashboard/membros/${membro.id}/editar`}
                       className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition">
                       Editar
@@ -120,6 +124,10 @@ export default async function Membros() {
                   <span>📱 {membro.telefone || '—'}</span>
                   <div className="flex items-center gap-2">
                     <span>📍 {membro.cidade || '—'}</span>
+                    <a href={`/dashboard/membros/${membro.id}/estatisticas`}
+                      className="text-xs font-semibold px-3 py-1 rounded-full bg-purple-50 text-purple-600 hover:bg-purple-100 transition">
+                      📊
+                    </a>
                     <a href={`/dashboard/membros/${membro.id}/editar`}
                       className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition">
                       Editar
