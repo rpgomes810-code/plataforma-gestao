@@ -45,7 +45,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     usuario_nome: usuarioNome,
     acao: `Editou escala: ${dadosAntes?.grupo} — ${dadosAntes?.data}`,
     tabela: 'escalas',
-    registro_id: id,
+    registro_id: String(id),
     dados_antes: dadosAntes,
     dados_depois: body,
   }])
@@ -65,7 +65,7 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ id: str
     usuario_nome: usuarioNome,
     acao: `Excluiu escala: ${dadosAntes?.grupo} — ${dadosAntes?.data}`,
     tabela: 'escalas',
-    registro_id: id,
+    registro_id: String(id),
     dados_antes: dadosAntes,
     dados_depois: { excluido: true },
   }])
