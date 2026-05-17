@@ -15,27 +15,16 @@ function getPeriodo(periodo: string) {
   let inicio = new Date(hoje)
 
   switch (periodo) {
-    case 'mes_atual':
-      inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1)
-      break
+    case 'mes_atual': inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1); break
     case 'mes_anterior':
       inicio = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1)
       fim.setTime(new Date(hoje.getFullYear(), hoje.getMonth(), 0).getTime())
       break
-    case 'bimestre':
-      inicio.setMonth(hoje.getMonth() - 2)
-      break
-    case 'trimestre':
-      inicio.setMonth(hoje.getMonth() - 3)
-      break
-    case 'semestre':
-      inicio.setMonth(hoje.getMonth() - 6)
-      break
-    case 'ano':
-      inicio.setFullYear(hoje.getFullYear() - 1)
-      break
-    default:
-      inicio = new Date(0)
+    case 'bimestre': inicio.setMonth(hoje.getMonth() - 2); break
+    case 'trimestre': inicio.setMonth(hoje.getMonth() - 3); break
+    case 'semestre': inicio.setMonth(hoje.getMonth() - 6); break
+    case 'ano': inicio.setFullYear(hoje.getFullYear() - 1); break
+    default: inicio = new Date(0)
   }
 
   return {
@@ -70,7 +59,64 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
   const { data: membros } = await supabase
     .from('membros')
     .select('*')
-    .order('criado_em', { ascending: false })
+    .order('nome', { ascending: true })
+
+  const { data: escalas } = await supabase
+    .from('escalas')
+    .select('id, data, grupo, local_texto, hospital_id, registrada')
+    .gte('data', dataInicio)
+    .lte('data', dataFim)
+
+  const escalasIds = escalas?.map(e => e.id) || []
+
+  const { data: confirmacoes } = escalasIds.length > 0 ? await supabase
+    .from('confirmacoes')
+    .select('*, membros!confirmacoes_membro_id_fkey(nome, grupo)')
+    .in('escala_id', escalasIds) : { data: [] }
+
+  // Cruzamento das 3 situações
+  type SituacaoMembro = {
+    nome: string
+    grupo: string
+    escala: string
+    data: string
+    convocado: boolean
+    confirmou: boolean
+    foi: boolean
+    dispensado: boolean
+  }
+
+  const situacoes: SituacaoMembro[] = []
+
+  escalas?.filter(e => e.registrada).forEach(escala => {
+    const registro = registros?.find(r => r.escala_id === escala.id)
+    if (!registro) return
+
+    const membrosDoGrupo = membros?.filter(m => m.grupo === escala.grupo) || []
+    const membrosPresentes = (registro.membros_presentes || '').split(',').map((n: string) => n.trim()).filter(Boolean)
+
+    membrosDoGrupo.forEach(membro => {
+      const confirmacao = confirmacoes?.find((c: any) => c.membro_id === membro.id && c.escala_id === escala.id)
+      const confirmou = confirmacao?.status === 'confirmado'
+      const dispensado = confirmacao?.status === 'dispensado'
+      const foi = membrosPresentes.includes(membro.nome)
+
+      situacoes.push({
+        nome: membro.nome,
+        grupo: membro.grupo || '—',
+        escala: `${escala.grupo} — ${escala.local_texto}`,
+        data: escala.data,
+        convocado: true,
+        confirmou,
+        foi,
+        dispensado,
+      })
+    })
+  })
+
+  const confirmouMasNaoFoi = situacoes.filter(s => s.confirmou && !s.foi && !s.dispensado)
+  const naoConfirmouMasFoi = situacoes.filter(s => !s.confirmou && s.foi && !s.dispensado)
+  const faltou = situacoes.filter(s => !s.confirmou && !s.foi && !s.dispensado)
 
   const totalRegistros = registros?.length || 0
   const totalMembros = membros?.length || 0
@@ -126,6 +172,8 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
     personalizado: 'Período personalizado',
   }
 
+  const formatarData = (data: string) => new Date(data + 'T12:00:00').toLocaleDateString('pt-BR')
+
   return (
     <div className="p-4 md:p-6">
 
@@ -156,6 +204,66 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
         </div>
       </div>
 
+      {/* Confirmou mas não foi */}
+      <div className="bg-white rounded-2xl shadow p-6 mb-6">
+        <h3 className="text-base font-bold text-gray-800 mb-4">⚠️ Confirmou presença mas não foi ({confirmouMasNaoFoi.length})</h3>
+        {confirmouMasNaoFoi.length === 0 ? (
+          <p className="text-sm text-gray-400">Nenhuma ocorrência no período ✅</p>
+        ) : (
+          <div className="space-y-2">
+            {confirmouMasNaoFoi.map((item, i) => (
+              <div key={i} className="flex items-center justify-between bg-orange-50 rounded-lg px-4 py-3">
+                <div>
+                  <p className="text-sm font-semibold text-gray-800">{item.nome}</p>
+                  <p className="text-xs text-gray-500">{item.grupo} · {item.escala}</p>
+                </div>
+                <span className="text-xs text-orange-600 font-semibold">{formatarData(item.data)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Não confirmou mas foi */}
+      <div className="bg-white rounded-2xl shadow p-6 mb-6">
+        <h3 className="text-base font-bold text-gray-800 mb-4">🔵 Não confirmou mas foi ({naoConfirmouMasFoi.length})</h3>
+        {naoConfirmouMasFoi.length === 0 ? (
+          <p className="text-sm text-gray-400">Nenhuma ocorrência no período ✅</p>
+        ) : (
+          <div className="space-y-2">
+            {naoConfirmouMasFoi.map((item, i) => (
+              <div key={i} className="flex items-center justify-between bg-blue-50 rounded-lg px-4 py-3">
+                <div>
+                  <p className="text-sm font-semibold text-gray-800">{item.nome}</p>
+                  <p className="text-xs text-gray-500">{item.grupo} · {item.escala}</p>
+                </div>
+                <span className="text-xs text-blue-600 font-semibold">{formatarData(item.data)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Faltou sem justificativa */}
+      <div className="bg-white rounded-2xl shadow p-6 mb-6">
+        <h3 className="text-base font-bold text-gray-800 mb-4">❌ Não confirmou e não foi ({faltou.length})</h3>
+        {faltou.length === 0 ? (
+          <p className="text-sm text-gray-400">Nenhuma ocorrência no período ✅</p>
+        ) : (
+          <div className="space-y-2">
+            {faltou.map((item, i) => (
+              <div key={i} className="flex items-center justify-between bg-red-50 rounded-lg px-4 py-3">
+                <div>
+                  <p className="text-sm font-semibold text-gray-800">{item.nome}</p>
+                  <p className="text-xs text-gray-500">{item.grupo} · {item.escala}</p>
+                </div>
+                <span className="text-xs text-red-600 font-semibold">{formatarData(item.data)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div className="bg-white rounded-2xl shadow p-6">
           <h3 className="text-base font-bold text-gray-800 mb-4">🏥 Atendimentos por hospital</h3>
@@ -170,8 +278,7 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
                     <span className="text-gray-500">{total} atendimento{total > 1 ? 's' : ''}</span>
                   </div>
                   <div className="w-full bg-gray-100 rounded-full h-2">
-                    <div className="bg-blue-600 h-2 rounded-full"
-                      style={{ width: `${(total / (hospitalOrdenado[0][1] || 1)) * 100}%` }} />
+                    <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${(total / (hospitalOrdenado[0][1] || 1)) * 100}%` }} />
                   </div>
                 </div>
               ))}
@@ -206,8 +313,7 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
                     <span className="text-gray-500">{total}x</span>
                   </div>
                   <div className="w-full bg-gray-100 rounded-full h-2">
-                    <div className="bg-green-500 h-2 rounded-full"
-                      style={{ width: `${(total / maxPresenca) * 100}%` }} />
+                    <div className="bg-green-500 h-2 rounded-full" style={{ width: `${(total / maxPresenca) * 100}%` }} />
                   </div>
                 </div>
               ))}
@@ -228,8 +334,7 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
                     <span className="text-gray-500">{total}x</span>
                   </div>
                   <div className="w-full bg-gray-100 rounded-full h-2">
-                    <div className="bg-yellow-400 h-2 rounded-full"
-                      style={{ width: `${(total / maxPresenca) * 100}%` }} />
+                    <div className="bg-yellow-400 h-2 rounded-full" style={{ width: `${(total / maxPresenca) * 100}%` }} />
                   </div>
                 </div>
               ))}
@@ -260,9 +365,7 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
               {novosNoPeriodo.map(m => (
                 <div key={m.id} className="flex justify-between items-center text-sm">
                   <span className="font-medium text-gray-700">{m.nome}</span>
-                  <span className="text-gray-400 text-xs">
-                    {m.criado_em ? new Date(m.criado_em).toLocaleDateString('pt-BR') : '—'}
-                  </span>
+                  <span className="text-gray-400 text-xs">{m.criado_em ? new Date(m.criado_em).toLocaleDateString('pt-BR') : '—'}</span>
                 </div>
               ))}
             </div>
