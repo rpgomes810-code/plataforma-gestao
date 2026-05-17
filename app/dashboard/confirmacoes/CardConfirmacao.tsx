@@ -164,8 +164,7 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
       <div className="p-6 space-y-4">
         <div>
           <div className="flex justify-between text-sm mb-2">
-            <span className="font-medium text-gray-700">Confirmações</span>
-            <span className="text-gray-500">{confirmados.length} de {totalGrupo} confirmados</span>
+                     <span className="text-gray-500">{confirmados.length} de {totalGrupo} confirmados</span>
           </div>
           <div className="w-full bg-gray-100 rounded-full h-2.5">
             <div className="bg-green-500 h-2.5 rounded-full transition-all"
@@ -302,7 +301,7 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
 
         {euSouDoGrupo && (
           <div className="border-t pt-4">
-            <p className="text-sm font-medium text-gray-700 mb-3">Sua confirmação:</p>
+            <p className="text-sm font-medium text-gray-700 mb-3">Podemos contar com você?</p>
             {erro && <p className="text-xs text-red-500 mb-2">{erro}</p>}
 
             {statusAtual === 'confirmado' && (
