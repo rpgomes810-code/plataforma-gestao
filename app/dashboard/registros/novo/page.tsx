@@ -66,6 +66,7 @@ function NovoRegistroForm() {
     const dadosRegistro = {
       hospital_id: form.hospital_id,
       data: form.data,
+      data_registro: form.data_registro,
       hora_inicio: form.hora_inicio,
       hora_termino: form.hora_termino,
       quem_autorizou: form.quem_autorizou,
@@ -117,6 +118,7 @@ function NovoRegistroForm() {
       <div className="bg-white rounded-2xl shadow p-4 md:p-6 w-full">
         <form onSubmit={handleSubmit} className="space-y-5">
 
+          {/* Linha 1: Hospital + Data do atendimento */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label className={labelClass}>Hospital *</label>
@@ -130,13 +132,6 @@ function NovoRegistroForm() {
               )}
             </div>
             <div>
-              <label className={labelClass}>Data do registro *</label>
-              <input name="data_registro" type="date" required value={form.data_registro} onChange={handleChange} className={inputClass} />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div>
               <label className={labelClass}>Data do atendimento *</label>
               {data_param ? (
                 <div className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-700">
@@ -145,6 +140,14 @@ function NovoRegistroForm() {
               ) : (
                 <input name="data" type="date" required value={form.data} onChange={handleChange} className={inputClass} />
               )}
+            </div>
+          </div>
+
+          {/* Linha 2: Data do registro + Hora início + Hora término */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label className={labelClass}>Data do registro *</label>
+              <input name="data_registro" type="date" required value={form.data_registro} onChange={handleChange} className={inputClass} />
             </div>
             <div>
               <label className={labelClass}>Hora início *</label>
