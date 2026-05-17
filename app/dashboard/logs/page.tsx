@@ -7,8 +7,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
-
-const CAMPOS_IGNORAR = ['id', 'user_id', 'aprovado', 'criado_em', 'escala_id', 'criado_por', 'data_registro', 'ativo', 'logo_url']
+const CAMPOS_IGNORAR = ['id', 'user_id', 'aprovado', 'criado_em', 'escala_id', 'criado_por', 'data_registro', 'ativo', 'logo_url', 'created_at', 'registrada', 'confirmacao_aberta', 'hospital_id']
 
 function DiffView({ antes, depois }: { antes: any, depois: any }) {
   if (!antes || !depois) return null
