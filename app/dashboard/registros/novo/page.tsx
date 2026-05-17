@@ -25,7 +25,7 @@ function NovoRegistroForm() {
   const [form, setForm] = useState({
     hospital_id: hospital_id_param,
     data: data_param,
-    data_registro: '',
+    data_registro: new Date().toISOString().split('T')[0],
     hora_inicio: '',
     hora_termino: '',
     quem_autorizou: '',
@@ -118,7 +118,6 @@ function NovoRegistroForm() {
       <div className="bg-white rounded-2xl shadow p-4 md:p-6 w-full">
         <form onSubmit={handleSubmit} className="space-y-5">
 
-          {/* Linha 1: Hospital + Data do atendimento */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label className={labelClass}>Hospital *</label>
@@ -143,11 +142,12 @@ function NovoRegistroForm() {
             </div>
           </div>
 
-          {/* Linha 2: Data do registro + Hora início + Hora término */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
               <label className={labelClass}>Data do registro *</label>
-              <input name="data_registro" type="date" required value={form.data_registro} onChange={handleChange} className={inputClass} />
+              <div className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-700">
+                📋 {new Date().toLocaleDateString('pt-BR')}
+              </div>
             </div>
             <div>
               <label className={labelClass}>Hora início *</label>
