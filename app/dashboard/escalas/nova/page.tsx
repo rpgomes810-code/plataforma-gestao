@@ -9,12 +9,14 @@ const labelClass = "block text-sm font-medium text-gray-700 mb-1"
 
 type Hospital = { id: string; nome: string }
 type Grupo = { id: string; nome: string }
+type Membro = { id: string; nome: string }
 
 export default function NovaEscala() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [hospitais, setHospitais] = useState<Hospital[]>([])
   const [grupos, setGrupos] = useState<Grupo[]>([])
+  const [atendentes, setAtendentes] = useState<Membro[]>([])
   const [form, setForm] = useState({
     data: '',
     grupo: '',
@@ -30,15 +32,14 @@ export default function NovaEscala() {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
-    supabase
-      .from('hospitais')
-      .select('id, nome')
-      .order('nome', { ascending: true })
+
+    supabase.from('hospitais').select('id, nome').order('nome', { ascending: true })
       .then(({ data }) => setHospitais(data || []))
 
-    fetch('/api/grupos')
-      .then(res => res.json())
-      .then(data => { if (Array.isArray(data)) setGrupos(data) })
+    supabase.from('membros').select('id, nome').eq('tipo', 'Atendente').eq('status', 'Ativo').order('nome', { ascending: true })
+      .then(({ data }) => setAtendentes(data || []))
+
+    fetch('/api/grupos').then(res => res.json()).then(data => { if (Array.isArray(data)) setGrupos(data) })
   }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -71,7 +72,6 @@ export default function NovaEscala() {
 
   return (
     <div className="p-4 md:p-6">
-
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-xl font-bold text-gray-800">Nova Escala</h2>
@@ -92,9 +92,7 @@ export default function NovaEscala() {
               <label className={labelClass}>Grupo *</label>
               <select name="grupo" required value={form.grupo} onChange={handleChange} className={inputClass}>
                 <option value="">Selecione o grupo...</option>
-                {grupos.map(g => (
-                  <option key={g.id} value={g.nome}>{g.nome}</option>
-                ))}
+                {grupos.map(g => (<option key={g.id} value={g.nome}>{g.nome}</option>))}
               </select>
             </div>
             <div>
@@ -108,9 +106,7 @@ export default function NovaEscala() {
               <label className={labelClass}>Hospital</label>
               <select name="hospital_id" value={form.hospital_id} onChange={handleChange} className={inputClass}>
                 <option value="">Selecione um hospital...</option>
-                {hospitais.map(h => (
-                  <option key={h.id} value={h.id}>{h.nome}</option>
-                ))}
+                {hospitais.map(h => (<option key={h.id} value={h.id}>{h.nome}</option>))}
               </select>
             </div>
             <div>
@@ -121,7 +117,10 @@ export default function NovaEscala() {
 
           <div>
             <label className={labelClass}>Atendente(s) *</label>
-            <input name="atendentes" type="text" required placeholder="Ex: Renê / Gilberto" value={form.atendentes} onChange={handleChange} className={inputClass}/>
+            <select name="atendentes" required value={form.atendentes} onChange={handleChange} className={inputClass}>
+              <option value="">Selecione o atendente...</option>
+              {atendentes.map(a => (<option key={a.id} value={a.nome}>{a.nome}</option>))}
+            </select>
           </div>
 
           <div>
