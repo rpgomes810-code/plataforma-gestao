@@ -1,15 +1,17 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
+import { createServerClient } from '@supabase/ssr'
 
-const supabase = createClient(
+const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('hospitais')
     .select('*')
     .eq('id', id)
@@ -23,23 +25,57 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   const { id } = await params
   const body = await req.json()
 
-  const { error } = await supabase
-    .from('hospitais')
-    .update(body)
-    .eq('id', id)
+  const cookieStore = await cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll() { return cookieStore.getAll() }, setAll() {} } }
+  )
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: membroLogado } = await supabaseAdmin.from('membros').select('nome').eq('user_id', user?.id).single()
 
+  const { data: dadosAntes } = await supabaseAdmin.from('hospitais').select('*').eq('id', id).single()
+
+  const { error } = await supabaseAdmin.from('hospitais').update(body).eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  await supabaseAdmin.from('logs').insert([{
+    usuario_nome: membroLogado?.nome || 'Desconhecido',
+    acao: `Editou hospital: ${dadosAntes?.nome || id}`,
+    tabela: 'hospitais',
+    registro_id: id,
+    dados_antes: dadosAntes,
+    dados_depois: body,
+  }])
+
   return NextResponse.json({ ok: true })
 }
 
 export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
-  const { error } = await supabase
-    .from('hospitais')
-    .delete()
-    .eq('id', id)
+  const cookieStore = await cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll() { return cookieStore.getAll() }, setAll() {} } }
+  )
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: membroLogado } = await supabaseAdmin.from('membros').select('nome').eq('user_id', user?.id).single()
 
+  const { data: dadosAntes } = await supabaseAdmin.from('hospitais').select('*').eq('id', id).single()
+
+  const { error } = await supabaseAdmin.from('hospitais').delete().eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  await supabaseAdmin.from('logs').insert([{
+    usuario_nome: membroLogado?.nome || 'Desconhecido',
+    acao: `Excluiu hospital: ${dadosAntes?.nome || id}`,
+    tabela: 'hospitais',
+    registro_id: id,
+    dados_antes: dadosAntes,
+    dados_depois: { excluido: true },
+  }])
+
   return NextResponse.json({ ok: true })
 }
