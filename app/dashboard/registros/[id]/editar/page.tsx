@@ -7,7 +7,7 @@ const inputClass = "w-full border border-gray-300 rounded-lg px-3 py-2 focus:out
 const labelClass = "block text-sm font-medium text-gray-700 mb-1"
 
 type Hospital = { id: string; nome: string }
-type Membro = { id: string; nome: string }
+type Membro = { id: string; nome: string; grupo: string }
 
 export default function EditarRegistro() {
   const router = useRouter()
@@ -16,6 +16,7 @@ export default function EditarRegistro() {
   const [loadingData, setLoadingData] = useState(true)
   const [hospitais, setHospitais] = useState<Hospital[]>([])
   const [membros, setMembros] = useState<Membro[]>([])
+  const [grupos, setGrupos] = useState<string[]>([])
   const [busca, setBusca] = useState('')
   const [membrosSelecionados, setMembrosSelecionados] = useState<string[]>([])
   const [dadosOriginais, setDadosOriginais] = useState<any>(null)
@@ -32,37 +33,36 @@ export default function EditarRegistro() {
   })
 
   useEffect(() => {
-    fetch('/api/hospitais')
-      .then(res => res.json())
-      .then(data => { if (Array.isArray(data)) setHospitais(data) })
-
-    fetch('/api/membros')
-      .then(res => res.json())
-      .then(data => { if (Array.isArray(data)) setMembros(data) })
-
-    fetch('/api/membros/eu')
-      .then(res => res.json())
-      .then(data => { if (data?.nome) setUsuarioNome(data.nome) })
-
-    fetch(`/api/registros/${params.id}`)
-      .then(res => res.json())
-      .then(data => {
-        setDadosOriginais(data)
-        setForm({
-          hospital_id:      data.hospital_id || '',
-          data:             data.data || '',
-          hora_inicio:      data.hora_inicio || '',
-          hora_termino:     data.hora_termino || '',
-          quem_autorizou:   data.quem_autorizou || '',
-          hinos_executados: String(data.hinos_executados ?? '0'),
-          teve_oracao:      data.teve_oracao ? 'true' : 'false',
-          observacoes:      data.observacoes || '',
-        })
-        if (data.membros_presentes) {
-          setMembrosSelecionados(data.membros_presentes.split(', ').filter(Boolean))
-        }
-        setLoadingData(false)
+    fetch('/api/hospitais').then(res => res.json()).then(data => { if (Array.isArray(data)) setHospitais(data) })
+    fetch('/api/membros').then(res => res.json()).then(data => {
+      if (Array.isArray(data)) {
+        setMembros(data)
+        const gs = [...new Set(data.map((m: Membro) => m.grupo).filter(Boolean))].sort((a: string, b: string) => {
+          const numA = parseInt(a.replace(/\D/g, '')) || 0
+          const numB = parseInt(b.replace(/\D/g, '')) || 0
+          return numA - numB
+        }) as string[]
+        setGrupos(gs)
+      }
+    })
+    fetch('/api/membros/eu').then(res => res.json()).then(data => { if (data?.nome) setUsuarioNome(data.nome) })
+    fetch(`/api/registros/${params.id}`).then(res => res.json()).then(data => {
+      setDadosOriginais(data)
+      setForm({
+        hospital_id: data.hospital_id || '',
+        data: data.data || '',
+        hora_inicio: data.hora_inicio || '',
+        hora_termino: data.hora_termino || '',
+        quem_autorizou: data.quem_autorizou || '',
+        hinos_executados: String(data.hinos_executados ?? '0'),
+        teve_oracao: data.teve_oracao ? 'true' : 'false',
+        observacoes: data.observacoes || '',
       })
+      if (data.membros_presentes) {
+        setMembrosSelecionados(data.membros_presentes.split(', ').filter(Boolean))
+      }
+      setLoadingData(false)
+    })
   }, [params.id])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -70,9 +70,14 @@ export default function EditarRegistro() {
   }
 
   const adicionarMembro = (nome: string) => {
-    if (!membrosSelecionados.includes(nome)) {
-      setMembrosSelecionados(prev => [...prev, nome])
-    }
+    if (!membrosSelecionados.includes(nome)) setMembrosSelecionados(prev => [...prev, nome])
+    setBusca('')
+  }
+
+  const adicionarGrupo = (grupo: string) => {
+    const membrosDoGrupo = membros.filter(m => m.grupo === grupo).map(m => m.nome)
+    const novos = membrosDoGrupo.filter(n => !membrosSelecionados.includes(n))
+    setMembrosSelecionados(prev => [...prev, ...novos])
     setBusca('')
   }
 
@@ -80,6 +85,7 @@ export default function EditarRegistro() {
     setMembrosSelecionados(prev => prev.filter(n => n !== nome))
   }
 
+  const gruposFiltrados = grupos.filter(g => busca.length > 0 && g.toLowerCase().includes(busca.toLowerCase()))
   const membrosFiltrados = membros.filter(m =>
     busca.length > 0 &&
     m.nome.toLowerCase().includes(busca.toLowerCase()) &&
@@ -105,7 +111,6 @@ export default function EditarRegistro() {
 
     if (res.ok) {
       const hospitalNome = hospitais.find(h => h.id === form.hospital_id)?.nome || form.hospital_id
-
       await fetch('/api/logs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -118,7 +123,6 @@ export default function EditarRegistro() {
           dados_depois: dadosParaEnviar,
         }),
       })
-
       router.push('/dashboard/registros')
     } else {
       alert('Erro ao atualizar registro')
@@ -146,9 +150,7 @@ export default function EditarRegistro() {
               <label className={labelClass}>Hospital *</label>
               <select name="hospital_id" required value={form.hospital_id} onChange={handleChange} className={inputClass}>
                 <option value="">Selecione...</option>
-                {hospitais.map(h => (
-                  <option key={h.id} value={h.id}>{h.nome}</option>
-                ))}
+                {hospitais.map(h => <option key={h.id} value={h.id}>{h.nome}</option>)}
               </select>
             </div>
             <div>
@@ -167,13 +169,13 @@ export default function EditarRegistro() {
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             <div className="md:col-span-2">
-  <label className={labelClass}>Quem autorizou a entrada *</label>
-  <input name="quem_autorizou" type="text" required value={form.quem_autorizou} onChange={handleChange} className={inputClass} placeholder="Nome do responsável" />
-</div>
-<div>
-  <label className={labelClass}>Hinos executados *</label>
-  <input name="hinos_executados" type="number" required min="1" value={form.hinos_executados} onChange={handleChange} className={inputClass} />
-</div>
+              <label className={labelClass}>Quem autorizou a entrada *</label>
+              <input name="quem_autorizou" type="text" required value={form.quem_autorizou} onChange={handleChange} className={inputClass} placeholder="Nome do responsável" />
+            </div>
+            <div>
+              <label className={labelClass}>Hinos executados *</label>
+              <input name="hinos_executados" type="number" required min="1" value={form.hinos_executados} onChange={handleChange} className={inputClass} />
+            </div>
             <div>
               <label className={labelClass}>Houve oração?</label>
               <select name="teve_oracao" value={form.teve_oracao} onChange={handleChange} className={inputClass}>
@@ -193,18 +195,18 @@ export default function EditarRegistro() {
                 value={busca}
                 onChange={e => setBusca(e.target.value)}
                 className={inputClass}
-                placeholder="Digite o nome para buscar e adicionar..."
+                placeholder="Digite o nome do membro ou o grupo (ex: Grupo 1)..."
               />
-              {membrosFiltrados.length > 0 && (
+              {(gruposFiltrados.length > 0 || membrosFiltrados.length > 0) && (
                 <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto">
+                  {gruposFiltrados.map(g => (
+                    <button key={g} type="button" onClick={() => adicionarGrupo(g)} className="w-full text-left px-4 py-2.5 text-sm text-blue-700 hover:bg-blue-50 transition font-semibold">
+                      🎻 Adicionar todos do {g}
+                    </button>
+                  ))}
                   {membrosFiltrados.map(m => (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => adicionarMembro(m.nome)}
-                      className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition"
-                    >
-                      {m.nome}
+                    <button key={m.id} type="button" onClick={() => adicionarMembro(m.nome)} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition">
+                      {m.nome} <span className="text-xs text-gray-400">({m.grupo})</span>
                     </button>
                   ))}
                 </div>
@@ -232,12 +234,10 @@ export default function EditarRegistro() {
           </div>
 
           <div className="flex flex-col md:flex-row gap-3 pt-1">
-            <button type="submit" disabled={loading}
-              className="w-full md:w-auto bg-blue-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 text-sm">
+            <button type="submit" disabled={loading} className="w-full md:w-auto bg-blue-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 text-sm">
               {loading ? 'Salvando...' : 'Salvar Alterações'}
             </button>
-            <a href="/dashboard/registros"
-              className="w-full md:w-auto text-center bg-gray-100 text-gray-700 px-6 py-2.5 rounded-lg font-semibold hover:bg-gray-200 transition text-sm">
+            <a href="/dashboard/registros" className="w-full md:w-auto text-center bg-gray-100 text-gray-700 px-6 py-2.5 rounded-lg font-semibold hover:bg-gray-200 transition text-sm">
               Cancelar
             </a>
           </div>

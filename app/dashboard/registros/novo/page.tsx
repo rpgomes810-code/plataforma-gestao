@@ -7,7 +7,7 @@ const inputClass = "w-full border border-gray-300 rounded-lg px-3 py-2 focus:out
 const labelClass = "block text-sm font-medium text-gray-700 mb-1"
 
 type Hospital = { id: string; nome: string }
-type Membro = { id: string; nome: string }
+type Membro = { id: string; nome: string; grupo: string }
 
 function NovoRegistroForm() {
   const router = useRouter()
@@ -19,6 +19,7 @@ function NovoRegistroForm() {
   const [loading, setLoading] = useState(false)
   const [hospitais, setHospitais] = useState<Hospital[]>([])
   const [membros, setMembros] = useState<Membro[]>([])
+  const [grupos, setGrupos] = useState<string[]>([])
   const [busca, setBusca] = useState('')
   const [membrosSelecionados, setMembrosSelecionados] = useState<string[]>([])
   const [usuarioNome, setUsuarioNome] = useState('Atendente')
@@ -36,7 +37,17 @@ function NovoRegistroForm() {
 
   useEffect(() => {
     fetch('/api/hospitais').then(res => res.json()).then(data => { if (Array.isArray(data)) setHospitais(data) })
-    fetch('/api/membros').then(res => res.json()).then(data => { if (Array.isArray(data)) setMembros(data) })
+    fetch('/api/membros').then(res => res.json()).then(data => {
+      if (Array.isArray(data)) {
+        setMembros(data)
+        const gs = [...new Set(data.map((m: Membro) => m.grupo).filter(Boolean))].sort((a: string, b: string) => {
+          const numA = parseInt(a.replace(/\D/g, '')) || 0
+          const numB = parseInt(b.replace(/\D/g, '')) || 0
+          return numA - numB
+        }) as string[]
+        setGrupos(gs)
+      }
+    })
     fetch('/api/membros/eu').then(res => res.json()).then(data => { if (data?.nome) setUsuarioNome(data.nome) })
   }, [])
 
@@ -49,10 +60,18 @@ function NovoRegistroForm() {
     setBusca('')
   }
 
+  const adicionarGrupo = (grupo: string) => {
+    const membrosDoGrupo = membros.filter(m => m.grupo === grupo).map(m => m.nome)
+    const novos = membrosDoGrupo.filter(n => !membrosSelecionados.includes(n))
+    setMembrosSelecionados(prev => [...prev, ...novos])
+    setBusca('')
+  }
+
   const removerMembro = (nome: string) => {
     setMembrosSelecionados(prev => prev.filter(n => n !== nome))
   }
 
+  const gruposFiltrados = grupos.filter(g => busca.length > 0 && g.toLowerCase().includes(busca.toLowerCase()))
   const membrosFiltrados = membros.filter(m =>
     busca.length > 0 &&
     m.nome.toLowerCase().includes(busca.toLowerCase()) &&
@@ -144,7 +163,7 @@ function NovoRegistroForm() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
-              <label className={labelClass}>Data do registro *</label>
+              <label className={labelClass}>Data do registro</label>
               <div className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-700">
                 📋 {new Date().toLocaleDateString('pt-BR')}
               </div>
@@ -182,12 +201,23 @@ function NovoRegistroForm() {
           <div>
             <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-2">Membros presentes</h3>
             <div className="relative mb-2">
-              <input type="text" value={busca} onChange={e => setBusca(e.target.value)} className={inputClass} placeholder="Digite o nome para buscar e adicionar..." />
-              {membrosFiltrados.length > 0 && (
+              <input
+                type="text"
+                value={busca}
+                onChange={e => setBusca(e.target.value)}
+                className={inputClass}
+                placeholder="Digite o nome do membro ou o grupo (ex: Grupo 1)..."
+              />
+              {(gruposFiltrados.length > 0 || membrosFiltrados.length > 0) && (
                 <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto">
+                  {gruposFiltrados.map(g => (
+                    <button key={g} type="button" onClick={() => adicionarGrupo(g)} className="w-full text-left px-4 py-2.5 text-sm text-blue-700 hover:bg-blue-50 transition font-semibold">
+                      🎻 Adicionar todos do {g}
+                    </button>
+                  ))}
                   {membrosFiltrados.map(m => (
                     <button key={m.id} type="button" onClick={() => adicionarMembro(m.nome)} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition">
-                      {m.nome}
+                      {m.nome} <span className="text-xs text-gray-400">({m.grupo})</span>
                     </button>
                   ))}
                 </div>
