@@ -32,13 +32,7 @@ function getPeriodo(periodo: string) {
   }
 }
 
-export default async function EstatisticasMembro({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ id: string }>
-  searchParams: Promise<{ periodo?: string, inicio?: string, fim?: string }>
-}) {
+export default async function EstatisticasMembro({ params, searchParams }: { params: Promise<{ id: string }>, searchParams: Promise<{ periodo?: string }> }) {
   const { id } = await params
   const sp = await searchParams
   const periodo = sp.periodo || 'todos'
@@ -46,10 +40,7 @@ export default async function EstatisticasMembro({
   let dataInicio: string
   let dataFim: string
 
-  if (periodo === 'personalizado' && sp.inicio && sp.fim) {
-    dataInicio = sp.inicio
-    dataFim = sp.fim
-  } else if (periodo === 'todos') {
+  if (periodo === 'todos') {
     dataInicio = '2000-01-01'
     dataFim = '2099-12-31'
   } else {
@@ -71,15 +62,10 @@ export default async function EstatisticasMembro({
   const escalasIds = (escalas || []).map(e => e.id)
 
   const { data: confirmacoes } = escalasIds.length > 0 ? await supabase
-    .from('confirmacoes')
-    .select('*')
-    .in('escala_id', escalasIds)
-    .eq('membro_id', id) : { data: [] }
+    .from('confirmacoes').select('*').in('escala_id', escalasIds).eq('membro_id', id) : { data: [] }
 
   const { data: todosRegistros } = escalasIds.length > 0 ? await supabase
-    .from('registros')
-    .select('*')
-    .in('escala_id', escalasIds) : { data: [] }
+    .from('registros').select('*').in('escala_id', escalasIds) : { data: [] }
 
   const { data: confirmacoesAvulso } = await supabase
     .from('confirmacoes')
@@ -102,18 +88,16 @@ export default async function EstatisticasMembro({
   })
 
   const pct = (valor: number) => totalConvocado > 0 ? Math.round((valor / totalConvocado) * 100) : 0
-
   const formatarData = (data: string) => new Date(data + 'T12:00:00').toLocaleDateString('pt-BR')
 
   const nomePeriodo: Record<string, string> = {
-    todos: 'Todo o período',
+    todos: 'Todo período',
     mes_atual: 'Mês atual',
     mes_anterior: 'Mês anterior',
-    bimestre: 'Último bimestre',
-    trimestre: 'Último trimestre',
-    semestre: 'Último semestre',
+    bimestre: 'Bimestre',
+    trimestre: 'Trimestre',
+    semestre: 'Semestre',
     ano: 'Último ano',
-    personalizado: 'Período personalizado',
   }
 
   const periodos = ['todos', 'mes_atual', 'mes_anterior', 'bimestre', 'trimestre', 'semestre', 'ano']
@@ -131,53 +115,46 @@ export default async function EstatisticasMembro({
       {/* Filtro de período */}
       <div className="flex flex-wrap gap-2 mb-6">
         {periodos.map(p => (
-          
-            key={p}
-            href={`/dashboard/membros/${id}/estatisticas?periodo=${p}`}
-            className={`text-xs font-semibold px-3 py-1.5 rounded-full transition ${
-              periodo === p
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-            }`}
-          >
+          <a key={p} href={`/dashboard/membros/${id}/estatisticas?periodo=${p}`} className={`text-xs font-semibold px-3 py-1.5 rounded-full transition ${periodo === p ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}>
             {nomePeriodo[p]}
           </a>
         ))}
       </div>
 
-      {/* Cards de resumo */}
+      {/* Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-white rounded-2xl shadow p-5 text-center">
           <p className="text-3xl font-bold text-blue-600">{totalConvocado}</p>
           <p className="text-sm text-gray-500 mt-1">📅 Convocado</p>
         </div>
         <div className="bg-white rounded-2xl shadow p-5 text-center">
-          <p className="text-3xl font-bold text-green-600">{totalConfirmou}</p>
-          <p className="text-xs text-gray-400 mt-0.5">{pct(totalConfirmou)}% das convocações</p>
+          <p className="text-3xl font-bold text-green-600">{pct(totalConfirmou)}%</p>
+          <p className="text-xs text-gray-400">{totalConfirmou} vez{totalConfirmou !== 1 ? 'es' : ''}</p>
           <p className="text-sm text-gray-500 mt-1">✅ Confirmou</p>
         </div>
         <div className="bg-white rounded-2xl shadow p-5 text-center">
-          <p className="text-3xl font-bold text-emerald-600">{totalFoi}</p>
-          <p className="text-xs text-gray-400 mt-0.5">{pct(totalFoi)}% das convocações</p>
+          <p className="text-3xl font-bold text-emerald-600">{pct(totalFoi)}%</p>
+          <p className="text-xs text-gray-400">{totalFoi} vez{totalFoi !== 1 ? 'es' : ''}</p>
           <p className="text-sm text-gray-500 mt-1">🏥 Foi efetivamente</p>
         </div>
         <div className="bg-white rounded-2xl shadow p-5 text-center">
-          <p className="text-3xl font-bold text-red-600">{totalAusente}</p>
-          <p className="text-xs text-gray-400 mt-0.5">{pct(totalAusente)}% das convocações</p>
+          <p className="text-3xl font-bold text-red-600">{pct(totalAusente)}%</p>
+          <p className="text-xs text-gray-400">{totalAusente} vez{totalAusente !== 1 ? 'es' : ''}</p>
           <p className="text-sm text-gray-500 mt-1">❌ Ausente</p>
         </div>
         <div className="bg-white rounded-2xl shadow p-5 text-center">
-          <p className="text-3xl font-bold text-gray-500">{totalDispensado}</p>
-          <p className="text-xs text-gray-400 mt-0.5">{pct(totalDispensado)}% das convocações</p>
+          <p className="text-3xl font-bold text-gray-500">{pct(totalDispensado)}%</p>
+          <p className="text-xs text-gray-400">{totalDispensado} vez{totalDispensado !== 1 ? 'es' : ''}</p>
           <p className="text-sm text-gray-500 mt-1">🔕 Dispensado</p>
         </div>
         <div className="bg-white rounded-2xl shadow p-5 text-center">
           <p className="text-3xl font-bold text-purple-600">{totalAvulso}</p>
+          <p className="text-xs text-gray-400">participações</p>
           <p className="text-sm text-gray-500 mt-1">🔄 Avulso</p>
         </div>
       </div>
 
-      {/* Participações como avulso */}
+      {/* Avulsos */}
       {totalAvulso > 0 && (
         <div className="bg-white rounded-2xl shadow p-6 mb-6">
           <h3 className="text-base font-bold text-gray-800 mb-4">🔄 Participações como avulso</h3>
@@ -192,7 +169,7 @@ export default async function EstatisticasMembro({
         </div>
       )}
 
-      {/* Histórico de escalas */}
+      {/* Histórico */}
       <div className="bg-white rounded-2xl shadow p-6">
         <h3 className="text-base font-bold text-gray-800 mb-4">📋 Histórico de escalas</h3>
         {(escalas || []).length === 0 ? (
@@ -202,9 +179,7 @@ export default async function EstatisticasMembro({
             {(escalas || []).map(escala => {
               const confirmacao = (confirmacoes || []).find(c => c.escala_id === escala.id)
               const registro = (todosRegistros || []).find(r => r.escala_id === escala.id)
-              const foi = registro
-                ? (registro.membros_presentes || '').split(',').map((n: string) => n.trim()).includes(membro?.nome)
-                : null
+              const foi = registro ? (registro.membros_presentes || '').split(',').map((n: string) => n.trim()).includes(membro?.nome) : null
               const status = confirmacao?.status || 'pendente'
 
               return (
@@ -214,21 +189,11 @@ export default async function EstatisticasMembro({
                     <p className="text-xs text-gray-400">{formatarData(escala.data)}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                      status === 'confirmado' ? 'bg-green-100 text-green-700' :
-                      status === 'ausente' ? 'bg-red-100 text-red-700' :
-                      status === 'dispensado' ? 'bg-gray-100 text-gray-500' :
-                      'bg-yellow-100 text-yellow-700'
-                    }`}>
-                      {status === 'confirmado' ? '✅ Confirmou' :
-                       status === 'ausente' ? '❌ Ausente' :
-                       status === 'dispensado' ? '🔕 Dispensado' :
-                       '⏳ Pendente'}
+                    <span className={`text-xs font-semibold px-2 py-1 rounded-full ${status === 'confirmado' ? 'bg-green-100 text-green-700' : status === 'ausente' ? 'bg-red-100 text-red-700' : status === 'dispensado' ? 'bg-gray-100 text-gray-500' : 'bg-yellow-100 text-yellow-700'}`}>
+                      {status === 'confirmado' ? '✅ Confirmou' : status === 'ausente' ? '❌ Ausente' : status === 'dispensado' ? '🔕 Dispensado' : '⏳ Pendente'}
                     </span>
                     {escala.registrada && foi !== null && (
-                      <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                        foi ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
-                      }`}>
+                      <span className={`text-xs font-semibold px-2 py-1 rounded-full ${foi ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
                         {foi ? '🏥 Foi' : '🚫 Não foi'}
                       </span>
                     )}
