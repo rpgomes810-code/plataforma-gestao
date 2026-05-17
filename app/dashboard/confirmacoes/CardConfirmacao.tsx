@@ -48,18 +48,25 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
     const res = await fetch('/api/confirmacoes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        escala_id: escala.id,
-        membro_id,
-        status: 'dispensado',
-        tipo: 'normal',
-      }),
+      body: JSON.stringify({ escala_id: escala.id, membro_id, status: 'dispensado', tipo: 'normal' }),
     })
     if (res.ok) {
       setConfirmacoes((prev: any[]) => {
         const semMembro = prev.filter((c: any) => c.membro_id !== membro_id)
         return [...semMembro, { id: Date.now(), escala_id: escala.id, membro_id, status: 'dispensado', tipo: 'normal' }]
       })
+      onAtualizar()
+    }
+  }
+
+  const desfazerDispensa = async (membro_id: string) => {
+    const res = await fetch('/api/confirmacoes', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ escala_id: escala.id, membro_id }),
+    })
+    if (res.ok) {
+      setConfirmacoes((prev: any[]) => prev.filter((c: any) => c.membro_id !== membro_id))
       onAtualizar()
     }
   }
@@ -170,12 +177,14 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
                            status === 'dispensado' ? '🔕 Dispensado' :
                            '⏳ Pendente'}
                         </span>
-                        {status === 'confirmado' && (
-                          <button
-                            onClick={() => dispensar(membro.id)}
-                            className="text-xs text-gray-400 hover:text-orange-600 transition"
-                          >
+                        {(status === 'confirmado' || status === 'pendente') && (
+                          <button onClick={() => dispensar(membro.id)} className="text-xs text-gray-400 hover:text-orange-600 transition">
                             Dispensar
+                          </button>
+                        )}
+                        {status === 'dispensado' && (
+                          <button onClick={() => desfazerDispensa(membro.id)} className="text-xs text-gray-400 hover:text-blue-600 transition">
+                            Desfazer
                           </button>
                         )}
                       </div>
