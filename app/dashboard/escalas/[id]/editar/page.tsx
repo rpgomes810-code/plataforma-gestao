@@ -33,30 +33,21 @@ export default function EditarEscala() {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
 
-    supabase
-      .from('hospitais')
-      .select('id, nome')
-      .order('nome', { ascending: true })
+    supabase.from('hospitais').select('id, nome').order('nome', { ascending: true })
       .then(({ data }) => setHospitais(data || []))
 
-    fetch('/api/grupos')
-      .then(res => res.json())
-      .then(data => { if (Array.isArray(data)) setGrupos(data) })
+    fetch('/api/grupos').then(res => res.json()).then(data => { if (Array.isArray(data)) setGrupos(data) })
 
-    supabase
-      .from('escalas')
-      .select('*')
-      .eq('id', params.id)
-      .single()
+    supabase.from('escalas').select('*').eq('id', params.id).single()
       .then(({ data }) => {
         if (data) {
           setForm({
-            data:        data.data || '',
-            grupo:       data.grupo || '',
+            data: data.data || '',
+            grupo: data.grupo || '',
             hospital_id: data.hospital_id || '',
             local_texto: data.local_texto || '',
             hora_inicio: data.hora_inicio || '',
-            atendentes:  data.atendentes || '',
+            atendentes: data.atendentes || '',
             observacoes: data.observacoes || '',
           })
         }
@@ -78,41 +69,29 @@ export default function EditarEscala() {
     e.preventDefault()
     setLoading(true)
 
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    const res = await fetch(`/api/escalas/${params.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form),
+    })
 
-    const { error } = await supabase
-      .from('escalas')
-      .update(form)
-      .eq('id', params.id)
-
-    if (error) {
+    if (res.ok) {
+      router.push('/dashboard/escalas')
+    } else {
       alert('Erro ao atualizar escala')
       setLoading(false)
-    } else {
-      router.push('/dashboard/escalas')
     }
   }
 
   const handleDelete = async () => {
     if (!confirm('Tem certeza que deseja excluir esta escala?')) return
 
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    const res = await fetch(`/api/escalas/${params.id}`, { method: 'DELETE' })
 
-    const { error } = await supabase
-      .from('escalas')
-      .delete()
-      .eq('id', params.id)
-
-    if (error) {
-      alert('Erro ao excluir escala')
-    } else {
+    if (res.ok) {
       router.push('/dashboard/escalas')
+    } else {
+      alert('Erro ao excluir escala')
     }
   }
 
@@ -120,7 +99,6 @@ export default function EditarEscala() {
 
   return (
     <div className="p-4 md:p-6">
-
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-xl font-bold text-gray-800">Editar Escala</h2>
@@ -141,9 +119,7 @@ export default function EditarEscala() {
               <label className={labelClass}>Grupo *</label>
               <select name="grupo" required value={form.grupo} onChange={handleChange} className={inputClass}>
                 <option value="">Selecione o grupo...</option>
-                {grupos.map(g => (
-                  <option key={g.id} value={g.nome}>{g.nome}</option>
-                ))}
+                {grupos.map(g => (<option key={g.id} value={g.nome}>{g.nome}</option>))}
               </select>
             </div>
             <div>
@@ -157,9 +133,7 @@ export default function EditarEscala() {
               <label className={labelClass}>Hospital</label>
               <select name="hospital_id" value={form.hospital_id} onChange={handleChange} className={inputClass}>
                 <option value="">Selecione um hospital...</option>
-                {hospitais.map(h => (
-                  <option key={h.id} value={h.id}>{h.nome}</option>
-                ))}
+                {hospitais.map(h => (<option key={h.id} value={h.id}>{h.nome}</option>))}
               </select>
             </div>
             <div>
