@@ -12,6 +12,7 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
 
   const confirmados = confirmacoes.filter((c: any) => c.status === 'confirmado')
   const ausentes = confirmacoes.filter((c: any) => c.status === 'ausente')
+  const dispensados = confirmacoes.filter((c: any) => c.status === 'dispensado')
   const avulsos = confirmacoes.filter((c: any) => c.tipo === 'avulso' && c.status === 'confirmado')
   const minhaConfirmacao = confirmacoes.find((c: any) => c.membro_id === membroLogado?.id)
   const euSouDoGrupo = membroLogado?.grupo === escala.grupo
@@ -24,25 +25,43 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
     })
   }
 
-  const getMembro = (membro_id: string) => {
-    return todosMembros?.find((m: any) => m.id === membro_id)
-  }
+  const getMembro = (membro_id: string) => todosMembros?.find((m: any) => m.id === membro_id)
 
   const cancelarConfirmacao = async () => {
     setLoading(true)
     const res = await fetch('/api/confirmacoes', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        escala_id: escala.id,
-        membro_id: membroLogado?.id,
-      }),
+      body: JSON.stringify({ escala_id: escala.id, membro_id: membroLogado?.id }),
     })
     if (res.ok) {
       setConfirmacoes((prev: any[]) => prev.filter((c: any) => c.membro_id !== membroLogado?.id))
       onAtualizar()
     }
     setLoading(false)
+  }
+
+  const dispensar = async (membro_id: string) => {
+    const confirmado = confirm('Deseja dispensar este membro por excesso?')
+    if (!confirmado) return
+
+    const res = await fetch('/api/confirmacoes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        escala_id: escala.id,
+        membro_id,
+        status: 'dispensado',
+        tipo: 'normal',
+      }),
+    })
+    if (res.ok) {
+      setConfirmacoes((prev: any[]) => {
+        const semMembro = prev.filter((c: any) => c.membro_id !== membro_id)
+        return [...semMembro, { id: Date.now(), escala_id: escala.id, membro_id, status: 'dispensado', tipo: 'normal' }]
+      })
+      onAtualizar()
+    }
   }
 
   const confirmar = async (status: string) => {
@@ -124,10 +143,7 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
 
         {isAdmin && (
           <div>
-            <button
-              onClick={() => setMostraDetalhes(!mostraDetalhes)}
-              className="text-xs text-blue-600 hover:text-blue-800 font-semibold"
-            >
+            <button onClick={() => setMostraDetalhes(!mostraDetalhes)} className="text-xs text-blue-600 hover:text-blue-800 font-semibold">
               {mostraDetalhes ? '▲ Ocultar detalhes' : '▼ Ver detalhes'}
             </button>
 
@@ -142,15 +158,27 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
                         <p className="text-sm font-medium text-gray-700">{membro.nome}</p>
                         <p className="text-xs text-gray-400">{membro.instrumento || membro.tipo}</p>
                       </div>
-                      <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                        status === 'confirmado' ? 'bg-green-100 text-green-700' :
-                        status === 'ausente' ? 'bg-red-100 text-red-700' :
-                        'bg-gray-100 text-gray-500'
-                      }`}>
-                        {status === 'confirmado' ? '✅ Confirmado' :
-                         status === 'ausente' ? '❌ Ausente' :
-                         '⏳ Pendente'}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                          status === 'confirmado' ? 'bg-green-100 text-green-700' :
+                          status === 'ausente' ? 'bg-red-100 text-red-700' :
+                          status === 'dispensado' ? 'bg-gray-100 text-gray-500' :
+                          'bg-yellow-100 text-yellow-700'
+                        }`}>
+                          {status === 'confirmado' ? '✅ Confirmado' :
+                           status === 'ausente' ? '❌ Ausente' :
+                           status === 'dispensado' ? '🔕 Dispensado' :
+                           '⏳ Pendente'}
+                        </span>
+                        {status === 'confirmado' && (
+                          <button
+                            onClick={() => dispensar(membro.id)}
+                            className="text-xs text-gray-400 hover:text-orange-600 transition"
+                          >
+                            Dispensar
+                          </button>
+                        )}
+                      </div>
                     </div>
                   )
                 })}
@@ -165,13 +193,9 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
                           <div>
                             <p className="text-sm font-medium text-gray-700">{membroAvulso?.nome || '—'}</p>
                             <p className="text-xs text-gray-400">{membroAvulso?.grupo || '—'}</p>
-                            {membroAvulso?.telefone && (
-                              <p className="text-xs text-blue-600">📱 {membroAvulso.telefone}</p>
-                            )}
+                            {membroAvulso?.telefone && <p className="text-xs text-blue-600">📱 {membroAvulso.telefone}</p>}
                           </div>
-                          <span className="text-xs font-semibold px-2 py-1 rounded-full bg-blue-100 text-blue-700">
-                            ✅ Avulso
-                          </span>
+                          <span className="text-xs font-semibold px-2 py-1 rounded-full bg-blue-100 text-blue-700">✅ Avulso</span>
                         </div>
                       )
                     })}
@@ -191,6 +215,22 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
                 return (
                   <span key={c.id} className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full">
                     {c.tipo === 'avulso' ? `${membroAvulso?.nome || '—'} (avulso)` : c.membros?.nome}
+                  </span>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {dispensados.length > 0 && (
+          <div>
+            <p className="text-xs font-semibold text-gray-400 uppercase mb-2">🔕 Dispensados ({dispensados.length})</p>
+            <div className="flex flex-wrap gap-2">
+              {dispensados.map((c: any) => {
+                const m = getMembro(c.membro_id)
+                return (
+                  <span key={c.id} className="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded-full">
+                    {m?.nome || c.membros?.nome || '—'}
                   </span>
                 )
               })}
@@ -245,6 +285,12 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
                 <button onClick={cancelarConfirmacao} disabled={loading} className="text-xs text-gray-400 hover:text-gray-600">
                   {loading ? 'Aguarde...' : 'Cancelar'}
                 </button>
+              </div>
+            )}
+
+            {statusAtual === 'dispensado' && (
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-gray-500 font-semibold">🔕 Você foi dispensado por excesso</span>
               </div>
             )}
 
