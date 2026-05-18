@@ -10,6 +10,7 @@ export default function Dashboard() {
   const [registros, setRegistros] = useState<any[]>([])
   const [escalasTotal, setEscalasTotal] = useState<any[]>([])
   const [registrosGrafico, setRegistrosGrafico] = useState<any[]>([])
+  const [registrosHospitais, setRegistrosHospitais] = useState<any[]>([])
   const [aberto, setAberto] = useState<Record<string, boolean>>({})
   const toggle = (key: string) => setAberto(prev => ({ ...prev, [key]: !prev[key] }))
 
@@ -37,6 +38,7 @@ export default function Dashboard() {
       .then(r => r.json()).then(data => { if (Array.isArray(data)) setRegistros(data) })
 
     fetch('/api/grafico').then(r => r.json()).then(data => { if (Array.isArray(data)) setRegistrosGrafico(data) })
+    fetch('/api/grafico-hospitais').then(r => r.json()).then(data => { if (Array.isArray(data)) setRegistrosHospitais(data) })
   }, [])
 
   const inicial = membro?.nome?.charAt(0).toUpperCase() || '?'
@@ -64,6 +66,15 @@ export default function Dashboard() {
     porGrupoReg[g].total++
     if (e.registrada) porGrupoReg[g].registradas++
   })
+
+  // Gráfico por hospital (mês atual)
+  const porHospital: Record<string, number> = {}
+  registrosHospitais.forEach(r => {
+    const nome = r.hospitais?.nome || 'Desconhecido'
+    porHospital[nome] = (porHospital[nome] || 0) + 1
+  })
+  const dadosHospital = Object.entries(porHospital).sort((a, b) => b[1] - a[1])
+  const maxHospital = Math.max(...dadosHospital.map(([, v]) => v), 1)
 
   return (
     <div className="p-4 md:p-8">
@@ -158,7 +169,7 @@ export default function Dashboard() {
 
       </div>
 
-      {/* Gráfico de barras */}
+      {/* Gráfico de barras - últimos 12 meses */}
       <div className="bg-white rounded-2xl shadow p-6 mb-6">
         <h3 className="text-base font-bold text-gray-800 mb-4">📊 Atendimentos mensais — últimos 12 meses</h3>
         <div className="flex items-end gap-1 md:gap-2 h-40">
@@ -166,13 +177,34 @@ export default function Dashboard() {
             <div key={i} className="flex-1 flex flex-col items-center gap-1">
               <span className="text-xs text-gray-600 font-semibold">{m.total > 0 ? m.total : ''}</span>
               <div
-                className="w-full rounded-t-lg bg-blue-500 transition-all"
+                className="w-full rounded-t-lg transition-all"
                 style={{ height: `${Math.max((m.total / maxGrafico) * 120, m.total > 0 ? 8 : 2)}px`, backgroundColor: m.total > 0 ? '#3b82f6' : '#e5e7eb' }}
               />
               <span className="text-gray-400 whitespace-nowrap" style={{ fontSize: '9px' }}>{m.label}</span>
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Gráfico por hospital - mês atual */}
+      <div className="bg-white rounded-2xl shadow p-6 mb-6">
+        <h3 className="text-base font-bold text-gray-800 mb-4">🏥 Atendimentos por hospital — mês atual</h3>
+        {dadosHospital.length === 0 ? (
+          <p className="text-sm text-gray-400">Nenhum registro este mês.</p>
+        ) : (
+          <div className="flex items-end gap-2 h-40">
+            {dadosHospital.map(([nome, total], i) => (
+              <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                <span className="text-xs text-gray-600 font-semibold">{total}</span>
+                <div
+                  className="w-full rounded-t-lg transition-all"
+                  style={{ height: `${Math.max((total / maxHospital) * 120, 8)}px`, backgroundColor: '#a855f7' }}
+                />
+                <span className="text-gray-400 text-center leading-tight" style={{ fontSize: '9px' }}>{nome}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
     </div>
