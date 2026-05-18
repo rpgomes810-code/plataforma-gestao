@@ -14,6 +14,7 @@ export default function Registros() {
   const [ano, setAno] = useState(hoje.getFullYear())
   const [registros, setRegistros] = useState<any[]>([])
   const [pendentes, setPendentes] = useState<any[]>([])
+  const [membros, setMembros] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
   const [isAtendente, setIsAtendente] = useState(false)
@@ -29,6 +30,8 @@ export default function Registros() {
     }).catch(() => setCarregouUsuario(true))
 
     fetch('/api/escalas/pendentes').then(res => res.json()).then(data => setPendentes(Array.isArray(data) ? data : []))
+
+    fetch('/api/membros').then(res => res.json()).then(data => { if (Array.isArray(data)) setMembros(data) })
   }, [])
 
   useEffect(() => {
@@ -52,6 +55,22 @@ export default function Registros() {
     : isAtendente
       ? pendentes.filter((e: any) => e.grupo === meuGrupo)
       : []
+
+  const resumoMembros = (membrosPresentes: string) => {
+    if (!membrosPresentes) return []
+    const nomes = membrosPresentes.split(',').map((n: string) => n.trim()).filter(Boolean)
+    const porGrupo: Record<string, number> = {}
+    nomes.forEach(nome => {
+      const membro = membros.find((m: any) => m.nome === nome)
+      const grupo = membro?.grupo || 'Avulso'
+      porGrupo[grupo] = (porGrupo[grupo] || 0) + 1
+    })
+    return Object.entries(porGrupo).sort((a, b) => {
+      const numA = parseInt(a[0].replace(/\D/g, '')) || 999
+      const numB = parseInt(b[0].replace(/\D/g, '')) || 999
+      return numA - numB
+    })
+  }
 
   if (!carregouUsuario) return <div className="p-6 text-gray-500">Carregando...</div>
 
@@ -112,48 +131,57 @@ export default function Registros() {
             </div>
           ) : (
             <div className="space-y-4">
-              {registros.map(registro => (
-                <div key={registro.id} className="bg-white rounded-2xl shadow p-5">
-                  <div className="flex flex-col md:flex-row justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between gap-3 mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white text-lg">🏥</div>
-                          <div>
-                            <p className="font-bold text-gray-800">{registro.hospitais?.nome || '—'}</p>
-                            <p className="text-xs text-gray-400">{formatarData(registro.data)} · {registro.hora_inicio} às {registro.hora_termino}</p>
+              {registros.map(registro => {
+                const resumo = resumoMembros(registro.membros_presentes)
+                return (
+                  <div key={registro.id} className="bg-white rounded-2xl shadow p-5">
+                    <div className="flex flex-col md:flex-row justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between gap-3 mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white text-lg">🏥</div>
+                            <div>
+                              <p className="font-bold text-gray-800">{registro.hospitais?.nome || '—'}</p>
+                              <p className="text-xs text-gray-400">{formatarData(registro.data)} · {registro.hora_inicio} às {registro.hora_termino}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <a href={`/dashboard/registros/${registro.id}/editar`} className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition">Editar</a>
+                            <BotaoExcluirRegistro id={registro.id} hospital={registro.hospitais?.nome || '—'} />
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <a href={`/dashboard/registros/${registro.id}/editar`} className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition">Editar</a>
-                          <BotaoExcluirRegistro id={registro.id} hospital={registro.hospitais?.nome || '—'} />
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                          <div>
+                            <p className="text-gray-400 text-xs">Autorizou entrada</p>
+                            <p className="text-gray-700 font-medium">👤 {registro.quem_autorizou || '—'}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400 text-xs">Membros presentes</p>
+                            <div className="space-y-0.5 mt-1">
+                              {resumo.length > 0 ? resumo.map(([grupo, total]) => (
+                                <p key={grupo} className="text-gray-700 font-medium text-xs">
+                                  👥 {total} {total === 1 ? 'membro' : 'membros'} {grupo}
+                                </p>
+                              )) : <p className="text-gray-400 text-xs">—</p>}
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-gray-400 text-xs">Hinos executados</p>
+                            <p className="text-gray-700 font-medium">🎵 {registro.hinos_executados}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400 text-xs">Oração</p>
+                            <p className="text-gray-700 font-medium">{registro.teve_oracao ? '✅ Sim' : '❌ Não'}</p>
+                          </div>
                         </div>
+                        {registro.observacoes && (
+                          <div className="mt-3 text-sm text-gray-500 bg-gray-50 rounded-lg p-2">💬 {registro.observacoes}</div>
+                        )}
                       </div>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                        <div>
-                          <p className="text-gray-400 text-xs">Autorizou entrada</p>
-                          <p className="text-gray-700 font-medium">👤 {registro.quem_autorizou || '—'}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-400 text-xs">Membros presentes</p>
-                          <p className="text-gray-700 font-medium">👥 {registro.membros_presentes || '—'}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-400 text-xs">Hinos executados</p>
-                          <p className="text-gray-700 font-medium">🎵 {registro.hinos_executados}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-400 text-xs">Oração</p>
-                          <p className="text-gray-700 font-medium">{registro.teve_oracao ? '✅ Sim' : '❌ Não'}</p>
-                        </div>
-                      </div>
-                      {registro.observacoes && (
-                        <div className="mt-3 text-sm text-gray-500 bg-gray-50 rounded-lg p-2">💬 {registro.observacoes}</div>
-                      )}
                     </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </>
