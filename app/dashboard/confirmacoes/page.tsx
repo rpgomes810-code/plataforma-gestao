@@ -21,19 +21,24 @@ export default function Confirmacoes() {
   const { membroLogado, escalas, confirmacoes, todosMembros } = dados
   const isAdmin = membroLogado?.nivel_acesso === 'Administrador'
 
-  // Filtra escalas relevantes para o membro
-  const escalasVisiveis = escalas?.filter((escala: any) => {
+  const escalasVisiveis = (escalas?.filter((escala: any) => {
     const eDoGrupo = membroLogado?.grupo === escala.grupo
     const temConfirmacao = confirmacoes?.some((c: any) => c.escala_id === escala.id && c.membro_id === membroLogado?.id)
     return isAdmin || eDoGrupo || temConfirmacao
-  }) || []
+  }) || []).sort((a: any, b: any) => {
+    if (a.confirmacao_aberta && !b.confirmacao_aberta) return -1
+    if (!a.confirmacao_aberta && b.confirmacao_aberta) return 1
+    return 0
+  })
+
+  const abertas = escalasVisiveis.filter((e: any) => e.confirmacao_aberta)
 
   return (
     <div className="p-4 md:p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-xl font-bold text-gray-800">Confirmações de Presença</h2>
-          <p className="text-sm text-gray-500">{escalasVisiveis.length} escala(s) aguardando confirmação</p>
+          <p className="text-sm text-gray-500">{abertas.length} escala(s) aguardando confirmação</p>
         </div>
       </div>
 
