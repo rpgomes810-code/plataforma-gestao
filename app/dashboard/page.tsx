@@ -36,7 +36,7 @@ export default function Dashboard() {
     fetch(`/api/registros?mes=${hoje.getMonth() + 1}&ano=${hoje.getFullYear()}`)
       .then(r => r.json()).then(data => { if (Array.isArray(data)) setRegistros(data) })
 
-    fetch('/api/dashboard/grafico').then(r => r.json()).then(data => { if (Array.isArray(data)) setRegistrosGrafico(data) })
+    fetch('/api/grafico').then(r => r.json()).then(data => { if (Array.isArray(data)) setRegistrosGrafico(data) })
   }, [])
 
   const inicial = membro?.nome?.charAt(0).toUpperCase() || '?'
