@@ -8,15 +8,16 @@ const supabase = createClient(
 
 export async function GET() {
   const hoje = new Date()
-  const inicio = new Date(hoje.getFullYear(), hoje.getMonth() - 5, 1).toISOString().split('T')[0]
-  const fim = hoje.toISOString().split('T')[0]
+  const inicio = new Date(hoje.getFullYear(), hoje.getMonth() - 11, 1).toISOString().split('T')[0]
+  const fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).toISOString().split('T')[0]
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('registros')
-    .select('*, hospitais(nome)')
+    .select('id, data, hospital_id, hospitais(nome)')
     .gte('data', inicio)
     .lte('data', fim)
     .order('data', { ascending: true })
 
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json(data || [])
 }
