@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function GET() {
   const { data, error } = await supabase
     .from('membros')
-    .select('id, nome')
+    .select('id, nome, grupo')
     .order('nome', { ascending: true })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
