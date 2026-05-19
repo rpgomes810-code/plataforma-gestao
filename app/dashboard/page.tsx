@@ -12,6 +12,7 @@ export default function Dashboard() {
   const [registrosGrafico, setRegistrosGrafico] = useState<any[]>([])
   const [registrosHospitais, setRegistrosHospitais] = useState<any[]>([])
   const [aberto, setAberto] = useState<Record<string, boolean>>({})
+  const [notificacaoAtiva, setNotificacaoAtiva] = useState<boolean | null>(null)
   const toggle = (key: string) => setAberto(prev => ({ ...prev, [key]: !prev[key] }))
 
   useEffect(() => {
@@ -39,6 +40,11 @@ export default function Dashboard() {
 
     fetch('/api/grafico').then(r => r.json()).then(data => { if (Array.isArray(data)) setRegistrosGrafico(data) })
     fetch('/api/grafico-hospitais').then(r => r.json()).then(data => { if (Array.isArray(data)) setRegistrosHospitais(data) })
+
+    // Verifica status das notificações
+    if ('Notification' in window) {
+      setNotificacaoAtiva(Notification.permission === 'granted')
+    }
   }, [])
 
   const inicial = membro?.nome?.charAt(0).toUpperCase() || '?'
@@ -86,6 +92,14 @@ export default function Dashboard() {
           <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">{inicial}</div>
         </div>
       </div>
+
+      {/* Informativo de notificações */}
+      {notificacaoAtiva !== null && (
+        <div className={`flex items-center gap-2 px-4 py-3 rounded-xl mb-6 text-sm font-medium ${notificacaoAtiva ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
+          <span>{notificacaoAtiva ? '🔔' : '🔕'}</span>
+          <span>{notificacaoAtiva ? 'Notificações ativadas' : 'Notificações desativadas — ative nas configurações do seu celular'}</span>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
 
