@@ -14,6 +14,12 @@ export default function BotaoAbrirConfirmacao({ id, aberta }: { id: string, aber
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ confirmacao_aberta: !aberta }),
     })
+
+    // Se está abrindo (estava fechada), dispara notificação
+    if (!aberta) {
+      await fetch('/api/push/notificar', { method: 'POST' })
+    }
+
     setLoading(false)
     router.refresh()
   }

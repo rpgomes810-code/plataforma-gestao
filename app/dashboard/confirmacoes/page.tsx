@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import CardConfirmacao from './CardConfirmacao'
+import BotaoNotificacao from '@/app/components/BotaoNotificacao'
 
 export default function Confirmacoes() {
   const [dados, setDados] = useState<any>(null)
@@ -36,6 +37,9 @@ export default function Confirmacoes() {
           <h2 className="text-xl font-bold text-gray-800">Confirmações de Presença</h2>
           <p className="text-sm text-gray-500">{abertas.length} escala(s) aguardando confirmação</p>
         </div>
+        {membroLogado?.id && (
+          <BotaoNotificacao membroId={membroLogado.id} />
+        )}
       </div>
 
       {escalasVisiveis.length === 0 ? (
