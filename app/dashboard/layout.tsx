@@ -53,7 +53,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     navigator.serviceWorker.register('/sw.js').catch(console.error)
 
-    // Mostra popup se permissão não foi concedida
     if (Notification.permission !== 'granted') {
       setMostrarPopup(true)
     }
@@ -93,7 +92,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row">
 
-      {/* Popup de notificação */}
       {mostrarPopup && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm text-center">
@@ -103,15 +101,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <button
               onClick={ativarNotificacoes}
               disabled={ativando}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition text-sm mb-3 disabled:opacity-50"
+              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition text-sm disabled:opacity-50"
             >
               {ativando ? 'Ativando...' : '🔔 Ativar notificações'}
-            </button>
-            <button
-              onClick={() => setMostrarPopup(false)}
-              className="w-full text-sm text-gray-400 hover:text-gray-600 transition"
-            >
-              Agora não
             </button>
           </div>
         </div>
