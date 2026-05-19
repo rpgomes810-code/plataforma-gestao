@@ -1,6 +1,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
+import { useEffect } from 'react'
 
 const navItems = [
   { href: '/dashboard',              icon: '📊', label: 'Início' },
@@ -35,6 +36,12 @@ function BottomNavLink({ href, icon, label, active }: { href: string; icon: stri
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(console.error)
+    }
+  }, [])
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row">
