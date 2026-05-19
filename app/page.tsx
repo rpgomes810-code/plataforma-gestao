@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 
@@ -12,11 +12,28 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [modo, setModo] = useState<'login' | 'recuperar'>('login')
   const [mensagem, setMensagem] = useState('')
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault()
+      setDeferredPrompt(e)
+    }
+    window.addEventListener('beforeinstallprompt', handler)
+    return () => window.removeEventListener('beforeinstallprompt', handler)
+  }, [])
+
+  const instalarApp = async () => {
+    if (!deferredPrompt) return
+    deferredPrompt.prompt()
+    await deferredPrompt.userChoice
+    setDeferredPrompt(null)
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -65,6 +82,13 @@ export default function Login() {
             {modo === 'login' ? 'Entre com sua conta para continuar' : 'Informe seu e-mail para recuperar a senha'}
           </p>
         </div>
+
+        {deferredPrompt && (
+          <button onClick={instalarApp}
+            className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition text-sm mb-4">
+            📲 Instalar app no celular
+          </button>
+        )}
 
         {modo === 'login' ? (
           <form onSubmit={handleLogin} className="space-y-4">
