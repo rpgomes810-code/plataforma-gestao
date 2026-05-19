@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 const navItems = [
   { href: '/dashboard',              icon: '📊', label: 'Início' },
@@ -34,17 +34,88 @@ function BottomNavLink({ href, icon, label, active }: { href: string; icon: stri
   )
 }
 
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4)
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+  const rawData = window.atob(base64)
+  const outputArray = new Uint8Array(rawData.length)
+  for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i)
+  return outputArray
+}
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const [mostrarPopup, setMostrarPopup] = useState(false)
+  const [ativando, setAtivando] = useState(false)
 
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(console.error)
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
+
+    navigator.serviceWorker.register('/sw.js').catch(console.error)
+
+    // Mostra popup se permissão não foi concedida
+    if (Notification.permission !== 'granted') {
+      setMostrarPopup(true)
     }
   }, [])
 
+  const ativarNotificacoes = async () => {
+    setAtivando(true)
+    try {
+      const permission = await Notification.requestPermission()
+      if (permission !== 'granted') {
+        setAtivando(false)
+        return
+      }
+
+      const membroRes = await fetch('/api/membros/eu')
+      const membro = await membroRes.json()
+
+      const reg = await navigator.serviceWorker.ready
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!)
+      })
+
+      await fetch('/api/push/assinar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subscription: sub.toJSON(), membro_id: membro.id })
+      })
+
+      setMostrarPopup(false)
+    } catch (e) {
+      console.error(e)
+    }
+    setAtivando(false)
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row">
+
+      {/* Popup de notificação */}
+      {mostrarPopup && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm text-center">
+            <p className="text-5xl mb-4">🔔</p>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">Ativar notificações</h2>
+            <p className="text-sm text-gray-500 mb-6">Receba avisos quando o admin abrir as confirmações de presença.</p>
+            <button
+              onClick={ativarNotificacoes}
+              disabled={ativando}
+              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition text-sm mb-3 disabled:opacity-50"
+            >
+              {ativando ? 'Ativando...' : '🔔 Ativar notificações'}
+            </button>
+            <button
+              onClick={() => setMostrarPopup(false)}
+              className="w-full text-sm text-gray-400 hover:text-gray-600 transition"
+            >
+              Agora não
+            </button>
+          </div>
+        </div>
+      )}
 
       <aside className="hidden md:flex w-64 bg-white shadow-md flex-col shrink-0">
         <div className="px-6 py-5 border-b">
