@@ -13,6 +13,7 @@ export default function Login() {
   const [modo, setModo] = useState<'login' | 'recuperar'>('login')
   const [mensagem, setMensagem] = useState('')
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
+  const [mostrarSenha, setMostrarSenha] = useState(false)
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -72,6 +73,8 @@ export default function Login() {
     setLoading(false)
   }
 
+  const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent)
+
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
       <div className="bg-white rounded-2xl shadow p-8 w-full max-w-sm">
@@ -106,14 +109,23 @@ export default function Login() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
-              <input
-                type="password"
-                required
-                value={senha}
-                onChange={e => setSenha(e.target.value)}
-                placeholder="••••••••"
-                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              />
+              <div className="relative">
+                <input
+                  type={mostrarSenha ? 'text' : 'password'}
+                  required
+                  value={senha}
+                  onChange={e => setSenha(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setMostrarSenha(!mostrarSenha)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {mostrarSenha ? '🙈' : '👁️'}
+                </button>
+              </div>
             </div>
 
             {erro && <p className="text-red-500 text-sm text-center">{erro}</p>}
