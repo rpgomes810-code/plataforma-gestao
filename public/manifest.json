@@ -1,0 +1,21 @@
+{
+  "name": "DARPE CCB — Setor 4 Hospitais",
+  "short_name": "DARPE CCB",
+  "description": "Gestão de escalas e atendimentos hospitalares",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#1d4ed8",
+  "theme_color": "#1d4ed8",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
