@@ -58,6 +58,12 @@ export default function Escalas() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ confirmacao_aberta: !aberta }),
     })
+
+    // Se está abrindo, dispara notificação
+    if (!aberta) {
+      await fetch('/api/push/notificar', { method: 'POST' })
+    }
+
     carregarEscalas()
   }
 
