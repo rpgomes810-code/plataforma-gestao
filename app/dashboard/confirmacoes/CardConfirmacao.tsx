@@ -355,9 +355,6 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
             <div className="space-y-2">
               {ausentes.filter((a: any) => !a.substituto_id).map((a: any, i: number) => {
                 const membroAusente = getMembro(a.membro_id)
-                console.log('membro_id da ausencia:', a.membro_id)
-                console.log('todosMembros:', todosMembros)
-                console.log('membroAusente encontrado:', membroAusente)
                 const tipo = (membroAusente?.tipo ?? '').toString().trim().toLowerCase()
                 const instrumento = (membroAusente?.instrumento ?? '').toString().trim()
                 const tipoVaga = tipo === 'atendente'
