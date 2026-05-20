@@ -24,7 +24,8 @@ export default function Confirmacoes() {
   const escalasVisiveis = (escalas?.filter((escala: any) => {
     const eDoGrupo = membroLogado?.grupo === escala.grupo
     const temConfirmacao = confirmacoes?.some((c: any) => c.escala_id === escala.id && c.membro_id === membroLogado?.id)
-    return isAdmin || eDoGrupo || temConfirmacao
+    const eOAtendente = membroLogado?.nome === escala.atendentes
+    return isAdmin || eDoGrupo || temConfirmacao || eOAtendente
   }) || []).sort((a: any, b: any) => new Date(b.criado_em || b.data).getTime() - new Date(a.criado_em || a.data).getTime())
 
   const abertas = escalasVisiveis.filter((e: any) => e.confirmacao_aberta)
