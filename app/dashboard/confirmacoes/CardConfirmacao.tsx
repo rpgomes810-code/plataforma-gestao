@@ -349,20 +349,20 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
           <div>
             <p className="text-xs font-semibold text-gray-400 uppercase mb-2">⚠️ Vagas abertas ({ausentes.filter((a: any) => !a.substituto_id).length})</p>
             <div className="space-y-2">
-              {ausentes.filter((a: any) => !a.substituto_id).map((a: any, i: number) => {
-                const membroAusente = getMembro(a.membro_id) || todosMembros?.find((m: any) => m.nome === escala.atendentes)
-const tipoVaga = membroAusente?.tipo === 'Atendente' || a.membros?.tipo === 'Atendente'
-  ? 'Atendente'
-  : membroAusente?.instrumento || a.membros?.instrumento || 'Músico'
-                return (
-                  <div key={i} className="flex items-center justify-between bg-yellow-50 rounded-lg px-3 py-2">
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">{tipoVaga}</p>
-                      <p className="text-xs text-gray-500">Ausência de: {membroAusente?.nome || a.membros?.nome}</p>
-                    </div>
-                  </div>
-                )
-              })}
+            {ausentes.filter((a: any) => !a.substituto_id).map((a: any, i: number) => {
+  const membroAusente = getMembro(a.membro_id)
+  const tipoVaga = membroAusente?.tipo === 'Atendente'
+    ? 'Atendente'
+    : membroAusente?.instrumento || 'Músico'
+  return (
+    <div key={i} className="flex items-center justify-between bg-yellow-50 rounded-lg px-3 py-2">
+      <div>
+        <p className="text-sm font-medium text-gray-700">{tipoVaga}</p>
+        <p className="text-xs text-gray-500">Ausência de: {membroAusente?.nome || '—'}</p>
+      </div>
+    </div>
+  )
+})}
             </div>
           </div>
         )}
