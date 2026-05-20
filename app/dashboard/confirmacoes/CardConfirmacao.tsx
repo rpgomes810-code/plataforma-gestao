@@ -2,6 +2,9 @@
 
 import { useState } from 'react'
 
+const normalizeId = (v: string | number | null | undefined) =>
+  v == null ? '' : String(v).trim()
+
 export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLogado, totalGrupo, membrosDoGrupo, todosMembros, isAdmin, onAtualizar }: any) {
   const [confirmacoes, setConfirmacoes] = useState(confirmacoesIniciais)
   const [loading, setLoading] = useState(false)
@@ -30,11 +33,8 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
     })
   }
 
-  // Função para normalizar IDs e buscar membros
-  const normalizeId = (v: any) => (v == null ? '' : String(v).trim());
-
-  const getMembro = (membro_id: any) =>
-    todosMembros?.find((m: any) => normalizeId(m.id) === normalizeId(membro_id));
+  const getMembro = (membro_id: string | number) =>
+    todosMembros?.find((m: any) => normalizeId(m.id) === normalizeId(membro_id))
 
   const cancelarConfirmacao = async (membro_id?: string) => {
     setLoading(true)
@@ -349,31 +349,26 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
           </div>
         )}
 
-        {/* SEÇÃO DE VAGAS ABERTAS COM CORREÇÃO ROBUSTA */}
         {ausentes.filter((a: any) => !a.substituto_id).length > 0 && (
           <div>
             <p className="text-xs font-semibold text-gray-400 uppercase mb-2">⚠️ Vagas abertas ({ausentes.filter((a: any) => !a.substituto_id).length})</p>
             <div className="space-y-2">
               {ausentes.filter((a: any) => !a.substituto_id).map((a: any, i: number) => {
-                const membroAusente = getMembro(a.membro_id);
-
-                // Força sempre a string correta nessas situações
-                let tipoVaga = 'Músico'; // valor padrão
-
-                if (membroAusente) {
-                  const tipo = (membroAusente.tipo || '').toString().trim().toLowerCase();
-                  const instrumento = (membroAusente.instrumento || '').toString().trim().toLowerCase();
-                  if (tipo === 'atendente' || membroAusente.nome === escala.atendentes) {
-                    tipoVaga = 'Atendente';
-                  } else if (instrumento && instrumento !== 'nenhum' && instrumento !== '' && instrumento !== 'undefined' && instrumento !== 'null') {
-                    tipoVaga = membroAusente.instrumento;
-                  }
-                }
-
+                const membroAusente = getMembro(a.membro_id)
+                console.log('membro_id da ausencia:', a.membro_id)
+                console.log('todosMembros:', todosMembros)
+                console.log('membroAusente encontrado:', membroAusente)
+                const tipo = (membroAusente?.tipo ?? '').toString().trim().toLowerCase()
+                const instrumento = (membroAusente?.instrumento ?? '').toString().trim()
+                const tipoVaga = tipo === 'atendente'
+                  ? 'Atendente'
+                  : instrumento && instrumento !== 'Nenhum'
+                    ? instrumento
+                    : '—'
                 return (
                   <div key={i} className="flex items-center justify-between bg-yellow-50 rounded-lg px-3 py-2">
                     <div>
-                      <p className="text-sm font-medium text-gray-700">Vaga de: {tipoVaga}</p>
+                      <p className="text-sm font-medium text-gray-700">{tipoVaga}</p>
                       <p className="text-xs text-gray-500">Ausência de: {membroAusente?.nome || '—'}</p>
                     </div>
                   </div>
