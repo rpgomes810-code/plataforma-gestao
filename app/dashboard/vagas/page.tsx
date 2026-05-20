@@ -30,6 +30,14 @@ export default function Vagas() {
     weekday: 'long', day: '2-digit', month: '2-digit'
   })
 
+  const tipoVaga = (vaga: any) => {
+    const tipo = (vaga.membros?.tipo ?? '').toString().trim().toLowerCase()
+    const instrumento = (vaga.membros?.instrumento ?? '').toString().trim()
+    if (tipo === 'atendente') return 'Atendente'
+    if (instrumento && instrumento !== 'Nenhum') return instrumento
+    return '—'
+  }
+
   return (
     <div className="p-4 md:p-6">
       <div className="mb-6">
@@ -51,7 +59,7 @@ export default function Vagas() {
                 <div>
                   <p className="font-semibold text-gray-800">{vaga.escalas?.grupo} — {vaga.escalas?.local_texto}</p>
                   <p className="text-xs text-gray-500 mt-1">{formatarData(vaga.escalas?.data)} · {vaga.escalas?.hora_inicio}</p>
-                  <p className="text-xs text-orange-600 mt-1">🎻 Vaga de: {vaga.membros?.instrumento || vaga.membros?.tipo}</p>
+                  <p className="text-xs text-orange-600 mt-1">🎻 Vaga de: {tipoVaga(vaga)}</p>
                 </div>
                 {!eDoGrupo && (
                   <button
