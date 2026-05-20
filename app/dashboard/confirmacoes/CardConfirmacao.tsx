@@ -197,7 +197,6 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
               </span>
             </div>
 
-            {/* Confirmação do atendente logado */}
             {euSouOAtendente && (
               <div className="mt-3 border-t border-blue-100 pt-3">
                 <p className="text-sm font-medium text-gray-700 mb-2">Podemos contar com você?</p>
@@ -235,7 +234,6 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
               </div>
             )}
 
-            {/* Admin pode dispensar atendente */}
             {isAdmin && atendenteMembro && statusAtendente && statusAtendente !== 'dispensado' && (
               <button onClick={() => dispensar(atendenteMembro.id, statusAtendente)} className="text-xs text-gray-400 hover:text-orange-600 mt-2">
                 Dispensar atendente
@@ -353,14 +351,20 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
           <div>
             <p className="text-xs font-semibold text-gray-400 uppercase mb-2">⚠️ Vagas abertas ({ausentes.filter((a: any) => !a.substituto_id).length})</p>
             <div className="space-y-2">
-              {ausentes.filter((a: any) => !a.substituto_id).map((a: any, i: number) => (
-                <div key={i} className="flex items-center justify-between bg-yellow-50 rounded-lg px-3 py-2">
-                  <div>
-                    <p className="text-sm font-medium text-gray-700">{a.membros?.instrumento || a.membros?.tipo}</p>
-                    <p className="text-xs text-gray-500">Ausência de: {a.membros?.nome}</p>
+              {ausentes.filter((a: any) => !a.substituto_id).map((a: any, i: number) => {
+                const membroAusente = getMembro(a.membro_id)
+                const tipoVaga = membroAusente?.tipo === 'Atendente'
+                  ? 'Atendente'
+                  : membroAusente?.instrumento || a.membros?.instrumento || a.membros?.tipo || 'Músico'
+                return (
+                  <div key={i} className="flex items-center justify-between bg-yellow-50 rounded-lg px-3 py-2">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">{tipoVaga}</p>
+                      <p className="text-xs text-gray-500">Ausência de: {membroAusente?.nome || a.membros?.nome}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         )}
