@@ -2,6 +2,9 @@
 
 import { useState } from 'react'
 
+const normalizeId = (v: string | number | null | undefined) =>
+  v == null ? '' : String(v).trim()
+
 export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLogado, totalGrupo, membrosDoGrupo, todosMembros, isAdmin, onAtualizar }: any) {
   const [confirmacoes, setConfirmacoes] = useState(confirmacoesIniciais)
   const [loading, setLoading] = useState(false)
@@ -30,7 +33,8 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
     })
   }
 
-  const getMembro = (membro_id: string) => todosMembros?.find((m: any) => m.id === membro_id)
+  const getMembro = (membro_id: string | number) =>
+    todosMembros?.find((m: any) => normalizeId(m.id) === normalizeId(membro_id))
 
   const cancelarConfirmacao = async (membro_id?: string) => {
     setLoading(true)
@@ -349,20 +353,24 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
           <div>
             <p className="text-xs font-semibold text-gray-400 uppercase mb-2">⚠️ Vagas abertas ({ausentes.filter((a: any) => !a.substituto_id).length})</p>
             <div className="space-y-2">
-            {ausentes.filter((a: any) => !a.substituto_id).map((a: any, i: number) => {
-  const membroAusente = getMembro(a.membro_id)
-  const tipoVaga = membroAusente?.tipo === 'Atendente'
-    ? 'Atendente'
-    : membroAusente?.instrumento || 'Músico'
-  return (
-    <div key={i} className="flex items-center justify-between bg-yellow-50 rounded-lg px-3 py-2">
-      <div>
-        <p className="text-sm font-medium text-gray-700">{tipoVaga}</p>
-        <p className="text-xs text-gray-500">Ausência de: {membroAusente?.nome || '—'}</p>
-      </div>
-    </div>
-  )
-})}
+              {ausentes.filter((a: any) => !a.substituto_id).map((a: any, i: number) => {
+                const membroAusente = getMembro(a.membro_id)
+                const tipo = (membroAusente?.tipo ?? '').toString().trim().toLowerCase()
+                const instrumento = (membroAusente?.instrumento ?? '').toString().trim()
+                const tipoVaga = tipo === 'atendente'
+                  ? 'Atendente'
+                  : instrumento && instrumento !== 'Nenhum'
+                    ? instrumento
+                    : '—'
+                return (
+                  <div key={i} className="flex items-center justify-between bg-yellow-50 rounded-lg px-3 py-2">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">{tipoVaga}</p>
+                      <p className="text-xs text-gray-500">Ausência de: {membroAusente?.nome || '—'}</p>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </div>
         )}
