@@ -2,10 +2,17 @@ import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
+import webpush from 'web-push'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
+
+webpush.setVapidDetails(
+  process.env.VAPID_SUBJECT!,
+  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+  process.env.VAPID_PRIVATE_KEY!
 )
 
 async function getUsuarioLogado() {
@@ -22,6 +29,36 @@ async function getUsuarioLogado() {
     return data?.nome || 'Desconhecido'
   } catch {
     return 'Desconhecido'
+  }
+}
+
+async function notificarAtendente(nomeAtendente: string, grupo: string, data: string, hospital: string) {
+  try {
+    const { data: membro } = await supabaseAdmin
+      .from('membros')
+      .select('id')
+      .eq('nome', nomeAtendente)
+      .single()
+
+    if (!membro) return
+
+    const { data: assinatura } = await supabaseAdmin
+      .from('push_subscriptions')
+      .select('subscription')
+      .eq('membro_id', membro.id)
+      .single()
+
+    if (!assinatura) return
+
+    await webpush.sendNotification(
+      assinatura.subscription,
+      JSON.stringify({
+        title: 'DARPE — Você foi escalado!',
+        body: `${grupo} — ${hospital} em ${new Date(data + 'T12:00:00').toLocaleDateString('pt-BR')}`
+      })
+    )
+  } catch (e) {
+    console.error('Erro ao notificar atendente:', e)
   }
 }
 
@@ -52,7 +89,7 @@ export async function POST(request: NextRequest) {
   const { data, error } = await supabaseAdmin.from('escalas').insert([body]).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  const { error: logError } = await supabaseAdmin.from('logs').insert([{
+  await supabaseAdmin.from('logs').insert([{
     usuario_nome: usuarioNome,
     acao: `Criou escala: ${body.grupo} — ${body.data}`,
     tabela: 'escalas',
@@ -61,7 +98,16 @@ export async function POST(request: NextRequest) {
     dados_depois: body,
   }])
 
-  console.log('Log error:', logError)
+  // Notifica atendente
+  if (body.atendentes && body.hospital_id) {
+    const { data: hospital } = await supabaseAdmin
+      .from('hospitais')
+      .select('nome')
+      .eq('id', body.hospital_id)
+      .single()
+
+    await notificarAtendente(body.atendentes, body.grupo, body.data, hospital?.nome || '')
+  }
 
   return NextResponse.json({ success: true })
 }
