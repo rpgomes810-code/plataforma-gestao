@@ -30,11 +30,11 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
     })
   }
 
-  // CORRIGIDO: Função para buscar membro com normalização de ID
-  const normalizeId = (v: any) => (v == null ? '' : String(v).trim())
-  
+  // CORRIGIDO: Função para normalizar IDs e buscar membros
+  const normalizeId = (v: any) => (v == null ? '' : String(v).trim());
+
   const getMembro = (membro_id: any) =>
-    todosMembros?.find((m: any) => normalizeId(m.id) === normalizeId(membro_id))
+    todosMembros?.find((m: any) => normalizeId(m.id) === normalizeId(membro_id));
 
   const cancelarConfirmacao = async (membro_id?: string) => {
     setLoading(true)
@@ -357,21 +357,23 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
               {ausentes.filter((a: any) => !a.substituto_id).map((a: any, i: number) => {
                 const membroAusente = getMembro(a.membro_id);
 
-                // NOVO: Normalização para evitar "Nenhum" e detectar atendente corretamente
-                const tipo = (membroAusente?.tipo ?? '').toString().trim().toLowerCase();
-                const instrumento = (membroAusente?.instrumento ?? '').toString().trim();
+                // Lógica robusta para exibir o tipo da vaga
+                let tipoVaga = 'Músico'; // valor padrão
 
-                const tipoVaga =
-                  tipo === 'atendente'
-                    ? 'Atendente'
-                    : instrumento && instrumento.toLowerCase() !== 'nenhum'
-                      ? instrumento
-                      : 'Músico';
+                if (membroAusente) {
+                  const tipoM = (membroAusente.tipo || '').toString().trim().toLowerCase();
+                  const instrumentoM = (membroAusente.instrumento || '').toString().trim();
+                  if (tipoM === 'atendente') {
+                    tipoVaga = 'Atendente';
+                  } else if (instrumentoM && instrumentoM.toLowerCase() !== 'nenhum') {
+                    tipoVaga = instrumentoM;
+                  }
+                }
 
                 return (
                   <div key={i} className="flex items-center justify-between bg-yellow-50 rounded-lg px-3 py-2">
                     <div>
-                      <p className="text-sm font-medium text-gray-700">{tipoVaga}</p>
+                      <p className="text-sm font-medium text-gray-700">Vaga de: {tipoVaga}</p>
                       <p className="text-xs text-gray-500">Ausência de: {membroAusente?.nome || '—'}</p>
                     </div>
                   </div>
