@@ -30,7 +30,7 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
     })
   }
 
-  // CORRIGIDO: Função para normalizar IDs e buscar membros
+  // Função para normalizar IDs e buscar membros
   const normalizeId = (v: any) => (v == null ? '' : String(v).trim());
 
   const getMembro = (membro_id: any) =>
@@ -349,7 +349,7 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
           </div>
         )}
 
-        {/* CORRIGIDO: Seção de vagas abertas com lógica melhorada */}
+        {/* SEÇÃO DE VAGAS ABERTAS COM CORREÇÃO ROBUSTA */}
         {ausentes.filter((a: any) => !a.substituto_id).length > 0 && (
           <div>
             <p className="text-xs font-semibold text-gray-400 uppercase mb-2">⚠️ Vagas abertas ({ausentes.filter((a: any) => !a.substituto_id).length})</p>
@@ -357,16 +357,16 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
               {ausentes.filter((a: any) => !a.substituto_id).map((a: any, i: number) => {
                 const membroAusente = getMembro(a.membro_id);
 
-                // Lógica robusta para exibir o tipo da vaga
+                // Força sempre a string correta nessas situações
                 let tipoVaga = 'Músico'; // valor padrão
 
                 if (membroAusente) {
-                  const tipoM = (membroAusente.tipo || '').toString().trim().toLowerCase();
-                  const instrumentoM = (membroAusente.instrumento || '').toString().trim();
-                  if (tipoM === 'atendente') {
+                  const tipo = (membroAusente.tipo || '').toString().trim().toLowerCase();
+                  const instrumento = (membroAusente.instrumento || '').toString().trim().toLowerCase();
+                  if (tipo === 'atendente' || membroAusente.nome === escala.atendentes) {
                     tipoVaga = 'Atendente';
-                  } else if (instrumentoM && instrumentoM.toLowerCase() !== 'nenhum') {
-                    tipoVaga = instrumentoM;
+                  } else if (instrumento && instrumento !== 'nenhum' && instrumento !== '' && instrumento !== 'undefined' && instrumento !== 'null') {
+                    tipoVaga = membroAusente.instrumento;
                   }
                 }
 
