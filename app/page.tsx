@@ -14,6 +14,8 @@ export default function Login() {
   const [mensagem, setMensagem] = useState('')
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
   const [mostrarSenha, setMostrarSenha] = useState(false)
+  const [isIOS, setIsIOS] = useState(false)
+  const [mostrarPassoIOS, setMostrarPassoIOS] = useState(false)
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,6 +23,9 @@ export default function Login() {
   )
 
   useEffect(() => {
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent)
+    setIsIOS(ios)
+
     const handler = (e: any) => {
       e.preventDefault()
       setDeferredPrompt(e)
@@ -84,11 +89,43 @@ export default function Login() {
           </p>
         </div>
 
-        {deferredPrompt && (
+        {/* Botão Android */}
+        {deferredPrompt && !isIOS && (
           <button onClick={instalarApp}
             className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition text-sm mb-4">
             📲 Instalar app no celular
           </button>
+        )}
+
+        {/* Botão iPhone */}
+        {isIOS && !mostrarPassoIOS && (
+          <button onClick={() => setMostrarPassoIOS(true)}
+            className="w-full bg-gray-800 text-white py-3 rounded-lg font-semibold hover:bg-gray-900 transition text-sm mb-4">
+            📲 Instalar app no iPhone
+          </button>
+        )}
+
+        {/* Passo a passo iPhone */}
+        {isIOS && mostrarPassoIOS && (
+          <div className="bg-gray-50 rounded-xl p-4 mb-4 text-sm">
+            <p className="font-bold text-gray-800 mb-3">Como instalar no iPhone:</p>
+            <ol className="space-y-2">
+              {[
+                'Abra este site no Safari',
+                'Toque no ícone de compartilhar (□↑) na barra inferior',
+                'Role e toque em "Adicionar à Tela de Início"',
+                'Toque em "Adicionar"',
+              ].map((passo, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span className="w-5 h-5 rounded-full bg-gray-800 text-white text-xs font-bold flex items-center justify-center shrink-0">{i + 1}</span>
+                  <p className="text-gray-600">{passo}</p>
+                </li>
+              ))}
+            </ol>
+            <button onClick={() => setMostrarPassoIOS(false)} className="text-xs text-gray-400 mt-3 hover:text-gray-600">
+              ← Fechar
+            </button>
+          </div>
         )}
 
         {modo === 'login' ? (
