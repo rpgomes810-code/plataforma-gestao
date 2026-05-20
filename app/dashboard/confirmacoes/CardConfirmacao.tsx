@@ -19,7 +19,6 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
   const statusAtual = minhaConfirmacao?.status || null
   const souAvulso = !euSouDoGrupo && minhaConfirmacao?.tipo === 'avulso'
 
-  // Atendente
   const atendenteMembro = todosMembros?.find((m: any) => m.nome === escala.atendentes)
   const euSouOAtendente = membroLogado?.nome === escala.atendentes
   const confirmacaoAtendente = atendenteMembro ? confirmacoes.find((c: any) => c.membro_id === atendenteMembro.id) : null
@@ -178,7 +177,6 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
           </div>
         </div>
 
-        {/* Atendente */}
         {escala.atendentes && (
           <div className="bg-blue-50 rounded-xl px-4 py-3">
             <p className="text-xs font-semibold text-blue-400 uppercase mb-2">🎙️ Atendente</p>
@@ -353,9 +351,9 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
             <div className="space-y-2">
               {ausentes.filter((a: any) => !a.substituto_id).map((a: any, i: number) => {
                 const membroAusente = getMembro(a.membro_id)
-                const tipoVaga = membroAusente?.tipo === 'Atendente'
+                const tipoVaga = membroAusente?.tipo === 'Atendente' || a.membros?.tipo === 'Atendente'
                   ? 'Atendente'
-                  : membroAusente?.instrumento || a.membros?.instrumento || a.membros?.tipo || 'Músico'
+                  : membroAusente?.instrumento || a.membros?.instrumento || 'Músico'
                 return (
                   <div key={i} className="flex items-center justify-between bg-yellow-50 rounded-lg px-3 py-2">
                     <div>
