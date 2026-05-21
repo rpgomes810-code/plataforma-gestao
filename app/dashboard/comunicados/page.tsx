@@ -129,8 +129,7 @@ export default function Comunicados() {
   }
 
   const getCientes = (comunicado: any) => {
-    const leituras = comunicado.comunicados_leituras?.map((l: any) => l.membro_id) || []
-    return leituras
+    return comunicado.comunicados_leituras?.map((l: any) => l.membro_id) || []
   }
 
   const comunicadosVisiveis = comunicados.filter((c: any) => {
@@ -273,7 +272,7 @@ export default function Comunicados() {
                 <p style={{ color: '#cbd5e1', fontSize: 14, lineHeight: 1.6, margin: '12px 0', wordBreak: 'break-word', overflowWrap: 'break-word' }}>{comunicado.conteudo}</p>
 
                 {/* Perfis destino */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
                   {comunicado.perfis_destino?.map((p: string) => (
                     <span key={p} style={{ padding: '3px 8px', borderRadius: 6, background: 'rgba(59,130,246,0.15)', color: '#60a5fa', fontSize: 11, fontWeight: 500 }}>{p}</span>
                   ))}
@@ -281,34 +280,37 @@ export default function Comunicados() {
 
                 {/* Barra de progresso — só para gestores */}
                 {isGestor && totalDestinatarios > 0 && (
-                  <div style={{ marginBottom: 12 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                      <span style={{ color: '#94a3b8', fontSize: 12 }}>Ciência dos destinatários</span>
+                  <div style={{ marginBottom: 12, background: 'rgba(255,255,255,0.04)', borderRadius: 12, padding: '12px 16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                      <span style={{ color: '#e2e8f0', fontSize: 14, fontWeight: 600 }}>Ciência dos destinatários</span>
                       <button onClick={() => setExpandido(expandidoAgora ? null : comunicado.id)}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#60a5fa', fontSize: 12 }}>
-                        {totalCientes}/{totalDestinatarios} ({percentual}%) {expandidoAgora ? '▲' : '▼'}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: percentual === 100 ? '#34d399' : '#60a5fa', fontSize: 16, fontWeight: 700 }}>
+                        {totalCientes}/{totalDestinatarios} — {percentual}% {expandidoAgora ? '▲' : '▼'}
                       </button>
                     </div>
-                    <div style={{ height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', borderRadius: 3, width: `${percentual}%`, background: percentual === 100 ? '#34d399' : '#3b82f6', transition: 'width 0.3s' }} />
+                    <div style={{ height: 10, borderRadius: 5, background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
+                      <div style={{
+                        height: '100%', borderRadius: 5, width: `${percentual}%`,
+                        background: percentual === 100 ? 'linear-gradient(90deg, #059669, #34d399)' : 'linear-gradient(90deg, #1e40af, #3b82f6)',
+                        transition: 'width 0.3s'
+                      }} />
                     </div>
 
-                    {/* Lista cientes/pendentes */}
                     {expandidoAgora && (
-                      <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                      <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                         <div>
-                          <p style={{ color: '#34d399', fontSize: 12, fontWeight: 600, margin: '0 0 6px' }}>✅ Cientes ({totalCientes})</p>
+                          <p style={{ color: '#34d399', fontSize: 14, fontWeight: 700, margin: '0 0 8px' }}>✅ Cientes ({totalCientes})</p>
                           {destinatarios.filter(d => cientes.includes(d.id)).map(d => (
-                            <p key={d.id} style={{ color: '#94a3b8', fontSize: 12, margin: '0 0 3px' }}>{d.nome}</p>
+                            <p key={d.id} style={{ color: '#cbd5e1', fontSize: 13, margin: '0 0 4px' }}>• {d.nome}</p>
                           ))}
-                          {totalCientes === 0 && <p style={{ color: '#475569', fontSize: 12 }}>Nenhum ainda</p>}
+                          {totalCientes === 0 && <p style={{ color: '#475569', fontSize: 13 }}>Nenhum ainda</p>}
                         </div>
                         <div>
-                          <p style={{ color: '#f59e0b', fontSize: 12, fontWeight: 600, margin: '0 0 6px' }}>⏳ Pendentes ({totalDestinatarios - totalCientes})</p>
+                          <p style={{ color: '#f59e0b', fontSize: 14, fontWeight: 700, margin: '0 0 8px' }}>⏳ Pendentes ({totalDestinatarios - totalCientes})</p>
                           {destinatarios.filter(d => !cientes.includes(d.id)).map(d => (
-                            <p key={d.id} style={{ color: '#94a3b8', fontSize: 12, margin: '0 0 3px' }}>{d.nome}</p>
+                            <p key={d.id} style={{ color: '#cbd5e1', fontSize: 13, margin: '0 0 4px' }}>• {d.nome}</p>
                           ))}
-                          {totalDestinatarios === totalCientes && <p style={{ color: '#475569', fontSize: 12 }}>Todos cientes!</p>}
+                          {totalDestinatarios === totalCientes && <p style={{ color: '#475569', fontSize: 13 }}>Todos cientes! 🎉</p>}
                         </div>
                       </div>
                     )}
@@ -320,11 +322,11 @@ export default function Comunicados() {
                   <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                     {!ciente ? (
                       <button onClick={() => marcarCiente(comunicado.id)}
-                        style={{ padding: '8px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 13, color: 'white', background: 'linear-gradient(135deg, #059669, #10b981)' }}>
+                        style={{ padding: '10px 20px', borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14, color: 'white', background: 'linear-gradient(135deg, #059669, #10b981)' }}>
                         ✅ Estou ciente
                       </button>
                     ) : (
-                      <span style={{ padding: '8px 16px', borderRadius: 10, background: 'rgba(52,211,153,0.1)', color: '#34d399', fontSize: 13, fontWeight: 600 }}>
+                      <span style={{ padding: '10px 20px', borderRadius: 10, background: 'rgba(52,211,153,0.1)', color: '#34d399', fontSize: 14, fontWeight: 600 }}>
                         ✅ Ciente
                       </span>
                     )}
