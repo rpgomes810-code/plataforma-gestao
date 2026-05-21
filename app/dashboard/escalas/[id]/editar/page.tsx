@@ -38,8 +38,8 @@ export default function EditarEscala() {
     supabase.from('hospitais').select('id, nome').order('nome', { ascending: true })
       .then(({ data }) => setHospitais(data || []))
 
-    supabase.from('membros').select('id, nome').eq('tipo', 'Atendente').eq('status', 'Ativo').order('nome', { ascending: true })
-      .then(({ data }) => setAtendentes(data || []))
+    supabase.from('membros').select('id, nome').eq('perfil', 'Atendente').eq('status', 'Ativo').order('nome', { ascending: true })
+  .then(({ data }) => setAtendentes(data || []))
 
     fetch('/api/grupos').then(res => res.json()).then(data => { if (Array.isArray(data)) setGrupos(data) })
 
