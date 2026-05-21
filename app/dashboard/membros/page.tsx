@@ -2,7 +2,13 @@ export const dynamic = 'force-dynamic'
 
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 import BotaoExcluir from './BotaoExcluir'
+
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
 export default async function Membros() {
   const cookieStore = await cookies()
@@ -20,15 +26,28 @@ export default async function Membros() {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: usuarioLogado } = await supabase
+  const { data: membroLogado } = await supabaseAdmin
     .from('membros')
-    .select('nivel_acesso, nome')
+    .select('id, nome, perfil')
     .eq('user_id', user?.id)
     .single()
 
-  const isAdmin = usuarioLogado?.nivel_acesso === 'Administrador'
+  // Busca permissões do perfil
+  let permissoes: any = {}
+  if (membroLogado?.perfil) {
+    const { data } = await supabaseAdmin
+      .from('permissoes')
+      .select('paginas')
+      .eq('perfil', membroLogado.perfil)
+      .single()
+    permissoes = data?.paginas || {}
+  }
 
-  const { data: membros } = await supabase
+  const podeCriar = permissoes?.membros?.criar === true
+  const podeEditar = permissoes?.membros?.editar === true
+  const podeExcluir = permissoes?.membros?.excluir === true
+
+  const { data: membros } = await supabaseAdmin
     .from('membros')
     .select('*')
     .order('nome', { ascending: true })
@@ -48,10 +67,12 @@ export default async function Membros() {
           <h2 className="text-xl font-bold text-gray-800">Membros</h2>
           <p className="text-sm text-gray-500">{membros?.length} membros cadastrados</p>
         </div>
-        <a href="/dashboard/membros/novo"
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">
-          + Novo Membro
-        </a>
+        {podeCriar && (
+          <a href="/dashboard/membros/novo"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">
+            + Novo Membro
+          </a>
+        )}
       </div>
 
       {grupos.map(grupo => (
@@ -77,23 +98,24 @@ export default async function Membros() {
                 <div className="border-t pt-3 flex justify-between items-center text-sm text-gray-500">
                   <span>📱 {membro.telefone || '—'}</span>
                   <div className="flex items-center gap-2">
-                    <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                      membro.nivel_acesso === 'Ministério' ? 'bg-purple-100 text-purple-700' :
-                      membro.nivel_acesso === 'Administrador' ? 'bg-blue-100 text-blue-700' :
-                      membro.nivel_acesso === 'Auxiliar' ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-gray-100 text-gray-600'
-                    }`}>
-                      {membro.nivel_acesso || '—'}
-                    </span>
+                    {membro.perfil && (
+                      <span className="text-xs font-semibold px-2 py-1 rounded-full bg-blue-50 text-blue-700">
+                        {membro.perfil}
+                      </span>
+                    )}
                     <a href={`/dashboard/membros/${membro.id}/estatisticas`}
                       className="text-xs font-semibold px-3 py-1 rounded-full bg-purple-50 text-purple-600 hover:bg-purple-100 transition">
                       📊
                     </a>
-                    <a href={`/dashboard/membros/${membro.id}/editar`}
-                      className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition">
-                      Editar
-                    </a>
-                    {isAdmin && <BotaoExcluir id={membro.id} nome={membro.nome} usuarioNome={usuarioLogado?.nome} />}
+                    {podeEditar && (
+                      <a href={`/dashboard/membros/${membro.id}/editar`}
+                        className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition">
+                        Editar
+                      </a>
+                    )}
+                    {podeExcluir && (
+                      <BotaoExcluir id={membro.id} nome={membro.nome} usuarioNome={membroLogado?.nome} />
+                    )}
                   </div>
                 </div>
               </div>
@@ -123,16 +145,24 @@ export default async function Membros() {
                 <div className="border-t pt-3 flex justify-between items-center text-sm text-gray-500">
                   <span>📱 {membro.telefone || '—'}</span>
                   <div className="flex items-center gap-2">
-                    <span>📍 {membro.cidade || '—'}</span>
+                    {membro.perfil && (
+                      <span className="text-xs font-semibold px-2 py-1 rounded-full bg-blue-50 text-blue-700">
+                        {membro.perfil}
+                      </span>
+                    )}
                     <a href={`/dashboard/membros/${membro.id}/estatisticas`}
                       className="text-xs font-semibold px-3 py-1 rounded-full bg-purple-50 text-purple-600 hover:bg-purple-100 transition">
                       📊
                     </a>
-                    <a href={`/dashboard/membros/${membro.id}/editar`}
-                      className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition">
-                      Editar
-                    </a>
-                    {isAdmin && <BotaoExcluir id={membro.id} nome={membro.nome} usuarioNome={usuarioLogado?.nome} />}
+                    {podeEditar && (
+                      <a href={`/dashboard/membros/${membro.id}/editar`}
+                        className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition">
+                        Editar
+                      </a>
+                    )}
+                    {podeExcluir && (
+                      <BotaoExcluir id={membro.id} nome={membro.nome} usuarioNome={membroLogado?.nome} />
+                    )}
                   </div>
                 </div>
               </div>
