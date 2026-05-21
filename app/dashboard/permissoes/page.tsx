@@ -3,17 +3,33 @@
 import { useEffect, useState } from 'react'
 
 const PAGINAS = [
-  { key: 'confirmacoes', label: '✅ Confirmações' },
-  { key: 'escalas', label: '📅 Escalas' },
-  { key: 'registros', label: '📋 Registros' },
-  { key: 'relatorios', label: '📈 Relatórios' },
-  { key: 'membros', label: '👥 Membros' },
-  { key: 'hospitais', label: '🏥 Hospitais' },
-  { key: 'vagas', label: '⚠️ Vagas' },
-  { key: 'grupos', label: '🎻 Grupos' },
-  { key: 'logs', label: '📋 Logs' },
-  { key: 'solicitacoes', label: '📩 Solicitações' },
+  { key: 'confirmacoes', label: 'Confirmações', acoes: ['ver'] },
+  { key: 'escalas', label: 'Escalas', acoes: ['ver', 'criar', 'editar', 'excluir'] },
+  { key: 'registros', label: 'Registros', acoes: ['ver', 'criar', 'editar', 'excluir'] },
+  { key: 'relatorios', label: 'Relatórios', acoes: ['ver'] },
+  { key: 'membros', label: 'Membros', acoes: ['ver', 'criar', 'editar', 'excluir'] },
+  { key: 'hospitais', label: 'Hospitais', acoes: ['ver', 'criar', 'editar', 'excluir'] },
+  { key: 'vagas', label: 'Vagas', acoes: ['ver'] },
+  { key: 'grupos', label: 'Grupos', acoes: ['ver', 'criar', 'editar', 'excluir'] },
+  { key: 'logs', label: 'Logs', acoes: ['ver'] },
+  { key: 'solicitacoes', label: 'Solicitações', acoes: ['ver'] },
 ]
+
+const LABEL_ACAO: Record<string, string> = {
+  ver: 'Ver',
+  criar: 'Criar',
+  editar: 'Editar',
+  excluir: 'Excluir',
+}
+
+const COR_ACAO: Record<string, string> = {
+  ver: 'bg-blue-600 text-white hover:bg-blue-700',
+  criar: 'bg-green-600 text-white hover:bg-green-700',
+  editar: 'bg-yellow-500 text-white hover:bg-yellow-600',
+  excluir: 'bg-red-600 text-white hover:bg-red-700',
+}
+
+const COR_INATIVO = 'bg-gray-100 text-gray-400 hover:bg-gray-200'
 
 export default function Permissoes() {
   const [permissoes, setPermissoes] = useState<any[]>([])
@@ -32,13 +48,24 @@ export default function Permissoes() {
     })
   }, [])
 
-  const togglePagina = async (perfil: string, pagina: string, ativo: boolean) => {
+  const toggleAcao = async (perfil: string, pagina: string, acao: string, ativo: boolean) => {
     const item = permissoes.find(p => p.perfil === perfil)
     if (!item) return
 
-    const novasPaginas = ativo
-      ? [...item.paginas, pagina]
-      : item.paginas.filter((p: string) => p !== pagina)
+    const paginaAtual = item.paginas?.[pagina] || {}
+    const novaPagina = { ...paginaAtual, [acao]: ativo }
+
+    // Se desativar "ver", desativa tudo
+    if (acao === 'ver' && !ativo) {
+      Object.keys(novaPagina).forEach(k => novaPagina[k] = false)
+    }
+
+    // Se ativar qualquer ação, ativa "ver" também
+    if (acao !== 'ver' && ativo) {
+      novaPagina['ver'] = true
+    }
+
+    const novasPaginas = { ...item.paginas, [pagina]: novaPagina }
 
     setPermissoes(prev => prev.map(p => p.perfil === perfil ? { ...p, paginas: novasPaginas } : p))
 
@@ -66,33 +93,56 @@ export default function Permissoes() {
     <div className="p-4 md:p-6">
       <div className="mb-6">
         <h2 className="text-xl font-bold text-gray-800">Permissões por Perfil</h2>
-        <p className="text-sm text-gray-500">Configure quais páginas cada perfil pode acessar</p>
+        <p className="text-sm text-gray-500">Configure o que cada perfil pode fazer em cada página</p>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-6">
         {permissoes.map(item => (
           <div key={item.perfil} className="bg-white rounded-2xl shadow p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-bold text-gray-800">{item.perfil}</h3>
               {salvando === item.perfil && <span className="text-xs text-blue-500">Salvando...</span>}
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-              {PAGINAS.map(pagina => {
-                const ativo = item.paginas?.includes(pagina.key)
-                return (
-                  <button
-                    key={pagina.key}
-                    onClick={() => togglePagina(item.perfil, pagina.key, !ativo)}
-                    className={`px-3 py-2 rounded-lg text-xs font-semibold transition ${
-                      ativo
-                        ? 'bg-blue-600 text-white hover:bg-blue-700'
-                        : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                    }`}
-                  >
-                    {pagina.label}
-                  </button>
-                )
-              })}
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr>
+                    <th className="text-left text-xs font-semibold text-gray-400 uppercase pb-2 pr-4">Página</th>
+                    <th className="text-center text-xs font-semibold text-blue-400 uppercase pb-2 px-2">Ver</th>
+                    <th className="text-center text-xs font-semibold text-green-400 uppercase pb-2 px-2">Criar</th>
+                    <th className="text-center text-xs font-semibold text-yellow-400 uppercase pb-2 px-2">Editar</th>
+                    <th className="text-center text-xs font-semibold text-red-400 uppercase pb-2 px-2">Excluir</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {PAGINAS.map(pagina => {
+                    const paginaPerms = item.paginas?.[pagina.key] || {}
+                    return (
+                      <tr key={pagina.key}>
+                        <td className="py-2 pr-4 font-medium text-gray-700">{pagina.label}</td>
+                        {['ver', 'criar', 'editar', 'excluir'].map(acao => {
+                          const temAcao = pagina.acoes.includes(acao)
+                          const ativo = paginaPerms[acao] === true
+                          return (
+                            <td key={acao} className="py-2 px-2 text-center">
+                              {temAcao ? (
+                                <button
+                                  onClick={() => toggleAcao(item.perfil, pagina.key, acao, !ativo)}
+                                  className={`w-8 h-8 rounded-lg text-xs font-bold transition ${ativo ? COR_ACAO[acao] : COR_INATIVO}`}
+                                >
+                                  {ativo ? '✓' : '×'}
+                                </button>
+                              ) : (
+                                <span className="text-gray-200">—</span>
+                              )}
+                            </td>
+                          )
+                        })}
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
         ))}
