@@ -63,6 +63,13 @@ export default function Dashboard() {
   const dadosHospital = Object.entries(porHospital).sort((a, b) => b[1] - a[1])
   const maxHospital = Math.max(...dadosHospital.map(([, v]) => v), 1)
 
+  const cardStyle = {
+    background: 'rgba(219,234,254,0.07)',
+    border: '1px solid rgba(147,197,253,0.2)',
+    borderRadius: 16,
+    padding: 20,
+  }
+
   const cards = [
     {
       key: 'membros',
@@ -120,26 +127,30 @@ export default function Dashboard() {
   ]
 
   return (
-    <div className="p-4 md:p-6 min-h-screen" style={{ background: '#0f172a' }}>
+    <div style={{ padding: '24px', minHeight: '100vh', background: '#0f172a' }}>
 
       {/* Header */}
-      <div className="mb-6">
-        <p className="text-xs uppercase tracking-widest mb-0.5" style={{ color: '#64748b' }}>Bem-vindo de volta</p>
-        <h2 className="text-2xl font-bold" style={{ color: '#f1f5f9' }}>{membro?.nome || '...'}</h2>
+      <div style={{ marginBottom: 24 }}>
+        <p style={{ color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>Bem-vindo de volta</p>
+        <h2 style={{ color: '#f1f5f9', fontSize: 24, fontWeight: 700, margin: 0 }}>{membro?.nome || '...'}</h2>
       </div>
 
-      {/* Vagas em destaque */}
+      {/* Vagas */}
       {vagas.length > 0 && (
-        <a href="/dashboard/vagas" className="flex items-center justify-between px-5 py-4 rounded-2xl mb-6 transition hover:opacity-90"
-          style={{ background: 'linear-gradient(135deg, #d97706, #f59e0b)' }}>
-          <div className="flex items-center gap-3">
+        <a href="/dashboard/vagas" style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '16px 20px', borderRadius: 16, marginBottom: 24,
+          background: 'linear-gradient(135deg, #d97706, #f59e0b)',
+          textDecoration: 'none',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
               <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
             </svg>
             <div>
-              <p className="font-bold text-sm text-white">{vagas.length} vaga{vagas.length > 1 ? 's' : ''} aberta{vagas.length > 1 ? 's' : ''}</p>
-              <p className="text-xs text-white/70">Clique para ver e preencher</p>
+              <p style={{ color: 'white', fontWeight: 700, fontSize: 14, margin: 0 }}>{vagas.length} vaga{vagas.length > 1 ? 's' : ''} aberta{vagas.length > 1 ? 's' : ''}</p>
+              <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, margin: 0 }}>Clique para ver e preencher</p>
             </div>
           </div>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -149,25 +160,26 @@ export default function Dashboard() {
       )}
 
       {/* Cards */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginBottom: 24 }}
+        className="xl:grid-cols-4">
         {cards.map(card => (
-          <div key={card.key} className="rounded-2xl p-5" style={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.06)' }}>
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.05)' }}>
+          <div key={card.key} style={cardStyle}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {card.icon}
               </div>
-              <button onClick={() => toggle(card.key)} style={{ color: '#475569' }} className="hover:text-blue-400 transition">
+              <button onClick={() => toggle(card.key)} style={{ color: '#475569', background: 'none', border: 'none', cursor: 'pointer' }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   {aberto[card.key] ? <polyline points="18 15 12 9 6 15"/> : <polyline points="6 9 12 15 18 9"/>}
                 </svg>
               </button>
             </div>
-            <p className="text-3xl font-bold mb-0.5" style={{ color: card.cor }}>{card.valor}</p>
-            <p className="text-xs font-medium" style={{ color: '#64748b' }}>{card.label}</p>
+            <p style={{ color: card.cor, fontSize: 30, fontWeight: 700, margin: '0 0 4px' }}>{card.valor}</p>
+            <p style={{ color: '#64748b', fontSize: 12, fontWeight: 500, margin: 0 }}>{card.label}</p>
             {aberto[card.key] && card.detalhes.length > 0 && (
-              <div className="mt-3 pt-3 space-y-1" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(147,197,253,0.1)' }}>
                 {card.detalhes.map((d, i) => (
-                  <p key={i} className="text-xs" style={{ color: '#94a3b8' }}>{d}</p>
+                  <p key={i} style={{ color: '#94a3b8', fontSize: 12, margin: '0 0 4px' }}>{d}</p>
                 ))}
               </div>
             )}
@@ -176,57 +188,59 @@ export default function Dashboard() {
       </div>
 
       {/* Gráfico 12 meses */}
-      <div className="rounded-2xl p-6 mb-4" style={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.06)' }}>
-        <div className="flex items-center gap-2 mb-5">
-          <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #60a5fa, #1e40af)' }}></div>
-          <h3 className="text-sm font-bold" style={{ color: '#cbd5e1' }}>Atendimentos mensais — últimos 12 meses</h3>
+      <div style={{ ...cardStyle, marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+          <div style={{ width: 4, height: 20, borderRadius: 2, background: 'linear-gradient(180deg, #60a5fa, #1e40af)' }}></div>
+          <h3 style={{ color: '#cbd5e1', fontSize: 13, fontWeight: 700, margin: 0 }}>Atendimentos mensais — últimos 12 meses</h3>
         </div>
-        <div className="flex items-end gap-1 md:gap-2 h-36">
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height: 140 }}>
           {ultimos12.map((m, i) => (
-            <div key={i} className="flex-1 flex flex-col items-center gap-1">
-              <span className="text-xs font-bold" style={{ color: m.total > 0 ? '#60a5fa' : 'transparent' }}>{m.total > 0 ? m.total : '.'}</span>
-              <div className="w-full rounded-t-md transition-all"
-                style={{
-                  height: `${Math.max((m.total / maxGrafico) * 110, m.total > 0 ? 8 : 2)}px`,
-                  background: m.total > 0 ? 'linear-gradient(180deg, #60a5fa, #1e40af)' : 'rgba(255,255,255,0.05)'
-                }} />
-              <span className="whitespace-nowrap" style={{ fontSize: '8px', color: '#475569' }}>{m.label}</span>
+            <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+              <span style={{ fontSize: 10, fontWeight: 700, color: m.total > 0 ? '#60a5fa' : 'transparent' }}>{m.total > 0 ? m.total : '.'}</span>
+              <div style={{
+                width: '100%', borderRadius: '4px 4px 0 0',
+                height: `${Math.max((m.total / maxGrafico) * 110, m.total > 0 ? 8 : 2)}px`,
+                background: m.total > 0 ? 'linear-gradient(180deg, #60a5fa, #1e40af)' : 'rgba(147,197,253,0.05)'
+              }} />
+              <span style={{ fontSize: 8, color: '#475569', whiteSpace: 'nowrap' }}>{m.label}</span>
             </div>
           ))}
         </div>
       </div>
 
       {/* Gráfico hospitais */}
-      <div className="rounded-2xl p-6 mb-6" style={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.06)' }}>
-        <div className="flex items-center gap-2 mb-5">
-          <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #c084fc, #7c3aed)' }}></div>
-          <h3 className="text-sm font-bold" style={{ color: '#cbd5e1' }}>Atendimentos por hospital — mês atual</h3>
+      <div style={{ ...cardStyle, marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+          <div style={{ width: 4, height: 20, borderRadius: 2, background: 'linear-gradient(180deg, #c084fc, #7c3aed)' }}></div>
+          <h3 style={{ color: '#cbd5e1', fontSize: 13, fontWeight: 700, margin: 0 }}>Atendimentos por hospital — mês atual</h3>
         </div>
         {dadosHospital.length === 0 ? (
-          <p className="text-sm" style={{ color: '#475569' }}>Nenhum registro este mês.</p>
+          <p style={{ color: '#475569', fontSize: 14 }}>Nenhum registro este mês.</p>
         ) : (
-          <div className="flex items-end gap-2 h-36">
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 140 }}>
             {dadosHospital.map(([nome, total], i) => (
-              <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                <span className="text-xs font-bold" style={{ color: '#c084fc' }}>{total}</span>
-                <div className="w-full rounded-t-md transition-all"
-                  style={{
-                    height: `${Math.max((total / maxHospital) * 110, 8)}px`,
-                    background: 'linear-gradient(180deg, #c084fc, #7c3aed)'
-                  }} />
-                <span className="text-center leading-tight" style={{ fontSize: '8px', color: '#475569' }}>{nome}</span>
+              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: '#c084fc' }}>{total}</span>
+                <div style={{
+                  width: '100%', borderRadius: '4px 4px 0 0',
+                  height: `${Math.max((total / maxHospital) * 110, 8)}px`,
+                  background: 'linear-gradient(180deg, #c084fc, #7c3aed)'
+                }} />
+                <span style={{ fontSize: 8, color: '#475569', textAlign: 'center' }}>{nome}</span>
               </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* Notificações no final */}
+      {/* Notificações */}
       {notificacaoAtiva !== null && (
-        <div className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium" style={{
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          padding: '12px 16px', borderRadius: 12, fontSize: 13, fontWeight: 500,
           background: notificacaoAtiva ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)',
           border: `1px solid ${notificacaoAtiva ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
-          color: notificacaoAtiva ? '#34d399' : '#f87171'
+          color: notificacaoAtiva ? '#34d399' : '#f87171',
         }}>
           <span>{notificacaoAtiva ? '🔔' : '🔕'}</span>
           <span>{notificacaoAtiva ? 'Notificações ativadas' : 'Notificações desativadas — ative nas configurações do celular'}</span>
