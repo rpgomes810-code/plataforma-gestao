@@ -32,7 +32,6 @@ export default async function Membros() {
     .eq('user_id', user?.id)
     .single()
 
-  // Busca permissões do perfil
   let permissoes: any = {}
   if (membroLogado?.perfil) {
     const { data } = await supabaseAdmin
@@ -58,6 +57,13 @@ export default async function Membros() {
     return numA - numB
   })
   const semGrupo = membros?.filter(m => !m.grupo) || []
+
+  const subtitulo = (membro: any) => {
+    const perfil = membro.perfil || membro.tipo || ''
+    const instrumento = membro.instrumento && membro.instrumento !== 'Nenhum' ? membro.instrumento : ''
+    if (perfil === 'Músico/Vocal' && instrumento) return `${perfil} — ${instrumento}`
+    return perfil
+  }
 
   return (
     <div className="p-4 md:p-6">
@@ -87,7 +93,7 @@ export default async function Membros() {
                   </div>
                   <div className="flex-1">
                     <p className="font-bold text-gray-800">{membro.nome}</p>
-                    <p className="text-sm text-gray-500">{membro.perfil || membro.tipo}{membro.instrumento && membro.instrumento !== 'Nenhum' ? ` — ${membro.instrumento}` : ''}</p>
+                    <p className="text-sm text-gray-500">{subtitulo(membro)}</p>
                   </div>
                   <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
                     membro.status === 'Ativo' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
@@ -98,11 +104,6 @@ export default async function Membros() {
                 <div className="border-t pt-3 flex justify-between items-center text-sm text-gray-500">
                   <span>📱 {membro.telefone || '—'}</span>
                   <div className="flex items-center gap-2">
-                    {membro.perfil && (
-                      <span className="text-xs font-semibold px-2 py-1 rounded-full bg-blue-50 text-blue-700">
-                        {membro.perfil}
-                      </span>
-                    )}
                     <a href={`/dashboard/membros/${membro.id}/estatisticas`}
                       className="text-xs font-semibold px-3 py-1 rounded-full bg-purple-50 text-purple-600 hover:bg-purple-100 transition">
                       📊
@@ -136,7 +137,7 @@ export default async function Membros() {
                   </div>
                   <div className="flex-1">
                     <p className="font-bold text-gray-800">{membro.nome}</p>
-                    <p className="text-sm text-gray-500">{membro.instrumento || 'Sem instrumento'}</p>
+                    <p className="text-sm text-gray-500">{subtitulo(membro)}</p>
                   </div>
                   <span className="text-xs font-semibold px-2 py-1 rounded-full bg-yellow-100 text-yellow-700">
                     Pendente
@@ -145,11 +146,6 @@ export default async function Membros() {
                 <div className="border-t pt-3 flex justify-between items-center text-sm text-gray-500">
                   <span>📱 {membro.telefone || '—'}</span>
                   <div className="flex items-center gap-2">
-                    {membro.perfil && (
-                      <span className="text-xs font-semibold px-2 py-1 rounded-full bg-blue-50 text-blue-700">
-                        {membro.perfil}
-                      </span>
-                    )}
                     <a href={`/dashboard/membros/${membro.id}/estatisticas`}
                       className="text-xs font-semibold px-3 py-1 rounded-full bg-purple-50 text-purple-600 hover:bg-purple-100 transition">
                       📊
