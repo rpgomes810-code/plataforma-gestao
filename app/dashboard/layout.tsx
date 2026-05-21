@@ -48,8 +48,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname()
   const [mostrarPopup, setMostrarPopup] = useState(false)
   const [ativando, setAtivando] = useState(false)
-  const [navItems, setNavItems] = useState(todosNavItems)
-  const [temAcessoPermissoes, setTemAcessoPermissoes] = useState(false)
+  const [navItems, setNavItems] = useState<typeof todosNavItems>([])
+  const [permissoes, setPermissoes] = useState<any>(null)
+  const [carregando, setCarregando] = useState(true)
 
   useEffect(() => {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
@@ -59,25 +60,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   useEffect(() => {
     fetch('/api/membros/eu').then(r => r.json()).then(async membro => {
-      const permissoes = membro.permissoes || {}
+      const perms = membro.permissoes || {}
+      setPermissoes(perms)
 
-      // Verifica acesso à tela de permissões
       const res = await fetch('/api/permissoes/acesso?membro_id=' + membro.id)
       const data = await res.json()
-      setTemAcessoPermissoes(data.acesso)
 
-      // Filtra menu
       const filtrado = todosNavItems.filter(item => {
         if (item.key === null) {
           if (item.href === '/dashboard/permissoes') return data.acesso
-          return true // Início sempre aparece
+          return true
         }
-        return permissoes[item.key]?.ver === true
+        return perms[item.key]?.ver === true
       })
 
       setNavItems(filtrado)
+      setCarregando(false)
     })
   }, [])
+
+  // Verifica se a página atual tem permissão
+  const paginaAtual = todosNavItems.find(item => item.href === pathname)
+  const semPermissao = !carregando && paginaAtual?.key && permissoes && !permissoes[paginaAtual.key]?.ver
 
   const ativarNotificacoes = async () => {
     setAtivando(true)
@@ -106,6 +110,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
     setAtivando(false)
   }
+
+  if (carregando) return (
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <p className="text-gray-400 text-sm">Carregando...</p>
+    </div>
+  )
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row">
@@ -151,7 +161,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
 
         <main className="flex-1 pb-20 md:pb-0">
-          {children}
+          {semPermissao ? (
+            <div className="flex items-center justify-center h-full py-24">
+              <div className="text-center">
+                <p className="text-5xl mb-4">🔒</p>
+                <p className="text-gray-500">Você não tem acesso a esta página</p>
+              </div>
+            </div>
+          ) : children}
         </main>
 
         <nav className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg md:hidden z-50">
