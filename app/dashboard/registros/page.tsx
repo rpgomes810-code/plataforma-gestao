@@ -16,32 +16,35 @@ export default function Registros() {
   const [pendentes, setPendentes] = useState<any[]>([])
   const [membros, setMembros] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [isAdmin, setIsAdmin] = useState(false)
-  const [isAtendente, setIsAtendente] = useState(false)
+  const [permissoes, setPermissoes] = useState<any>(null)
   const [meuGrupo, setMeuGrupo] = useState('')
   const [carregouUsuario, setCarregouUsuario] = useState(false)
 
   useEffect(() => {
     fetch('/api/membros/eu').then(res => res.json()).then(data => {
-      if (data?.nivel_acesso === 'Administrador') setIsAdmin(true)
-      if (data?.tipo === 'Atendente') setIsAtendente(true)
+      setPermissoes(data.permissoes || {})
       if (data?.grupo) setMeuGrupo(data.grupo)
       setCarregouUsuario(true)
     }).catch(() => setCarregouUsuario(true))
 
     fetch('/api/escalas/pendentes').then(res => res.json()).then(data => setPendentes(Array.isArray(data) ? data : []))
-
     fetch('/api/membros').then(res => res.json()).then(data => { if (Array.isArray(data)) setMembros(data) })
   }, [])
 
+  const podeVerRegistros = permissoes?.registros?.ver === true
+  const podeCriar = permissoes?.registros?.criar === true
+  const podeEditar = permissoes?.registros?.editar === true
+  const podeExcluir = permissoes?.registros?.excluir === true
+  const isAtendente = permissoes !== null && !podeVerRegistros
+
   useEffect(() => {
-    if (!isAdmin) return
+    if (!podeVerRegistros) return
     setLoading(true)
     fetch(`/api/registros?mes=${mes + 1}&ano=${ano}`).then(res => res.json()).then(data => {
       setRegistros(Array.isArray(data) ? data : [])
       setLoading(false)
     }).catch(() => { setRegistros([]); setLoading(false) })
-  }, [mes, ano, isAdmin])
+  }, [mes, ano, podeVerRegistros])
 
   const formatarData = (data: string) => new Date(data + 'T12:00:00').toLocaleDateString('pt-BR')
 
@@ -50,11 +53,9 @@ export default function Registros() {
     window.location.href = `/dashboard/registros/novo?${params.toString()}`
   }
 
-  const pendentesFiltrados = isAdmin
+  const pendentesFiltrados = podeVerRegistros
     ? pendentes
-    : isAtendente
-      ? pendentes.filter((e: any) => e.grupo === meuGrupo)
-      : []
+    : pendentes.filter((e: any) => e.grupo === meuGrupo)
 
   const resumoMembros = (membrosPresentes: string) => {
     if (!membrosPresentes) return []
@@ -74,17 +75,6 @@ export default function Registros() {
 
   if (!carregouUsuario) return <div className="p-6 text-gray-500">Carregando...</div>
 
-  if (!isAdmin && !isAtendente) {
-    return (
-      <div className="p-4 md:p-6">
-        <div className="text-center py-12 bg-white rounded-2xl shadow">
-          <p className="text-4xl mb-3">🔒</p>
-          <p className="text-gray-500">Você não tem acesso a esta página</p>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="p-4 md:p-6">
 
@@ -98,16 +88,18 @@ export default function Registros() {
                   <p className="text-sm font-semibold text-gray-800">{escala.grupo} — {escala.hospitais?.nome || escala.local_texto}</p>
                   <p className="text-xs text-gray-500">{formatarData(escala.data)} · {escala.hora_inicio}</p>
                 </div>
-                <button onClick={() => irParaRegistro(escala)} className="bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-red-700 transition">
-                  Registrar
-                </button>
+                {podeCriar && (
+                  <button onClick={() => irParaRegistro(escala)} className="bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-red-700 transition">
+                    Registrar
+                  </button>
+                )}
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {isAdmin && (
+      {podeVerRegistros && (
         <>
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
             <div>
@@ -118,7 +110,9 @@ export default function Registros() {
               <button onClick={() => { if (mes === 0) { setMes(11); setAno(ano - 1) } else setMes(mes - 1) }} className="px-3 py-2 bg-white border rounded-lg text-gray-600 hover:bg-gray-50">←</button>
               <span className="px-4 py-2 bg-white border rounded-lg font-medium text-gray-700 text-sm">{meses[mes]} {ano}</span>
               <button onClick={() => { if (mes === 11) { setMes(0); setAno(ano + 1) } else setMes(mes + 1) }} className="px-3 py-2 bg-white border rounded-lg text-gray-600 hover:bg-gray-50">→</button>
-              <a href="/dashboard/registros/novo" className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">+ Novo Registro</a>
+              {podeCriar && (
+                <a href="/dashboard/registros/novo" className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">+ Novo Registro</a>
+              )}
             </div>
           </div>
 
@@ -146,8 +140,12 @@ export default function Registros() {
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <a href={`/dashboard/registros/${registro.id}/editar`} className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition">Editar</a>
-                            <BotaoExcluirRegistro id={registro.id} hospital={registro.hospitais?.nome || '—'} />
+                            {podeEditar && (
+                              <a href={`/dashboard/registros/${registro.id}/editar`} className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition">Editar</a>
+                            )}
+                            {podeExcluir && (
+                              <BotaoExcluirRegistro id={registro.id} hospital={registro.hospitais?.nome || '—'} />
+                            )}
                           </div>
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
@@ -187,7 +185,7 @@ export default function Registros() {
         </>
       )}
 
-      {!isAdmin && isAtendente && pendentesFiltrados.length === 0 && (
+      {!podeVerRegistros && pendentesFiltrados.length === 0 && (
         <div className="text-center py-12 bg-white rounded-2xl shadow">
           <p className="text-4xl mb-3">✅</p>
           <p className="text-gray-500">Nenhuma escala pendente de registro</p>

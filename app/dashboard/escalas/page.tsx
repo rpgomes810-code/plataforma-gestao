@@ -25,16 +25,19 @@ export default function Escalas() {
   const [ano, setAno] = useState(hoje.getFullYear())
   const [escalas, setEscalas] = useState<Escala[]>([])
   const [loading, setLoading] = useState(true)
-  const [isAdmin, setIsAdmin] = useState(false)
+  const [permissoes, setPermissoes] = useState<any>(null)
 
   useEffect(() => {
     fetch('/api/membros/eu')
       .then(res => res.json())
-      .then(data => {
-        if (data?.nivel_acesso === 'Administrador') setIsAdmin(true)
-      })
-      .catch(() => {})
+      .then(data => setPermissoes(data.permissoes || {}))
+      .catch(() => setPermissoes({}))
   }, [])
+
+  const podeCriar = permissoes?.escalas?.criar === true
+  const podeEditar = permissoes?.escalas?.editar === true
+  const podeExcluir = permissoes?.escalas?.excluir === true
+  const podeAbrirConfirmacao = podeEditar
 
   const carregarEscalas = () => {
     setLoading(true)
@@ -58,12 +61,9 @@ export default function Escalas() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ confirmacao_aberta: !aberta }),
     })
-
-    // Se está abrindo, dispara notificação
     if (!aberta) {
       await fetch('/api/push/notificar', { method: 'POST' })
     }
-
     carregarEscalas()
   }
 
@@ -83,7 +83,6 @@ export default function Escalas() {
 
   return (
     <div className="p-4 md:p-6">
-
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
           <h2 className="text-xl font-bold text-gray-800">Escalas</h2>
@@ -99,10 +98,12 @@ export default function Escalas() {
           <button onClick={() => {
             if (mes === 11) { setMes(0); setAno(ano + 1) } else setMes(mes + 1)
           }} className="px-3 py-2 bg-white border rounded-lg text-gray-600 hover:bg-gray-50">→</button>
-          <a href="/dashboard/escalas/nova"
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">
-            + Nova Escala
-          </a>
+          {podeCriar && (
+            <a href="/dashboard/escalas/nova"
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">
+              + Nova Escala
+            </a>
+          )}
         </div>
       </div>
 
@@ -141,9 +142,11 @@ export default function Escalas() {
                           <td className="px-4 py-3 text-sm text-gray-600">🕐 {escala.hora_inicio}</td>
                           <td className="px-4 py-3 text-sm text-gray-600">👤 {escala.atendentes}</td>
                           <td className="px-4 py-3 flex items-center gap-2 flex-wrap">
-                            <a href={`/dashboard/escalas/${escala.id}/editar`}
-                              className="text-xs text-blue-600 hover:underline">Editar</a>
-                            {isAdmin && (
+                            {podeEditar && (
+                              <a href={`/dashboard/escalas/${escala.id}/editar`}
+                                className="text-xs text-blue-600 hover:underline">Editar</a>
+                            )}
+                            {podeAbrirConfirmacao && (
                               <button
                                 onClick={() => toggleConfirmacao(escala.id, escala.confirmacao_aberta)}
                                 className={`text-xs font-semibold px-2 py-1 rounded-full transition ${
@@ -154,7 +157,7 @@ export default function Escalas() {
                                 {escala.confirmacao_aberta ? '✅ Confirmações abertas' : 'Abrir confirmações'}
                               </button>
                             )}
-                            {isAdmin && <BotaoExcluirEscala id={escala.id} />}
+                            {podeExcluir && <BotaoExcluirEscala id={escala.id} />}
                           </td>
                         </tr>
                       ))}

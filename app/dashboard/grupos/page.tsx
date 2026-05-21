@@ -8,6 +8,7 @@ export default function Grupos() {
   const [grupos, setGrupos] = useState<Grupo[]>([])
   const [novoGrupo, setNovoGrupo] = useState('')
   const [loading, setLoading] = useState(false)
+  const [permissoes, setPermissoes] = useState<any>(null)
 
   const carregar = () => {
     fetch('/api/grupos')
@@ -15,7 +16,15 @@ export default function Grupos() {
       .then(data => { if (Array.isArray(data)) setGrupos(data) })
   }
 
-  useEffect(() => { carregar() }, [])
+  useEffect(() => {
+    carregar()
+    fetch('/api/membros/eu').then(r => r.json()).then(data => {
+      setPermissoes(data.permissoes || {})
+    })
+  }, [])
+
+  const podeCriar = permissoes?.grupos?.criar === true
+  const podeExcluir = permissoes?.grupos?.excluir === true
 
   const adicionar = async () => {
     if (!novoGrupo.trim()) return
@@ -48,29 +57,33 @@ export default function Grupos() {
       </div>
 
       <div className="bg-white rounded-2xl shadow p-6 space-y-4">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={novoGrupo}
-            onChange={e => setNovoGrupo(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && adicionar()}
-            placeholder="Nome do novo grupo..."
-            className="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <button onClick={adicionar} disabled={loading}
-            className="bg-blue-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-50">
-            + Adicionar
-          </button>
-        </div>
+        {podeCriar && (
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={novoGrupo}
+              onChange={e => setNovoGrupo(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && adicionar()}
+              placeholder="Nome do novo grupo..."
+              className="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button onClick={adicionar} disabled={loading}
+              className="bg-blue-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-50">
+              + Adicionar
+            </button>
+          </div>
+        )}
 
         <div className="space-y-2">
           {grupos.map(g => (
             <div key={g.id} className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3">
               <span className="text-sm font-medium text-gray-700">🎻 {g.nome}</span>
-              <button onClick={() => excluir(g.id, g.nome)}
-                className="text-xs text-red-500 hover:text-red-700 transition">
-                Excluir
-              </button>
+              {podeExcluir && (
+                <button onClick={() => excluir(g.id, g.nome)}
+                  className="text-xs text-red-500 hover:text-red-700 transition">
+                  Excluir
+                </button>
+              )}
             </div>
           ))}
         </div>

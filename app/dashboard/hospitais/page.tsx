@@ -2,7 +2,13 @@ export const dynamic = 'force-dynamic'
 
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 import BotaoExcluirHospital from './BotaoExcluirHospital'
+
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
 export default async function Hospitais() {
   const cookieStore = await cookies()
@@ -20,31 +26,44 @@ export default async function Hospitais() {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: usuarioLogado } = await supabase
+  const { data: membroLogado } = await supabaseAdmin
     .from('membros')
-    .select('nivel_acesso, nome')
+    .select('id, nome, perfil')
     .eq('user_id', user?.id)
     .single()
 
-  const isAdmin = usuarioLogado?.nivel_acesso === 'Administrador'
+  let permissoes: any = {}
+  if (membroLogado?.perfil) {
+    const { data } = await supabaseAdmin
+      .from('permissoes')
+      .select('paginas')
+      .eq('perfil', membroLogado.perfil)
+      .single()
+    permissoes = data?.paginas || {}
+  }
 
-  const { data: hospitais } = await supabase
+  const podeCriar = permissoes?.hospitais?.criar === true
+  const podeEditar = permissoes?.hospitais?.editar === true
+  const podeExcluir = permissoes?.hospitais?.excluir === true
+
+  const { data: hospitais } = await supabaseAdmin
     .from('hospitais')
     .select('*')
     .order('nome', { ascending: true })
 
   return (
     <div className="p-4 md:p-6">
-
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-xl font-bold text-gray-800">Hospitais</h2>
           <p className="text-sm text-gray-500">{hospitais?.length} hospitais cadastrados</p>
         </div>
-        <a href="/dashboard/hospitais/novo"
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">
-          + Novo Hospital
-        </a>
+        {podeCriar && (
+          <a href="/dashboard/hospitais/novo"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">
+            + Novo Hospital
+          </a>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -78,13 +97,19 @@ export default async function Hospitais() {
               )}
             </div>
 
-            <div className="flex gap-2 mt-2">
-              <a href={`/dashboard/hospitais/${hospital.id}/editar`}
-                className="flex-1 text-center text-sm text-blue-600 border border-blue-200 rounded-lg py-1.5 hover:bg-blue-50 transition">
-                ✏️ Editar
-              </a>
-              {isAdmin && <BotaoExcluirHospital id={hospital.id} nome={hospital.nome} usuarioNome={usuarioLogado?.nome} />}
-            </div>
+            {(podeEditar || podeExcluir) && (
+              <div className="flex gap-2 mt-2">
+                {podeEditar && (
+                  <a href={`/dashboard/hospitais/${hospital.id}/editar`}
+                    className="flex-1 text-center text-sm text-blue-600 border border-blue-200 rounded-lg py-1.5 hover:bg-blue-50 transition">
+                    ✏️ Editar
+                  </a>
+                )}
+                {podeExcluir && (
+                  <BotaoExcluirHospital id={hospital.id} nome={hospital.nome} usuarioNome={membroLogado?.nome} />
+                )}
+              </div>
+            )}
           </div>
         ))}
       </div>
