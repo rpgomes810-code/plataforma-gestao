@@ -93,6 +93,16 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true, id: data.id })
 }
 
+export async function PUT(req: NextRequest) {
+  const { id, titulo, conteudo, perfis_destino } = await req.json()
+  const { error } = await supabaseAdmin
+    .from('comunicados')
+    .update({ titulo, conteudo, perfis_destino })
+    .eq('id', id)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ ok: true })
+}
+
 export async function DELETE(req: NextRequest) {
   const { id } = await req.json()
   const { error } = await supabaseAdmin.from('comunicados').delete().eq('id', id)

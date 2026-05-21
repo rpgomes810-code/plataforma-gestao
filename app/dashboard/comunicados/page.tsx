@@ -14,6 +14,7 @@ export default function Comunicados() {
   const [permissoes, setPermissoes] = useState<any>(null)
   const [busca, setBusca] = useState('')
   const [mostrarForm, setMostrarForm] = useState(false)
+  const [editando, setEditando] = useState<any>(null)
   const [titulo, setTitulo] = useState('')
   const [conteudo, setConteudo] = useState('')
   const [perfisSelecionados, setPerfisSelecionados] = useState<string[]>([])
@@ -37,7 +38,24 @@ export default function Comunicados() {
   }, [])
 
   const podeCriar = permissoes?.comunicados?.criar === true
+  const podeEditar = permissoes?.comunicados?.editar === true
   const podeExcluir = permissoes?.comunicados?.excluir === true
+
+  const abrirEdicao = (comunicado: any) => {
+    setEditando(comunicado)
+    setTitulo(comunicado.titulo)
+    setConteudo(comunicado.conteudo)
+    setPerfisSelecionados(comunicado.perfis_destino || [])
+    setMostrarForm(true)
+  }
+
+  const fecharForm = () => {
+    setMostrarForm(false)
+    setEditando(null)
+    setTitulo('')
+    setConteudo('')
+    setPerfisSelecionados([])
+  }
 
   const togglePerfil = (perfil: string) => {
     setPerfisSelecionados(prev =>
@@ -55,15 +73,22 @@ export default function Comunicados() {
       return
     }
     setSalvando(true)
-    await fetch('/api/comunicados', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ titulo, conteudo, perfis_destino: perfisSelecionados }),
-    })
-    setTitulo('')
-    setConteudo('')
-    setPerfisSelecionados([])
-    setMostrarForm(false)
+
+    if (editando) {
+      await fetch('/api/comunicados', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: editando.id, titulo, conteudo, perfis_destino: perfisSelecionados }),
+      })
+    } else {
+      await fetch('/api/comunicados', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ titulo, conteudo, perfis_destino: perfisSelecionados }),
+      })
+    }
+
+    fecharForm()
     carregarComunicados('')
     setSalvando(false)
   }
@@ -91,6 +116,11 @@ export default function Comunicados() {
     return comunicado.comunicados_leituras?.some((l: any) => l.membro_id === membro?.id)
   }
 
+  const comunicadosVisiveis = comunicados.filter((c: any) => {
+    if (podeCriar || podeEditar || podeExcluir) return true
+    return c.perfis_destino?.includes(membro?.perfil)
+  })
+
   const formatarData = (data: string) => new Date(data).toLocaleDateString('pt-BR', {
     day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
   })
@@ -112,7 +142,7 @@ export default function Comunicados() {
           <h2 style={{ color: '#ffffff', fontSize: 24, fontWeight: 700, margin: '4px 0 0' }}>Comunicados</h2>
         </div>
         {podeCriar && (
-          <button onClick={() => setMostrarForm(!mostrarForm)} style={{
+          <button onClick={() => mostrarForm ? fecharForm() : setMostrarForm(true)} style={{
             padding: '10px 20px', borderRadius: 12, border: 'none', cursor: 'pointer',
             fontWeight: 600, fontSize: 14, color: 'white',
             background: mostrarForm ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #1e40af, #3b82f6)',
@@ -123,9 +153,11 @@ export default function Comunicados() {
       </div>
 
       {/* Formulário */}
-      {mostrarForm && podeCriar && (
+      {mostrarForm && (podeCriar || podeEditar) && (
         <div style={{ ...cardStyle, marginBottom: 24 }}>
-          <h3 style={{ color: '#e2e8f0', fontSize: 16, fontWeight: 700, margin: '0 0 16px' }}>Novo Comunicado</h3>
+          <h3 style={{ color: '#e2e8f0', fontSize: 16, fontWeight: 700, margin: '0 0 16px' }}>
+            {editando ? '✏️ Editar Comunicado' : 'Novo Comunicado'}
+          </h3>
 
           <div style={{ marginBottom: 12 }}>
             <label style={{ color: '#94a3b8', fontSize: 13, fontWeight: 500, display: 'block', marginBottom: 6 }}>Título *</label>
@@ -162,7 +194,7 @@ export default function Comunicados() {
 
           <button onClick={salvar} disabled={salvando}
             style={{ padding: '12px 24px', borderRadius: 12, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14, color: 'white', background: 'linear-gradient(135deg, #1e40af, #3b82f6)', opacity: salvando ? 0.5 : 1 }}>
-            {salvando ? 'Enviando...' : '📢 Enviar Comunicado'}
+            {salvando ? 'Salvando...' : editando ? '💾 Salvar Alterações' : '📢 Enviar Comunicado'}
           </button>
         </div>
       )}
@@ -180,14 +212,14 @@ export default function Comunicados() {
       {/* Lista */}
       {loading ? (
         <p style={{ color: '#64748b', textAlign: 'center', padding: 40 }}>Carregando...</p>
-      ) : comunicados.length === 0 ? (
+      ) : comunicadosVisiveis.length === 0 ? (
         <div style={{ ...cardStyle, textAlign: 'center', padding: 48 }}>
           <p style={{ fontSize: 36, margin: '0 0 8px' }}>📢</p>
           <p style={{ color: '#64748b' }}>Nenhum comunicado encontrado</p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {comunicados.map(comunicado => {
+          {comunicadosVisiveis.map(comunicado => {
             const ciente = jaSouCiente(comunicado)
             const totalCientes = comunicado.comunicados_leituras?.length || 0
             return (
@@ -201,12 +233,20 @@ export default function Comunicados() {
                       <span style={{ color: '#34d399', fontSize: 12 }}>✅ {totalCientes} ciente{totalCientes !== 1 ? 's' : ''}</span>
                     </div>
                   </div>
-                  {podeExcluir && (
-                    <button onClick={() => excluir(comunicado.id)}
-                      style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', color: '#f87171', fontSize: 12 }}>
-                      🗑️
-                    </button>
-                  )}
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {podeEditar && (
+                      <button onClick={() => abrirEdicao(comunicado)}
+                        style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', color: '#60a5fa', fontSize: 12 }}>
+                        ✏️
+                      </button>
+                    )}
+                    {podeExcluir && (
+                      <button onClick={() => excluir(comunicado.id)}
+                        style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', color: '#f87171', fontSize: 12 }}>
+                        🗑️
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <p style={{ color: '#cbd5e1', fontSize: 14, lineHeight: 1.6, margin: '12px 0' }}>{comunicado.conteudo}</p>

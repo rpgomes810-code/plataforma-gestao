@@ -10,17 +10,11 @@ const PAGINAS = [
   { key: 'membros', label: 'Membros', acoes: ['ver', 'criar', 'editar', 'excluir'] },
   { key: 'hospitais', label: 'Hospitais', acoes: ['ver', 'criar', 'editar', 'excluir'] },
   { key: 'vagas', label: 'Vagas', acoes: ['ver'] },
+  { key: 'comunicados', label: 'Comunicados', acoes: ['ver', 'criar', 'editar', 'excluir'] },
   { key: 'grupos', label: 'Grupos', acoes: ['ver', 'criar', 'editar', 'excluir'] },
   { key: 'logs', label: 'Logs', acoes: ['ver'] },
   { key: 'solicitacoes', label: 'Solicitações', acoes: ['ver'] },
 ]
-
-const LABEL_ACAO: Record<string, string> = {
-  ver: 'Ver',
-  criar: 'Criar',
-  editar: 'Editar',
-  excluir: 'Excluir',
-}
 
 const COR_ACAO: Record<string, string> = {
   ver: 'bg-blue-600 text-white hover:bg-blue-700',
@@ -42,7 +36,6 @@ export default function Permissoes() {
       const data = await res.json()
       setTemAcesso(data.acesso)
     })
-
     fetch('/api/permissoes').then(r => r.json()).then(data => {
       if (Array.isArray(data)) setPermissoes(data)
     })
@@ -55,18 +48,14 @@ export default function Permissoes() {
     const paginaAtual = item.paginas?.[pagina] || {}
     const novaPagina = { ...paginaAtual, [acao]: ativo }
 
-    // Se desativar "ver", desativa tudo
     if (acao === 'ver' && !ativo) {
       Object.keys(novaPagina).forEach(k => novaPagina[k] = false)
     }
-
-    // Se ativar qualquer ação, ativa "ver" também
     if (acao !== 'ver' && ativo) {
       novaPagina['ver'] = true
     }
 
     const novasPaginas = { ...item.paginas, [pagina]: novaPagina }
-
     setPermissoes(prev => prev.map(p => p.perfil === perfil ? { ...p, paginas: novasPaginas } : p))
 
     setSalvando(perfil)
