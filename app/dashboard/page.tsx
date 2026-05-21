@@ -64,11 +64,11 @@ export default function Dashboard() {
   const maxHospital = Math.max(...dadosHospital.map(([, v]) => v), 1)
 
   const cardStyle = {
-  background: '#1e3a5f',
-  border: '1px solid #2563eb',
-  borderRadius: 16,
-  padding: 20,
-}
+    background: 'rgba(255,255,255,0.08)',
+    border: '1px solid rgba(255,255,255,0.15)',
+    borderRadius: 16,
+    padding: 20,
+  }
 
   const cards = [
     {
@@ -131,8 +131,8 @@ export default function Dashboard() {
 
       {/* Header */}
       <div style={{ marginBottom: 24 }}>
-        <p style={{ color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>Bem-vindo de volta</p>
-        <h2 style={{ color: '#f1f5f9', fontSize: 24, fontWeight: 700, margin: 0 }}>{membro?.nome || '...'}</h2>
+        <p style={{ color: '#94a3b8', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4, margin: 0 }}>Bem-vindo de volta</p>
+        <h2 style={{ color: '#ffffff', fontSize: 26, fontWeight: 700, margin: '4px 0 0' }}>{membro?.nome || '...'}</h2>
       </div>
 
       {/* Vagas */}
@@ -159,27 +159,26 @@ export default function Dashboard() {
         </a>
       )}
 
-      {/* Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginBottom: 24 }}
-        className="xl:grid-cols-4">
+      {/* Cards - todos na mesma linha */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
         {cards.map(card => (
           <div key={card.key} style={cardStyle}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {card.icon}
               </div>
-              <button onClick={() => toggle(card.key)} style={{ color: '#475569', background: 'none', border: 'none', cursor: 'pointer' }}>
+              <button onClick={() => toggle(card.key)} style={{ color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer' }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   {aberto[card.key] ? <polyline points="18 15 12 9 6 15"/> : <polyline points="6 9 12 15 18 9"/>}
                 </svg>
               </button>
             </div>
-            <p style={{ color: card.cor, fontSize: 30, fontWeight: 700, margin: '0 0 4px' }}>{card.valor}</p>
-            <p style={{ color: '#64748b', fontSize: 12, fontWeight: 500, margin: 0 }}>{card.label}</p>
+            <p style={{ color: card.cor, fontSize: 32, fontWeight: 700, margin: '0 0 4px' }}>{card.valor}</p>
+            <p style={{ color: '#e2e8f0', fontSize: 14, fontWeight: 500, margin: 0 }}>{card.label}</p>
             {aberto[card.key] && card.detalhes.length > 0 && (
-              <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(147,197,253,0.1)' }}>
+              <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
                 {card.detalhes.map((d, i) => (
-                  <p key={i} style={{ color: '#94a3b8', fontSize: 12, margin: '0 0 4px' }}>{d}</p>
+                  <p key={i} style={{ color: '#cbd5e1', fontSize: 12, margin: '0 0 4px' }}>{d}</p>
                 ))}
               </div>
             )}
@@ -191,7 +190,7 @@ export default function Dashboard() {
       <div style={{ ...cardStyle, marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
           <div style={{ width: 4, height: 20, borderRadius: 2, background: 'linear-gradient(180deg, #60a5fa, #1e40af)' }}></div>
-          <h3 style={{ color: '#cbd5e1', fontSize: 13, fontWeight: 700, margin: 0 }}>Atendimentos mensais — últimos 12 meses</h3>
+          <h3 style={{ color: '#e2e8f0', fontSize: 14, fontWeight: 700, margin: 0 }}>Atendimentos mensais — últimos 12 meses</h3>
         </div>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height: 140 }}>
           {ultimos12.map((m, i) => (
@@ -200,9 +199,9 @@ export default function Dashboard() {
               <div style={{
                 width: '100%', borderRadius: '4px 4px 0 0',
                 height: `${Math.max((m.total / maxGrafico) * 110, m.total > 0 ? 8 : 2)}px`,
-                background: m.total > 0 ? 'linear-gradient(180deg, #60a5fa, #1e40af)' : 'rgba(147,197,253,0.05)'
+                background: m.total > 0 ? 'linear-gradient(180deg, #60a5fa, #1e40af)' : 'rgba(255,255,255,0.05)'
               }} />
-              <span style={{ fontSize: 8, color: '#475569', whiteSpace: 'nowrap' }}>{m.label}</span>
+              <span style={{ fontSize: 8, color: '#64748b', whiteSpace: 'nowrap' }}>{m.label}</span>
             </div>
           ))}
         </div>
@@ -212,10 +211,10 @@ export default function Dashboard() {
       <div style={{ ...cardStyle, marginBottom: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
           <div style={{ width: 4, height: 20, borderRadius: 2, background: 'linear-gradient(180deg, #c084fc, #7c3aed)' }}></div>
-          <h3 style={{ color: '#cbd5e1', fontSize: 13, fontWeight: 700, margin: 0 }}>Atendimentos por hospital — mês atual</h3>
+          <h3 style={{ color: '#e2e8f0', fontSize: 14, fontWeight: 700, margin: 0 }}>Atendimentos por hospital — mês atual</h3>
         </div>
         {dadosHospital.length === 0 ? (
-          <p style={{ color: '#475569', fontSize: 14 }}>Nenhum registro este mês.</p>
+          <p style={{ color: '#64748b', fontSize: 14 }}>Nenhum registro este mês.</p>
         ) : (
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 140 }}>
             {dadosHospital.map(([nome, total], i) => (
@@ -226,7 +225,7 @@ export default function Dashboard() {
                   height: `${Math.max((total / maxHospital) * 110, 8)}px`,
                   background: 'linear-gradient(180deg, #c084fc, #7c3aed)'
                 }} />
-                <span style={{ fontSize: 8, color: '#475569', textAlign: 'center' }}>{nome}</span>
+                <span style={{ fontSize: 8, color: '#64748b', textAlign: 'center' }}>{nome}</span>
               </div>
             ))}
           </div>
@@ -238,8 +237,8 @@ export default function Dashboard() {
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8,
           padding: '12px 16px', borderRadius: 12, fontSize: 13, fontWeight: 500,
-          background: notificacaoAtiva ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)',
-          border: `1px solid ${notificacaoAtiva ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
+          background: notificacaoAtiva ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+          border: `1px solid ${notificacaoAtiva ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
           color: notificacaoAtiva ? '#34d399' : '#f87171',
         }}>
           <span>{notificacaoAtiva ? '🔔' : '🔕'}</span>
