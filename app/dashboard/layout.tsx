@@ -15,6 +15,7 @@ const navItems = [
   { href: '/dashboard/relatorios',   icon: '📈', label: 'Relatórios' },
   { href: '/dashboard/grupos',       icon: '🎻', label: 'Grupos' },
   { href: '/dashboard/logs',         icon: '📋', label: 'Logs' },
+  { href: '/dashboard/permissoes',   icon: '🔐', label: 'Permissões' },
 ]
 
 function NavLink({ href, icon, label, active }: { href: string; icon: string; label: string; active: boolean }) {
