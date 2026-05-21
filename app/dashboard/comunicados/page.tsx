@@ -12,6 +12,7 @@ export default function Comunicados() {
   const [comunicados, setComunicados] = useState<any[]>([])
   const [membro, setMembro] = useState<any>(null)
   const [permissoes, setPermissoes] = useState<any>(null)
+  const [membros, setMembros] = useState<any[]>([])
   const [busca, setBusca] = useState('')
   const [mostrarForm, setMostrarForm] = useState(false)
   const [editando, setEditando] = useState<any>(null)
@@ -20,6 +21,7 @@ export default function Comunicados() {
   const [perfisSelecionados, setPerfisSelecionados] = useState<string[]>([])
   const [salvando, setSalvando] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [expandido, setExpandido] = useState<string | null>(null)
 
   const carregarComunicados = (b = busca) => {
     setLoading(true)
@@ -34,12 +36,16 @@ export default function Comunicados() {
       setMembro(data)
       setPermissoes(data.permissoes || {})
     })
+    fetch('/api/membros').then(r => r.json()).then(data => {
+      if (Array.isArray(data)) setMembros(data)
+    })
     carregarComunicados('')
   }, [])
 
   const podeCriar = permissoes?.comunicados?.criar === true
   const podeEditar = permissoes?.comunicados?.editar === true
   const podeExcluir = permissoes?.comunicados?.excluir === true
+  const isGestor = podeCriar || podeEditar || podeExcluir
 
   const abrirEdicao = (comunicado: any) => {
     setEditando(comunicado)
@@ -73,7 +79,6 @@ export default function Comunicados() {
       return
     }
     setSalvando(true)
-
     if (editando) {
       await fetch('/api/comunicados', {
         method: 'PUT',
@@ -87,7 +92,6 @@ export default function Comunicados() {
         body: JSON.stringify({ titulo, conteudo, perfis_destino: perfisSelecionados }),
       })
     }
-
     fecharForm()
     carregarComunicados('')
     setSalvando(false)
@@ -116,8 +120,21 @@ export default function Comunicados() {
     return comunicado.comunicados_leituras?.some((l: any) => l.membro_id === membro?.id)
   }
 
+  const souDestinatario = (comunicado: any) => {
+    return comunicado.perfis_destino?.includes(membro?.perfil)
+  }
+
+  const getDestinatarios = (comunicado: any) => {
+    return membros.filter(m => comunicado.perfis_destino?.includes(m.perfil) && m.status === 'Ativo')
+  }
+
+  const getCientes = (comunicado: any) => {
+    const leituras = comunicado.comunicados_leituras?.map((l: any) => l.membro_id) || []
+    return leituras
+  }
+
   const comunicadosVisiveis = comunicados.filter((c: any) => {
-    if (podeCriar || podeEditar || podeExcluir) return true
+    if (isGestor) return true
     return c.perfis_destino?.includes(membro?.perfil)
   })
 
@@ -158,19 +175,16 @@ export default function Comunicados() {
           <h3 style={{ color: '#e2e8f0', fontSize: 16, fontWeight: 700, margin: '0 0 16px' }}>
             {editando ? '✏️ Editar Comunicado' : 'Novo Comunicado'}
           </h3>
-
           <div style={{ marginBottom: 12 }}>
             <label style={{ color: '#94a3b8', fontSize: 13, fontWeight: 500, display: 'block', marginBottom: 6 }}>Título *</label>
             <input value={titulo} onChange={e => setTitulo(e.target.value)} placeholder="Título do comunicado"
               style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: '#f1f5f9', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
           </div>
-
           <div style={{ marginBottom: 16 }}>
             <label style={{ color: '#94a3b8', fontSize: 13, fontWeight: 500, display: 'block', marginBottom: 6 }}>Conteúdo *</label>
             <textarea value={conteudo} onChange={e => setConteudo(e.target.value)} placeholder="Digite o comunicado..." rows={4}
               style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: '#f1f5f9', fontSize: 14, outline: 'none', resize: 'vertical', boxSizing: 'border-box' }} />
           </div>
-
           <div style={{ marginBottom: 20 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <label style={{ color: '#94a3b8', fontSize: 13, fontWeight: 500 }}>Enviar para *</label>
@@ -191,7 +205,6 @@ export default function Comunicados() {
               ))}
             </div>
           </div>
-
           <button onClick={salvar} disabled={salvando}
             style={{ padding: '12px 24px', borderRadius: 12, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14, color: 'white', background: 'linear-gradient(135deg, #1e40af, #3b82f6)', opacity: salvando ? 0.5 : 1 }}>
             {salvando ? 'Salvando...' : editando ? '💾 Salvar Alterações' : '📢 Enviar Comunicado'}
@@ -221,16 +234,23 @@ export default function Comunicados() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {comunicadosVisiveis.map(comunicado => {
             const ciente = jaSouCiente(comunicado)
-            const totalCientes = comunicado.comunicados_leituras?.length || 0
+            const destinatarios = getDestinatarios(comunicado)
+            const cientes = getCientes(comunicado)
+            const totalDestinatarios = destinatarios.length
+            const totalCientes = cientes.length
+            const percentual = totalDestinatarios > 0 ? Math.round((totalCientes / totalDestinatarios) * 100) : 0
+            const expandidoAgora = expandido === comunicado.id
+
             return (
               <div key={comunicado.id} style={{ ...cardStyle, borderLeft: ciente ? '3px solid #34d399' : '3px solid #f59e0b' }}>
+
+                {/* Cabeçalho */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                   <div style={{ flex: 1 }}>
                     <h3 style={{ color: '#f1f5f9', fontSize: 16, fontWeight: 700, margin: '0 0 4px' }}>{comunicado.titulo}</h3>
                     <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                       <span style={{ color: '#64748b', fontSize: 12 }}>📅 {formatarData(comunicado.criado_em)}</span>
                       <span style={{ color: '#64748b', fontSize: 12 }}>👤 {comunicado.criado_por}</span>
-                      <span style={{ color: '#34d399', fontSize: 12 }}>✅ {totalCientes} ciente{totalCientes !== 1 ? 's' : ''}</span>
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: 8 }}>
@@ -249,25 +269,67 @@ export default function Comunicados() {
                   </div>
                 </div>
 
+                {/* Conteúdo */}
                 <p style={{ color: '#cbd5e1', fontSize: 14, lineHeight: 1.6, margin: '12px 0' }}>{comunicado.conteudo}</p>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                    {comunicado.perfis_destino?.map((p: string) => (
-                      <span key={p} style={{ padding: '3px 8px', borderRadius: 6, background: 'rgba(59,130,246,0.15)', color: '#60a5fa', fontSize: 11, fontWeight: 500 }}>{p}</span>
-                    ))}
-                  </div>
-                  {!ciente ? (
-                    <button onClick={() => marcarCiente(comunicado.id)}
-                      style={{ padding: '8px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 13, color: 'white', background: 'linear-gradient(135deg, #059669, #10b981)' }}>
-                      ✅ Estou ciente
-                    </button>
-                  ) : (
-                    <span style={{ padding: '8px 16px', borderRadius: 10, background: 'rgba(52,211,153,0.1)', color: '#34d399', fontSize: 13, fontWeight: 600 }}>
-                      ✅ Ciente
-                    </span>
-                  )}
+                {/* Perfis destino */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+                  {comunicado.perfis_destino?.map((p: string) => (
+                    <span key={p} style={{ padding: '3px 8px', borderRadius: 6, background: 'rgba(59,130,246,0.15)', color: '#60a5fa', fontSize: 11, fontWeight: 500 }}>{p}</span>
+                  ))}
                 </div>
+
+                {/* Barra de progresso — só para gestores */}
+                {isGestor && totalDestinatarios > 0 && (
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                      <span style={{ color: '#94a3b8', fontSize: 12 }}>Ciência dos destinatários</span>
+                      <button onClick={() => setExpandido(expandidoAgora ? null : comunicado.id)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#60a5fa', fontSize: 12 }}>
+                        {totalCientes}/{totalDestinatarios} ({percentual}%) {expandidoAgora ? '▲' : '▼'}
+                      </button>
+                    </div>
+                    <div style={{ height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', borderRadius: 3, width: `${percentual}%`, background: percentual === 100 ? '#34d399' : '#3b82f6', transition: 'width 0.3s' }} />
+                    </div>
+
+                    {/* Lista cientes/pendentes */}
+                    {expandidoAgora && (
+                      <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                        <div>
+                          <p style={{ color: '#34d399', fontSize: 12, fontWeight: 600, margin: '0 0 6px' }}>✅ Cientes ({totalCientes})</p>
+                          {destinatarios.filter(d => cientes.includes(d.id)).map(d => (
+                            <p key={d.id} style={{ color: '#94a3b8', fontSize: 12, margin: '0 0 3px' }}>{d.nome}</p>
+                          ))}
+                          {totalCientes === 0 && <p style={{ color: '#475569', fontSize: 12 }}>Nenhum ainda</p>}
+                        </div>
+                        <div>
+                          <p style={{ color: '#f59e0b', fontSize: 12, fontWeight: 600, margin: '0 0 6px' }}>⏳ Pendentes ({totalDestinatarios - totalCientes})</p>
+                          {destinatarios.filter(d => !cientes.includes(d.id)).map(d => (
+                            <p key={d.id} style={{ color: '#94a3b8', fontSize: 12, margin: '0 0 3px' }}>{d.nome}</p>
+                          ))}
+                          {totalDestinatarios === totalCientes && <p style={{ color: '#475569', fontSize: 12 }}>Todos cientes!</p>}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Botão ciente — só para destinatários */}
+                {souDestinatario(comunicado) && (
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    {!ciente ? (
+                      <button onClick={() => marcarCiente(comunicado.id)}
+                        style={{ padding: '8px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 13, color: 'white', background: 'linear-gradient(135deg, #059669, #10b981)' }}>
+                        ✅ Estou ciente
+                      </button>
+                    ) : (
+                      <span style={{ padding: '8px 16px', borderRadius: 10, background: 'rgba(52,211,153,0.1)', color: '#34d399', fontSize: 13, fontWeight: 600 }}>
+                        ✅ Ciente
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             )
           })}
