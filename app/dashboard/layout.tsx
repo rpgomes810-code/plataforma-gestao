@@ -4,36 +4,19 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 const todosNavItems = [
-  { href: '/dashboard',              icon: '📊', label: 'Início',        key: null },
-  { href: '/dashboard/confirmacoes', icon: '✅', label: 'Confirmações',  key: 'confirmacoes' },
-  { href: '/dashboard/escalas',      icon: '📅', label: 'Escalas',       key: 'escalas' },
-  { href: '/dashboard/registros',    icon: '📋', label: 'Registros',     key: 'registros' },
-  { href: '/dashboard/relatorios',   icon: '📈', label: 'Relatórios',    key: 'relatorios' },
-  { href: '/dashboard/membros',      icon: '👥', label: 'Membros',       key: 'membros' },
-  { href: '/dashboard/hospitais',    icon: '🏥', label: 'Hospitais',     key: 'hospitais' },
-  { href: '/dashboard/vagas',        icon: '⚠️', label: 'Vagas',         key: 'vagas' },
-  { href: '/dashboard/solicitacoes', icon: '📩', label: 'Solicitações',  key: 'solicitacoes' },
-  { href: '/dashboard/grupos',       icon: '🎻', label: 'Grupos',        key: 'grupos' },
-  { href: '/dashboard/logs',         icon: '📋', label: 'Logs',          key: 'logs' },
-  { href: '/dashboard/permissoes',   icon: '🔐', label: 'Permissões',    key: null },
+  { href: '/dashboard',              icon: '⊞', label: 'Início',        key: null },
+  { href: '/dashboard/confirmacoes', icon: '✓', label: 'Confirmações',  key: 'confirmacoes' },
+  { href: '/dashboard/escalas',      icon: '◷', label: 'Escalas',       key: 'escalas' },
+  { href: '/dashboard/registros',    icon: '≡', label: 'Registros',     key: 'registros' },
+  { href: '/dashboard/relatorios',   icon: '↗', label: 'Relatórios',    key: 'relatorios' },
+  { href: '/dashboard/membros',      icon: '◉', label: 'Membros',       key: 'membros' },
+  { href: '/dashboard/hospitais',    icon: '⊕', label: 'Hospitais',     key: 'hospitais' },
+  { href: '/dashboard/vagas',        icon: '◈', label: 'Vagas',         key: 'vagas' },
+  { href: '/dashboard/solicitacoes', icon: '✉', label: 'Solicitações',  key: 'solicitacoes' },
+  { href: '/dashboard/grupos',       icon: '◎', label: 'Grupos',        key: 'grupos' },
+  { href: '/dashboard/logs',         icon: '◑', label: 'Logs',          key: 'logs' },
+  { href: '/dashboard/permissoes',   icon: '⊙', label: 'Permissões',    key: null },
 ]
-
-function NavLink({ href, icon, label, active }: { href: string; icon: string; label: string; active: boolean }) {
-  return (
-    <a href={href} className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium ${active ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-100'}`}>
-      {icon} {label}
-    </a>
-  )
-}
-
-function BottomNavLink({ href, icon, label, active }: { href: string; icon: string; label: string; active: boolean }) {
-  return (
-    <a href={href} className={`flex flex-col items-center gap-0.5 px-1 py-1 ${active ? 'text-blue-600 font-semibold' : 'text-gray-500'}`} style={{ minWidth: 0 }}>
-      <span className="text-xl">{icon}</span>
-      <span className="text-[10px] truncate w-full text-center">{label}</span>
-    </a>
-  )
-}
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4)
@@ -51,6 +34,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [navItems, setNavItems] = useState<typeof todosNavItems>([])
   const [permissoes, setPermissoes] = useState<any>(null)
   const [carregando, setCarregando] = useState(true)
+  const [menuAberto, setMenuAberto] = useState(false)
 
   useEffect(() => {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
@@ -79,7 +63,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     })
   }, [])
 
-  // Verifica se a página atual tem permissão
   const paginaAtual = todosNavItems.find(item => item.href === pathname)
   const semPermissao = !carregando && paginaAtual?.key && permissoes && !permissoes[paginaAtual.key]?.ver
 
@@ -88,96 +71,140 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     try {
       const permission = await Notification.requestPermission()
       if (permission !== 'granted') { setAtivando(false); return }
-
       const membroRes = await fetch('/api/membros/eu')
       const membro = await membroRes.json()
-
       const reg = await navigator.serviceWorker.ready
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!)
       })
-
       await fetch('/api/push/assinar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ subscription: sub.toJSON(), membro_id: membro.id })
       })
-
       setMostrarPopup(false)
-    } catch (e) {
-      console.error(e)
-    }
+    } catch (e) { console.error(e) }
     setAtivando(false)
   }
 
   if (carregando) return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <p className="text-gray-400 text-sm">Carregando...</p>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)' }}>
+      <div className="text-center">
+        <div className="w-12 h-12 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-blue-200 text-sm">Carregando...</p>
+      </div>
     </div>
   )
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row">
+    <div className="min-h-screen flex" style={{ background: '#f0f4f8', fontFamily: "'DM Sans', sans-serif" }}>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-      {mostrarPopup && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm text-center">
-            <p className="text-5xl mb-4">🔔</p>
-            <h2 className="text-xl font-bold text-gray-800 mb-2">Ativar notificações</h2>
-            <p className="text-sm text-gray-500 mb-6">Receba avisos quando o admin abrir as confirmações de presença.</p>
-            <button onClick={ativarNotificacoes} disabled={ativando}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition text-sm disabled:opacity-50">
-              {ativando ? 'Ativando...' : '🔔 Ativar notificações'}
+      {/* Overlay mobile */}
+      {menuAberto && (
+        <div className="fixed inset-0 bg-black/50 z-30 md:hidden" onClick={() => setMenuAberto(false)} />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`fixed top-0 left-0 h-full z-40 flex flex-col transition-transform duration-300 ease-in-out
+        ${menuAberto ? 'translate-x-0' : '-translate-x-full'}
+        md:translate-x-0 md:static md:flex
+        w-64 shrink-0`}
+        style={{ background: 'linear-gradient(180deg, #0f172a 0%, #1e3a5f 100%)' }}>
+
+        {/* Logo */}
+        <div className="px-6 py-6 border-b border-white/10">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-blue-300 uppercase tracking-widest font-semibold">DARPE</p>
+              <h1 className="text-white font-bold text-base leading-tight mt-0.5">Setor 4 — Hospitais</h1>
+            </div>
+            <button onClick={() => setMenuAberto(false)} className="md:hidden text-white/50 hover:text-white">
+              ✕
             </button>
           </div>
         </div>
-      )}
 
-      <aside className="hidden md:flex w-64 bg-white shadow-md flex-col shrink-0">
-        <div className="px-6 py-5 border-b">
-          <p className="text-xs text-gray-400 uppercase tracking-wider">DARPE</p>
-          <h1 className="text-lg font-bold text-gray-800">Setor 4 — Hospitais</h1>
-        </div>
-        <nav className="flex-1 px-4 py-6 space-y-1">
-          {navItems.map(item => (
-            <NavLink key={item.href} {...item} active={pathname === item.href} />
-          ))}
+        {/* Nav */}
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+          {navItems.map(item => {
+            const active = pathname === item.href
+            return (
+              <a key={item.href} href={item.href}
+                onClick={() => setMenuAberto(false)}
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                  active
+                    ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30'
+                    : 'text-blue-100/70 hover:bg-white/10 hover:text-white'
+                }`}>
+                <span className="text-lg">{item.icon}</span>
+                <span>{item.label}</span>
+                {active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white"></span>}
+              </a>
+            )
+          })}
         </nav>
-        <div className="px-4 py-4 border-t">
-          <a href="/" className="flex items-center gap-3 px-4 py-2 rounded-lg text-red-500 hover:bg-red-50 text-sm">
-            🚪 Sair
+
+        {/* Sair */}
+        <div className="px-3 py-4 border-t border-white/10">
+          <a href="/" className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-red-300/70 hover:bg-red-500/20 hover:text-red-300 transition-all">
+            <span>⬡</span>
+            <span>Sair</span>
           </a>
         </div>
       </aside>
 
-      <div className="flex-1 flex flex-col">
-        <header className="md:hidden bg-white shadow px-4 py-3 flex justify-between items-center">
-          <div>
-            <p className="text-xs text-gray-400 uppercase tracking-wider">DARPE</p>
-            <h1 className="text-base font-bold text-gray-800">Setor 4 — Hospitais</h1>
+      {/* Main */}
+      <div className="flex-1 flex flex-col min-w-0">
+
+        {/* Header mobile */}
+        <header className="md:hidden sticky top-0 z-20 px-4 py-3 flex items-center justify-between"
+          style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)' }}>
+          <button onClick={() => setMenuAberto(true)} className="text-white p-1">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <line x1="3" y1="12" x2="21" y2="12"/>
+              <line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
+          <div className="text-center">
+            <p className="text-xs text-blue-300 uppercase tracking-widest">DARPE</p>
+            <p className="text-white font-bold text-sm">Setor 4 — Hospitais</p>
           </div>
-          <a href="/" className="text-red-500 text-sm">🚪 Sair</a>
+          <a href="/" className="text-red-300 text-xs">Sair</a>
         </header>
 
-        <main className="flex-1 pb-20 md:pb-0">
+        {/* Content */}
+        <main className="flex-1 overflow-auto">
+          {mostrarPopup && (
+            <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm text-center">
+                <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-3xl">🔔</span>
+                </div>
+                <h2 className="text-xl font-bold text-gray-800 mb-2">Ativar notificações</h2>
+                <p className="text-sm text-gray-500 mb-6">Receba avisos quando o admin abrir as confirmações de presença.</p>
+                <button onClick={ativarNotificacoes} disabled={ativando}
+                  className="w-full text-white py-3 rounded-xl font-semibold transition text-sm disabled:opacity-50"
+                  style={{ background: 'linear-gradient(135deg, #1e40af, #3b82f6)' }}>
+                  {ativando ? 'Ativando...' : '🔔 Ativar notificações'}
+                </button>
+              </div>
+            </div>
+          )}
+
           {semPermissao ? (
             <div className="flex items-center justify-center h-full py-24">
               <div className="text-center">
-                <p className="text-5xl mb-4">🔒</p>
-                <p className="text-gray-500">Você não tem acesso a esta página</p>
+                <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-4xl">🔒</span>
+                </div>
+                <p className="text-gray-500 font-medium">Você não tem acesso a esta página</p>
               </div>
             </div>
           ) : children}
         </main>
-
-        <nav className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg md:hidden z-50">
-          <div className="flex justify-around items-center py-1 px-1">
-            {navItems.map(item => (
-              <BottomNavLink key={item.href} {...item} active={pathname === item.href} />
-            ))}
-          </div>
-        </nav>
       </div>
     </div>
   )
