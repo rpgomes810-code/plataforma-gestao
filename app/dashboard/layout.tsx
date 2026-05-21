@@ -173,7 +173,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       )}
 
       {/* Sidebar desktop */}
-      <div style={sidebarStyle} className="hidden md:flex md:flex-col">
+      <div style={{...sidebarStyle, display: 'none'}} className="md:flex md:flex-col">
         <SidebarContent />
       </div>
 
