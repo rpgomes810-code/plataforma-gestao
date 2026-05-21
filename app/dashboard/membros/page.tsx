@@ -59,11 +59,11 @@ export default async function Membros() {
   const semGrupo = membros?.filter(m => !m.grupo) || []
 
   const subtitulo = (membro: any) => {
-    const perfil = membro.perfil || membro.tipo || ''
-    const instrumento = membro.instrumento && membro.instrumento !== 'Nenhum' ? membro.instrumento : ''
-    if (perfil === 'Músico/Vocal' && instrumento) return `${perfil} — ${instrumento}`
-    return perfil
-  }
+  const perfil = membro.perfil || membro.tipo || ''
+  const instrumento = membro.instrumento && membro.instrumento !== 'Nenhum' ? membro.instrumento : ''
+  if (instrumento) return `${perfil} — ${instrumento}`
+  return perfil
+}
 
   return (
     <div className="p-4 md:p-6">
