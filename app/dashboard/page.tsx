@@ -64,11 +64,11 @@ export default function Dashboard() {
   const maxHospital = Math.max(...dadosHospital.map(([, v]) => v), 1)
 
   const cardStyle = {
-    background: 'rgba(219,234,254,0.07)',
-    border: '1px solid rgba(147,197,253,0.2)',
-    borderRadius: 16,
-    padding: 20,
-  }
+  background: 'rgba(147,197,253,0.12)',
+  border: '1px solid rgba(147,197,253,0.3)',
+  borderRadius: 16,
+  padding: 20,
+}
 
   const cards = [
     {
