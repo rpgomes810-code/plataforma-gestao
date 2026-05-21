@@ -89,7 +89,7 @@ function Sidebar({ navItems, pathname, onClose }: { navItems: typeof todosNavIte
           <h1 style={{ color: '#f1f5f9', fontWeight: 700, fontSize: 15, margin: '4px 0 0' }}>Setor 4 — Hospitais</h1>
         </div>
         {onClose && (
-          <button onClick={onClose} style={{ color: '#475569', background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>✕</button>
+          <button onClick={onClose} style={{ color: '#475569', background: 'none', border: 'none', cursor: 'pointer', fontSize: 18 }}>✕</button>
         )}
       </div>
       <nav style={{ flex: 1, padding: '12px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -120,6 +120,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [permissoes, setPermissoes] = useState<any>(null)
   const [carregando, setCarregando] = useState(true)
   const [menuAberto, setMenuAberto] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   useEffect(() => {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
@@ -185,52 +193,54 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div style={{ display: 'flex', minHeight: '100vh', background: '#0f172a' }}>
 
       {/* Overlay mobile */}
-      {menuAberto && (
+      {menuAberto && isMobile && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 30 }}
           onClick={() => setMenuAberto(false)} />
       )}
 
       {/* Sidebar mobile */}
-      {menuAberto && (
+      {menuAberto && isMobile && (
         <div style={{ position: 'fixed', top: 0, left: 0, height: '100vh', zIndex: 40 }}>
           <Sidebar navItems={navItems} pathname={pathname} onClose={() => setMenuAberto(false)} />
         </div>
       )}
 
       {/* Sidebar desktop */}
-      <div className="hidden md:block" style={{ flexShrink: 0 }}>
-        <div style={{ position: 'sticky', top: 0, height: '100vh' }}>
+      {!isMobile && (
+        <div style={{ flexShrink: 0, position: 'sticky', top: 0, height: '100vh' }}>
           <Sidebar navItems={navItems} pathname={pathname} />
         </div>
-      </div>
+      )}
 
       {/* Main */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
 
         {/* Header mobile */}
-        <header className="md:hidden" style={{
-          position: 'sticky', top: 0, zIndex: 20,
-          padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12,
-          background: '#0f172a', borderBottom: '1px solid rgba(255,255,255,0.06)',
-        }}>
-          <button onClick={() => setMenuAberto(true)} style={{ color: '#64748b', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
-            </svg>
-          </button>
-          {!isDashboardHome && (
-            <button onClick={() => router.back()} style={{ color: '#64748b', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="15 18 9 12 15 6"/>
+        {isMobile && (
+          <header style={{
+            position: 'sticky', top: 0, zIndex: 20,
+            padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12,
+            background: '#0f172a', borderBottom: '1px solid rgba(255,255,255,0.06)',
+          }}>
+            <button onClick={() => setMenuAberto(true)} style={{ color: '#cbd5e1', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
               </svg>
             </button>
-          )}
-          <div style={{ flex: 1, textAlign: 'center' }}>
-            <p style={{ color: '#3b82f6', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600, margin: 0 }}>DARPE</p>
-            <p style={{ color: '#f1f5f9', fontWeight: 700, fontSize: 14, margin: 0 }}>Setor 4 — Hospitais</p>
-          </div>
-          <a href="/" style={{ color: '#ef4444', fontSize: 12, textDecoration: 'none' }}>Sair</a>
-        </header>
+            {!isDashboardHome && (
+              <button onClick={() => router.back()} style={{ color: '#cbd5e1', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15 18 9 12 15 6"/>
+                </svg>
+              </button>
+            )}
+            <div style={{ flex: 1, textAlign: 'center' }}>
+              <p style={{ color: '#3b82f6', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600, margin: 0 }}>DARPE</p>
+              <p style={{ color: '#f1f5f9', fontWeight: 700, fontSize: 14, margin: 0 }}>Setor 4 — Hospitais</p>
+            </div>
+            <a href="/" style={{ color: '#ef4444', fontSize: 12, textDecoration: 'none' }}>Sair</a>
+          </header>
+        )}
 
         <main style={{ flex: 1, overflow: 'auto' }}>
           {mostrarPopup && (

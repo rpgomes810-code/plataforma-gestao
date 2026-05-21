@@ -41,7 +41,7 @@ export default function Dashboard() {
       const rd = new Date(r.data + 'T12:00:00')
       return rd.getMonth() === d.getMonth() && rd.getFullYear() === d.getFullYear()
     }).length
-    return { label: `${mesesNomes[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`, total }
+    return { label: `${mesesNomes[d.getMonth()]}`, total }
   })
   const maxGrafico = Math.max(...ultimos12.map(m => m.total), 1)
 
@@ -76,12 +76,7 @@ export default function Dashboard() {
       valor: stats?.totalMembros || '—',
       label: 'Membros',
       cor: '#60a5fa',
-      icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-        </svg>
-      ),
+      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
       detalhes: Object.entries(stats?.porTipo || {}).map(([tipo, total]: any) => `${total} ${tipo}`),
     },
     {
@@ -89,12 +84,7 @@ export default function Dashboard() {
       valor: stats?.totalEscalas || '—',
       label: 'Escalas abertas',
       cor: '#34d399',
-      icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
-          <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-        </svg>
-      ),
+      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
       detalhes: Object.entries(stats?.porGrupo || {}).sort((a: any, b: any) => (parseInt(a[0].replace(/\D/g, '')) || 0) - (parseInt(b[0].replace(/\D/g, '')) || 0)).map(([grupo, total]: any) => `${grupo}: ${total}`),
     },
     {
@@ -102,13 +92,7 @@ export default function Dashboard() {
       valor: `${escalasRegistradas}/${totalEscalasMes}`,
       label: 'Registros',
       cor: '#fbbf24',
-      icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
-          <line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/>
-          <line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
-        </svg>
-      ),
+      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>,
       detalhes: Object.entries(porGrupoReg).sort((a: any, b: any) => (parseInt(a[0].replace(/\D/g, '')) || 0) - (parseInt(b[0].replace(/\D/g, '')) || 0)).map(([grupo, val]: any) => `${grupo}: ${(val as any).registradas}/${(val as any).total}`),
     },
     {
@@ -116,33 +100,21 @@ export default function Dashboard() {
       valor: hospitais.length || '—',
       label: 'Hospitais',
       cor: '#c084fc',
-      icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c084fc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-          <polyline points="9 22 9 12 15 12 15 22"/>
-        </svg>
-      ),
+      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c084fc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
       detalhes: hospitais.map((h: any) => h.nome),
     },
   ]
 
   return (
-    <div style={{ padding: '24px', minHeight: '100vh', background: '#0f172a' }}>
+    <div style={{ padding: '24px', minHeight: '100vh', background: '#0f172a', boxSizing: 'border-box', overflowX: 'hidden' }}>
 
-      {/* Header */}
       <div style={{ marginBottom: 24 }}>
         <p style={{ color: '#94a3b8', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>Bem-vindo de volta</p>
         <h2 style={{ color: '#ffffff', fontSize: 26, fontWeight: 700, margin: '4px 0 0' }}>{membro?.nome || '...'}</h2>
       </div>
 
-      {/* Vagas */}
       {vagas.length > 0 && (
-        <a href="/dashboard/vagas" style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '16px 20px', borderRadius: 16, marginBottom: 24,
-          background: 'linear-gradient(135deg, #d97706, #f59e0b)',
-          textDecoration: 'none',
-        }}>
+        <a href="/dashboard/vagas" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderRadius: 16, marginBottom: 24, background: 'linear-gradient(135deg, #d97706, #f59e0b)', textDecoration: 'none' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
@@ -153,13 +125,10 @@ export default function Dashboard() {
               <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, margin: 0 }}>Clique para ver e preencher</p>
             </div>
           </div>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="9 18 15 12 9 6"/>
-          </svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
         </a>
       )}
 
-      {/* Cards - 2 colunas no mobile, 4 no desktop */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {cards.map(card => (
           <div key={card.key} style={cardStyle}>
@@ -173,8 +142,8 @@ export default function Dashboard() {
                 </svg>
               </button>
             </div>
-            <p style={{ color: card.cor, fontSize: 32, fontWeight: 700, margin: '0 0 4px' }}>{card.valor}</p>
-            <p style={{ color: '#e2e8f0', fontSize: 14, fontWeight: 500, margin: 0 }}>{card.label}</p>
+            <p style={{ color: card.cor, fontSize: 30, fontWeight: 700, margin: '0 0 4px' }}>{card.valor}</p>
+            <p style={{ color: '#e2e8f0', fontSize: 13, fontWeight: 500, margin: 0 }}>{card.label}</p>
             {aberto[card.key] && card.detalhes.length > 0 && (
               <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
                 {card.detalhes.map((d, i) => (
@@ -187,52 +156,47 @@ export default function Dashboard() {
       </div>
 
       {/* Gráfico 12 meses */}
-      <div style={{ ...cardStyle, marginBottom: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+      <div style={{ ...cardStyle, marginBottom: 16, overflow: 'hidden' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
           <div style={{ width: 4, height: 20, borderRadius: 2, background: 'linear-gradient(180deg, #60a5fa, #1e40af)' }}></div>
-          <h3 style={{ color: '#e2e8f0', fontSize: 14, fontWeight: 700, margin: 0 }}>Atendimentos mensais — últimos 12 meses</h3>
+          <h3 style={{ color: '#e2e8f0', fontSize: 13, fontWeight: 700, margin: 0 }}>Atendimentos mensais — últimos 12 meses</h3>
         </div>
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height: 140 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height: 120 }}>
           {ultimos12.map((m, i) => (
-            <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-              <span style={{ fontSize: 10, fontWeight: 700, color: m.total > 0 ? '#60a5fa' : 'transparent' }}>{m.total > 0 ? m.total : '.'}</span>
+            <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, minWidth: 0 }}>
+              <span style={{ fontSize: 9, fontWeight: 700, color: m.total > 0 ? '#60a5fa' : 'transparent' }}>{m.total > 0 ? m.total : '.'}</span>
               <div style={{
-                width: '100%', borderRadius: '4px 4px 0 0',
-                height: `${Math.max((m.total / maxGrafico) * 110, m.total > 0 ? 8 : 2)}px`,
+                width: '100%', borderRadius: '3px 3px 0 0',
+                height: `${Math.max((m.total / maxGrafico) * 80, m.total > 0 ? 6 : 2)}px`,
                 background: m.total > 0 ? 'linear-gradient(180deg, #60a5fa, #1e40af)' : 'rgba(255,255,255,0.05)'
               }} />
-              <span style={{ fontSize: 10, color: '#cbd5e1', whiteSpace: 'nowrap' }}>{m.label}</span>
+              <span style={{ fontSize: 8, color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%', textAlign: 'center' }}>{m.label}</span>
             </div>
           ))}
         </div>
       </div>
 
       {/* Gráfico hospitais */}
-      <div style={{ ...cardStyle, marginBottom: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+      <div style={{ ...cardStyle, marginBottom: 24, overflow: 'hidden' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
           <div style={{ width: 4, height: 20, borderRadius: 2, background: 'linear-gradient(180deg, #c084fc, #7c3aed)' }}></div>
-          <h3 style={{ color: '#e2e8f0', fontSize: 14, fontWeight: 700, margin: 0 }}>Atendimentos por hospital — mês atual</h3>
+          <h3 style={{ color: '#e2e8f0', fontSize: 13, fontWeight: 700, margin: 0 }}>Atendimentos por hospital — mês atual</h3>
         </div>
         {dadosHospital.length === 0 ? (
           <p style={{ color: '#94a3b8', fontSize: 14 }}>Nenhum registro este mês.</p>
         ) : (
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 140 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 120 }}>
             {dadosHospital.map(([nome, total], i) => (
-              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, minWidth: 0 }}>
                 <span style={{ fontSize: 10, fontWeight: 700, color: '#c084fc' }}>{total}</span>
-                <div style={{
-                  width: '100%', borderRadius: '4px 4px 0 0',
-                  height: `${Math.max((total / maxHospital) * 110, 8)}px`,
-                  background: 'linear-gradient(180deg, #c084fc, #7c3aed)'
-                }} />
-                <span style={{ fontSize: 10, color: '#cbd5e1', textAlign: 'center' }}>{nome}</span>
+                <div style={{ width: '100%', borderRadius: '3px 3px 0 0', height: `${Math.max((total / maxHospital) * 80, 8)}px`, background: 'linear-gradient(180deg, #c084fc, #7c3aed)' }} />
+                <span style={{ fontSize: 9, color: '#94a3b8', textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%' }}>{nome}</span>
               </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* Notificações */}
       {notificacaoAtiva !== null && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8,
@@ -245,7 +209,6 @@ export default function Dashboard() {
           <span>{notificacaoAtiva ? 'Notificações ativadas' : 'Notificações desativadas — ative nas configurações do celular'}</span>
         </div>
       )}
-
     </div>
   )
 }
