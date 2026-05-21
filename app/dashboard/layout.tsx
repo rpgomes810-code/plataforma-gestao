@@ -3,19 +3,19 @@
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-const navItems = [
-  { href: '/dashboard',              icon: '📊', label: 'Início' },
-  { href: '/dashboard/membros',      icon: '👥', label: 'Membros' },
-  { href: '/dashboard/hospitais',    icon: '🏥', label: 'Hospitais' },
-  { href: '/dashboard/confirmacoes', icon: '✅', label: 'Confirmações' },
-  { href: '/dashboard/escalas',      icon: '📅', label: 'Escalas' },
-  { href: '/dashboard/registros',    icon: '📋', label: 'Registros' },
-  { href: '/dashboard/vagas',        icon: '⚠️', label: 'Vagas' },
-  { href: '/dashboard/solicitacoes', icon: '📩', label: 'Solicitações' },
-  { href: '/dashboard/relatorios',   icon: '📈', label: 'Relatórios' },
-  { href: '/dashboard/grupos',       icon: '🎻', label: 'Grupos' },
-  { href: '/dashboard/logs',         icon: '📋', label: 'Logs' },
-  { href: '/dashboard/permissoes',   icon: '🔐', label: 'Permissões' },
+const todosNavItems = [
+  { href: '/dashboard',              icon: '📊', label: 'Início',        key: null },
+  { href: '/dashboard/confirmacoes', icon: '✅', label: 'Confirmações',  key: 'confirmacoes' },
+  { href: '/dashboard/escalas',      icon: '📅', label: 'Escalas',       key: 'escalas' },
+  { href: '/dashboard/registros',    icon: '📋', label: 'Registros',     key: 'registros' },
+  { href: '/dashboard/relatorios',   icon: '📈', label: 'Relatórios',    key: 'relatorios' },
+  { href: '/dashboard/membros',      icon: '👥', label: 'Membros',       key: 'membros' },
+  { href: '/dashboard/hospitais',    icon: '🏥', label: 'Hospitais',     key: 'hospitais' },
+  { href: '/dashboard/vagas',        icon: '⚠️', label: 'Vagas',         key: 'vagas' },
+  { href: '/dashboard/solicitacoes', icon: '📩', label: 'Solicitações',  key: 'solicitacoes' },
+  { href: '/dashboard/grupos',       icon: '🎻', label: 'Grupos',        key: 'grupos' },
+  { href: '/dashboard/logs',         icon: '📋', label: 'Logs',          key: 'logs' },
+  { href: '/dashboard/permissoes',   icon: '🔐', label: 'Permissões',    key: null },
 ]
 
 function NavLink({ href, icon, label, active }: { href: string; icon: string; label: string; active: boolean }) {
@@ -48,25 +48,42 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname()
   const [mostrarPopup, setMostrarPopup] = useState(false)
   const [ativando, setAtivando] = useState(false)
+  const [navItems, setNavItems] = useState(todosNavItems)
+  const [temAcessoPermissoes, setTemAcessoPermissoes] = useState(false)
 
   useEffect(() => {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
-
     navigator.serviceWorker.register('/sw.js').catch(console.error)
+    if (Notification.permission !== 'granted') setMostrarPopup(true)
+  }, [])
 
-    if (Notification.permission !== 'granted') {
-      setMostrarPopup(true)
-    }
+  useEffect(() => {
+    fetch('/api/membros/eu').then(r => r.json()).then(async membro => {
+      const permissoes = membro.permissoes || {}
+
+      // Verifica acesso à tela de permissões
+      const res = await fetch('/api/permissoes/acesso?membro_id=' + membro.id)
+      const data = await res.json()
+      setTemAcessoPermissoes(data.acesso)
+
+      // Filtra menu
+      const filtrado = todosNavItems.filter(item => {
+        if (item.key === null) {
+          if (item.href === '/dashboard/permissoes') return data.acesso
+          return true // Início sempre aparece
+        }
+        return permissoes[item.key]?.ver === true
+      })
+
+      setNavItems(filtrado)
+    })
   }, [])
 
   const ativarNotificacoes = async () => {
     setAtivando(true)
     try {
       const permission = await Notification.requestPermission()
-      if (permission !== 'granted') {
-        setAtivando(false)
-        return
-      }
+      if (permission !== 'granted') { setAtivando(false); return }
 
       const membroRes = await fetch('/api/membros/eu')
       const membro = await membroRes.json()
@@ -99,11 +116,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <p className="text-5xl mb-4">🔔</p>
             <h2 className="text-xl font-bold text-gray-800 mb-2">Ativar notificações</h2>
             <p className="text-sm text-gray-500 mb-6">Receba avisos quando o admin abrir as confirmações de presença.</p>
-            <button
-              onClick={ativarNotificacoes}
-              disabled={ativando}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition text-sm disabled:opacity-50"
-            >
+            <button onClick={ativarNotificacoes} disabled={ativando}
+              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition text-sm disabled:opacity-50">
               {ativando ? 'Ativando...' : '🔔 Ativar notificações'}
             </button>
           </div>
