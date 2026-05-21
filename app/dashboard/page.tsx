@@ -131,7 +131,7 @@ export default function Dashboard() {
 
       {/* Header */}
       <div style={{ marginBottom: 24 }}>
-        <p style={{ color: '#94a3b8', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4, margin: 0 }}>Bem-vindo de volta</p>
+        <p style={{ color: '#94a3b8', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>Bem-vindo de volta</p>
         <h2 style={{ color: '#ffffff', fontSize: 26, fontWeight: 700, margin: '4px 0 0' }}>{membro?.nome || '...'}</h2>
       </div>
 
@@ -159,8 +159,8 @@ export default function Dashboard() {
         </a>
       )}
 
-      {/* Cards - todos na mesma linha */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
+      {/* Cards - 2 colunas no mobile, 4 no desktop */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {cards.map(card => (
           <div key={card.key} style={cardStyle}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
@@ -201,7 +201,7 @@ export default function Dashboard() {
                 height: `${Math.max((m.total / maxGrafico) * 110, m.total > 0 ? 8 : 2)}px`,
                 background: m.total > 0 ? 'linear-gradient(180deg, #60a5fa, #1e40af)' : 'rgba(255,255,255,0.05)'
               }} />
-              <span style={{ fontSize: 8, color: '#64748b', whiteSpace: 'nowrap' }}>{m.label}</span>
+              <span style={{ fontSize: 10, color: '#cbd5e1', whiteSpace: 'nowrap' }}>{m.label}</span>
             </div>
           ))}
         </div>
@@ -214,7 +214,7 @@ export default function Dashboard() {
           <h3 style={{ color: '#e2e8f0', fontSize: 14, fontWeight: 700, margin: 0 }}>Atendimentos por hospital — mês atual</h3>
         </div>
         {dadosHospital.length === 0 ? (
-          <p style={{ color: '#64748b', fontSize: 14 }}>Nenhum registro este mês.</p>
+          <p style={{ color: '#94a3b8', fontSize: 14 }}>Nenhum registro este mês.</p>
         ) : (
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 140 }}>
             {dadosHospital.map(([nome, total], i) => (
@@ -225,7 +225,7 @@ export default function Dashboard() {
                   height: `${Math.max((total / maxHospital) * 110, 8)}px`,
                   background: 'linear-gradient(180deg, #c084fc, #7c3aed)'
                 }} />
-                <span style={{ fontSize: 8, color: '#64748b', textAlign: 'center' }}>{nome}</span>
+                <span style={{ fontSize: 10, color: '#cbd5e1', textAlign: 'center' }}>{nome}</span>
               </div>
             ))}
           </div>

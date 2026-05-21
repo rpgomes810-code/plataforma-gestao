@@ -61,7 +61,7 @@ function NavItem({ href, label, active, onClick }: { href: string; label: string
         fontWeight: 500,
         textDecoration: 'none',
         background: active ? 'rgba(59,130,246,0.15)' : hovered ? 'rgba(255,255,255,0.05)' : 'transparent',
-        color: active ? '#60a5fa' : hovered ? '#94a3b8' : '#64748b',
+        color: active ? '#60a5fa' : hovered ? '#ffffff' : '#cbd5e1',
         borderLeft: active ? '2px solid #3b82f6' : '2px solid transparent',
         transition: 'all 0.2s',
       }}
