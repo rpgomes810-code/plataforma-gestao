@@ -18,12 +18,14 @@ export default function Registros() {
   const [loading, setLoading] = useState(true)
   const [permissoes, setPermissoes] = useState<any>(null)
   const [meuGrupo, setMeuGrupo] = useState('')
+  const [meuNome, setMeuNome] = useState('')
   const [carregouUsuario, setCarregouUsuario] = useState(false)
 
   useEffect(() => {
     fetch('/api/membros/eu').then(res => res.json()).then(data => {
       setPermissoes(data.permissoes || {})
       if (data?.grupo) setMeuGrupo(data.grupo)
+      if (data?.nome) setMeuNome(data.nome)
       setCarregouUsuario(true)
     }).catch(() => setCarregouUsuario(true))
 
@@ -35,7 +37,6 @@ export default function Registros() {
   const podeCriar = permissoes?.registros?.criar === true
   const podeEditar = permissoes?.registros?.editar === true
   const podeExcluir = permissoes?.registros?.excluir === true
-  const isAtendente = permissoes !== null && !podeVerRegistros
 
   useEffect(() => {
     if (!podeVerRegistros) return
@@ -53,9 +54,10 @@ export default function Registros() {
     window.location.href = `/dashboard/registros/novo?${params.toString()}`
   }
 
+  // Admin vê todos os pendentes, atendente só vê as escalas onde é o responsável
   const pendentesFiltrados = podeVerRegistros
     ? pendentes
-    : pendentes.filter((e: any) => e.grupo === meuGrupo)
+    : pendentes.filter((e: any) => e.atendentes === meuNome)
 
   const resumoMembros = (membrosPresentes: string) => {
     if (!membrosPresentes) return []
