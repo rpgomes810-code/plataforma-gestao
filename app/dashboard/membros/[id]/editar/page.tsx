@@ -18,6 +18,20 @@ function mascaraTelefone(valor: string) {
     .replace(/(\d{5})(\d)/, '$1-$2')
 }
 
+const PERFIS = [
+  'Músico/Vocal',
+  'Atendente',
+  'Organizador',
+  'Ancião',
+  'Cooperador Jovens',
+  'Cooperador Oficial',
+  'Diácono',
+  'Encarregado Local',
+  'Encarregado Regional',
+  'Administrador',
+  'Secretário',
+]
+
 type Grupo = { id: string; nome: string }
 
 export default function EditarMembro() {
@@ -43,6 +57,7 @@ export default function EditarMembro() {
     status: '',
     observacoes: '',
     data_inscricao_darpe: '',
+    perfil: '',
   })
 
   useEffect(() => {
@@ -65,6 +80,7 @@ export default function EditarMembro() {
           status:               data.status || '',
           observacoes:          data.observacoes || '',
           data_inscricao_darpe: data.data_inscricao_darpe || '',
+          perfil:               data.perfil || '',
         })
         setLoadingData(false)
       })
@@ -179,18 +195,17 @@ export default function EditarMembro() {
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className={labelClass}>Tipo *</label>
-                  <select name="tipo" required value={form.tipo} onChange={handleChange} className={inputClass}>
+                  <label className={labelClass}>Perfil *</label>
+                  <select name="perfil" required value={form.perfil} onChange={handleChange} className={inputClass}>
                     <option value="">Selecione...</option>
-                    <option value="Músico">Músico</option>
-                    <option value="Vocal">Vocal</option>
-                    <option value="Atendente">Atendente</option>
-                    <option value="Organizador">Organizador</option>
+                    {PERFIS.map(p => (
+                      <option key={p} value={p}>{p}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
-                  <label className={labelClass}>Instrumento *</label>
-                  <select name="instrumento" required value={form.instrumento} onChange={handleChange} className={inputClass}>
+                  <label className={labelClass}>Instrumento</label>
+                  <select name="instrumento" value={form.instrumento} onChange={handleChange} className={inputClass}>
                     <option value="">Selecione...</option>
                     <option value="Nenhum">Nenhum</option>
                     <option value="Violino">Violino</option>
@@ -211,29 +226,6 @@ export default function EditarMembro() {
                   </select>
                 </div>
                 <div>
-                  <label className={labelClass}>Nível de acesso *</label>
-                  <select name="nivel_acesso" required value={form.nivel_acesso} onChange={handleChange} className={inputClass}>
-                    <option value="">Selecione...</option>
-                    <option value="Colaborador">Colaborador</option>
-                    <option value="Auxiliar">Auxiliar</option>
-                    <option value="Ministério">Ministério</option>
-                    <option value="Administrador">Administrador</option>
-                  </select>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className={labelClass}>Cargo *</label>
-                  <select name="cargo" required value={form.cargo} onChange={handleChange} className={inputClass}>
-                    <option value="">Selecione...</option>
-                    <option value="Nenhum">Nenhum</option>
-                    <option value="Ancião">Ancião</option>
-                    <option value="Diácono">Diácono</option>
-                    <option value="Secretário">Secretário</option>
-                    <option value="Gestor">Gestor</option>
-                  </select>
-                </div>
-                <div>
                   <label className={labelClass}>Status *</label>
                   <select name="status" required value={form.status} onChange={handleChange} className={inputClass}>
                     <option value="">Selecione...</option>
@@ -241,6 +233,8 @@ export default function EditarMembro() {
                     <option value="Inativo">Inativo</option>
                   </select>
                 </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className={labelClass}>Data de inscrição no DARPE *</label>
                   <input name="data_inscricao_darpe" type="date" required value={form.data_inscricao_darpe} onChange={handleChange} className={inputClass} />
