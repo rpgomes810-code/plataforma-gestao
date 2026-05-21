@@ -7,7 +7,6 @@ export default function Dashboard() {
   const [vagas, setVagas] = useState<any[]>([])
   const [stats, setStats] = useState<any>(null)
   const [hospitais, setHospitais] = useState<any[]>([])
-  const [registros, setRegistros] = useState<any[]>([])
   const [escalasTotal, setEscalasTotal] = useState<any[]>([])
   const [registrosGrafico, setRegistrosGrafico] = useState<any[]>([])
   const [registrosHospitais, setRegistrosHospitais] = useState<any[]>([])
@@ -20,36 +19,22 @@ export default function Dashboard() {
       setMembro(d.membroLogado)
       const todosMembros = d.todosMembros || []
       const escalas = d.escalas || []
-
       const porTipo: Record<string, number> = {}
       todosMembros.forEach((m: any) => { porTipo[m.tipo || 'Outro'] = (porTipo[m.tipo || 'Outro'] || 0) + 1 })
-
       const porGrupo: Record<string, number> = {}
       escalas.forEach((e: any) => { porGrupo[e.grupo || 'Sem grupo'] = (porGrupo[e.grupo || 'Sem grupo'] || 0) + 1 })
-
       setStats({ totalMembros: todosMembros.length, porTipo, totalEscalas: escalas.length, porGrupo })
       setEscalasTotal(escalas)
     })
-
     fetch('/api/vagas').then(r => r.json()).then(setVagas)
     fetch('/api/hospitais').then(r => r.json()).then(data => { if (Array.isArray(data)) setHospitais(data) })
-
-    const hoje = new Date()
-    fetch(`/api/registros?mes=${hoje.getMonth() + 1}&ano=${hoje.getFullYear()}`)
-      .then(r => r.json()).then(data => { if (Array.isArray(data)) setRegistros(data) })
-
     fetch('/api/grafico').then(r => r.json()).then(data => { if (Array.isArray(data)) setRegistrosGrafico(data) })
     fetch('/api/grafico-hospitais').then(r => r.json()).then(data => { if (Array.isArray(data)) setRegistrosHospitais(data) })
-
-    // Verifica status das notificações
-    if ('Notification' in window) {
-      setNotificacaoAtiva(Notification.permission === 'granted')
-    }
+    if ('Notification' in window) setNotificacaoAtiva(Notification.permission === 'granted')
   }, [])
 
   const inicial = membro?.nome?.charAt(0).toUpperCase() || '?'
 
-  // Gráfico últimos 12 meses
   const mesesNomes = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
   const hoje = new Date()
   const ultimos12 = Array.from({ length: 12 }, (_, i) => {
@@ -62,7 +47,6 @@ export default function Dashboard() {
   })
   const maxGrafico = Math.max(...ultimos12.map(m => m.total), 1)
 
-  // Registros: escalas registradas vs total
   const totalEscalasMes = escalasTotal.length
   const escalasRegistradas = escalasTotal.filter((e: any) => e.registrada).length
   const porGrupoReg: Record<string, { total: number; registradas: number }> = {}
@@ -73,7 +57,6 @@ export default function Dashboard() {
     if (e.registrada) porGrupoReg[g].registradas++
   })
 
-  // Gráfico por hospital (mês atual)
   const porHospital: Record<string, number> = {}
   registrosHospitais.forEach(r => {
     const nome = r.hospitais?.nome || 'Desconhecido'
@@ -82,139 +65,186 @@ export default function Dashboard() {
   const dadosHospital = Object.entries(porHospital).sort((a, b) => b[1] - a[1])
   const maxHospital = Math.max(...dadosHospital.map(([, v]) => v), 1)
 
-  return (
-    <div className="p-4 md:p-8">
+  const cards = [
+    {
+      key: 'membros',
+      valor: stats?.totalMembros || '—',
+      label: 'Membros',
+      cor: '#3b82f6',
+      bg: 'rgba(59,130,246,0.1)',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      ),
+      detalhes: Object.entries(stats?.porTipo || {}).map(([tipo, total]: any) => `${total} ${tipo}`),
+    },
+    {
+      key: 'escalas',
+      valor: stats?.totalEscalas || '—',
+      label: 'Escalas abertas',
+      cor: '#10b981',
+      bg: 'rgba(16,185,129,0.1)',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+      ),
+      detalhes: Object.entries(stats?.porGrupo || {}).sort((a: any, b: any) => (parseInt(a[0].replace(/\D/g, '')) || 0) - (parseInt(b[0].replace(/\D/g, '')) || 0)).map(([grupo, total]: any) => `${grupo}: ${total}`),
+    },
+    {
+      key: 'registros',
+      valor: `${escalasRegistradas}/${totalEscalasMes}`,
+      label: 'Registros',
+      cor: '#f59e0b',
+      bg: 'rgba(245,158,11,0.1)',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+          <line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/>
+          <line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+        </svg>
+      ),
+      detalhes: Object.entries(porGrupoReg).sort((a: any, b: any) => (parseInt(a[0].replace(/\D/g, '')) || 0) - (parseInt(b[0].replace(/\D/g, '')) || 0)).map(([grupo, val]: any) => `${grupo}: ${val.registradas}/${val.total}`),
+    },
+    {
+      key: 'hospitais',
+      valor: hospitais.length || '—',
+      label: 'Hospitais',
+      cor: '#a855f7',
+      bg: 'rgba(168,85,247,0.1)',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a855f7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      ),
+      detalhes: hospitais.map((h: any) => h.nome),
+    },
+  ]
 
+  return (
+    <div className="p-4 md:p-6">
+
+      {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-gray-800">Dashboard</h2>
-        <div className="flex items-center gap-3">
-          <span className="text-gray-600 text-sm">Olá, {membro?.nome || '...'}!</span>
-          <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">{inicial}</div>
+        <div>
+          <p className="text-xs text-gray-400 uppercase tracking-widest mb-0.5">Bem-vindo de volta</p>
+          <h2 className="text-2xl font-bold text-gray-800">{membro?.nome || '...'}</h2>
+        </div>
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-lg"
+          style={{ background: 'linear-gradient(135deg, #1e40af, #3b82f6)' }}>
+          {inicial}
         </div>
       </div>
 
-      {/* Informativo de notificações */}
+      {/* Notificações */}
       {notificacaoAtiva !== null && (
-        <div className={`flex items-center gap-2 px-4 py-3 rounded-xl mb-6 text-sm font-medium ${notificacaoAtiva ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
+        <div className={`flex items-center gap-2 px-4 py-3 rounded-xl mb-6 text-sm font-medium ${
+          notificacaoAtiva
+            ? 'text-emerald-700'
+            : 'text-red-600'
+        }`} style={{
+          background: notificacaoAtiva ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)',
+          border: `1px solid ${notificacaoAtiva ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`
+        }}>
           <span>{notificacaoAtiva ? '🔔' : '🔕'}</span>
-          <span>{notificacaoAtiva ? 'Notificações ativadas' : 'Notificações desativadas — ative nas configurações do seu celular'}</span>
+          <span>{notificacaoAtiva ? 'Notificações ativadas' : 'Notificações desativadas — ative nas configurações do celular'}</span>
         </div>
       )}
 
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
-
-        {/* Membros */}
-        <div className="bg-white rounded-2xl shadow p-5">
-          <p className="text-3xl font-bold text-blue-600">{stats?.totalMembros || '—'}</p>
-          <p className="text-sm text-gray-500 mt-1">👥 Membros</p>
-          <button onClick={() => toggle('membros')} className="text-xs text-blue-500 mt-2 hover:underline">
-            {aberto.membros ? '▲ Ocultar' : '▼ Ver detalhes'}
-          </button>
-          {aberto.membros && (
-            <div className="mt-2 space-y-1">
-              {Object.entries(stats?.porTipo || {}).map(([tipo, total]: any) => (
-                <p key={tipo} className="text-xs text-gray-500">{total} {tipo}</p>
-              ))}
+      {/* Vagas em destaque */}
+      {vagas.length > 0 && (
+        <a href="/dashboard/vagas" className="flex items-center justify-between px-5 py-4 rounded-2xl mb-6 transition hover:opacity-90"
+          style={{ background: 'linear-gradient(135deg, #f59e0b, #f97316)', color: 'white' }}>
+          <div className="flex items-center gap-3">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <div>
+              <p className="font-bold text-sm">{vagas.length} vaga{vagas.length > 1 ? 's' : ''} aberta{vagas.length > 1 ? 's' : ''}</p>
+              <p className="text-xs text-white/70">Clique para ver e preencher</p>
             </div>
-          )}
-        </div>
-
-        {/* Escalas */}
-        <div className="bg-white rounded-2xl shadow p-5">
-          <p className="text-3xl font-bold text-green-600">{stats?.totalEscalas || '—'}</p>
-          <p className="text-sm text-gray-500 mt-1">📅 Escalas abertas</p>
-          <button onClick={() => toggle('escalas')} className="text-xs text-blue-500 mt-2 hover:underline">
-            {aberto.escalas ? '▲ Ocultar' : '▼ Ver detalhes'}
-          </button>
-          {aberto.escalas && (
-            <div className="mt-2 space-y-1">
-              {Object.entries(stats?.porGrupo || {}).sort((a: any, b: any) => {
-                return (parseInt(a[0].replace(/\D/g, '')) || 0) - (parseInt(b[0].replace(/\D/g, '')) || 0)
-              }).map(([grupo, total]: any) => (
-                <p key={grupo} className="text-xs text-gray-500">{grupo}: {total}</p>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Vagas */}
-        <a href="/dashboard/vagas" className="bg-white rounded-2xl shadow p-5 hover:shadow-md transition block">
-          <p className="text-3xl font-bold text-orange-500">{vagas.length}</p>
-          <p className="text-sm text-gray-500 mt-1">⚠️ Vagas abertas</p>
-          <p className="text-xs text-orange-400 mt-2">Ver vagas →</p>
+          </div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
         </a>
+      )}
 
-        {/* Registros */}
-        <div className="bg-white rounded-2xl shadow p-5">
-          <p className="text-3xl font-bold text-yellow-600">{escalasRegistradas}/{totalEscalasMes}</p>
-          <p className="text-xs text-gray-400">registros efetivos</p>
-          <p className="text-sm text-gray-500 mt-1">📋 Registros</p>
-          <button onClick={() => toggle('registros')} className="text-xs text-blue-500 mt-2 hover:underline">
-            {aberto.registros ? '▲ Ocultar' : '▼ Ver detalhes'}
-          </button>
-          {aberto.registros && (
-            <div className="mt-2 space-y-1">
-              {Object.entries(porGrupoReg).sort((a: any, b: any) => {
-                return (parseInt(a[0].replace(/\D/g, '')) || 0) - (parseInt(b[0].replace(/\D/g, '')) || 0)
-              }).map(([grupo, val]: any) => (
-                <p key={grupo} className={`text-xs ${val.registradas < val.total ? 'text-red-500' : 'text-green-600'}`}>
-                  {grupo}: {val.registradas}/{val.total}
-                </p>
-              ))}
+      {/* Cards */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+        {cards.map(card => (
+          <div key={card.key} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: card.bg }}>
+                {card.icon}
+              </div>
+              <button onClick={() => toggle(card.key)} className="text-gray-300 hover:text-gray-500 transition">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  {aberto[card.key]
+                    ? <><polyline points="18 15 12 9 6 15"/></>
+                    : <><polyline points="6 9 12 15 18 9"/></>
+                  }
+                </svg>
+              </button>
             </div>
-          )}
-        </div>
-
-        {/* Hospitais */}
-        <div className="bg-white rounded-2xl shadow p-5">
-          <p className="text-3xl font-bold text-purple-600">{hospitais.length}</p>
-          <p className="text-sm text-gray-500 mt-1">🏥 Hospitais</p>
-          <button onClick={() => toggle('hospitais')} className="text-xs text-blue-500 mt-2 hover:underline">
-            {aberto.hospitais ? '▲ Ocultar' : '▼ Ver detalhes'}
-          </button>
-          {aberto.hospitais && (
-            <div className="mt-2 space-y-1">
-              {hospitais.map((h: any) => (
-                <p key={h.id} className="text-xs text-gray-500">🏥 {h.nome}</p>
-              ))}
-            </div>
-          )}
-        </div>
-
+            <p className="text-3xl font-bold mb-0.5" style={{ color: card.cor }}>{card.valor}</p>
+            <p className="text-xs text-gray-400 font-medium">{card.label}</p>
+            {aberto[card.key] && card.detalhes.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-gray-50 space-y-1">
+                {card.detalhes.map((d, i) => (
+                  <p key={i} className="text-xs text-gray-500">{d}</p>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
 
-      {/* Gráfico de barras - últimos 12 meses */}
-      <div className="bg-white rounded-2xl shadow p-6 mb-6">
-        <h3 className="text-base font-bold text-gray-800 mb-4">📊 Atendimentos mensais — últimos 12 meses</h3>
-        <div className="flex items-end gap-1 md:gap-2 h-40">
+      {/* Gráfico 12 meses */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-4">
+        <div className="flex items-center gap-2 mb-5">
+          <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #3b82f6, #1e40af)' }}></div>
+          <h3 className="text-sm font-bold text-gray-700">Atendimentos mensais — últimos 12 meses</h3>
+        </div>
+        <div className="flex items-end gap-1 md:gap-2 h-36">
           {ultimos12.map((m, i) => (
             <div key={i} className="flex-1 flex flex-col items-center gap-1">
-              <span className="text-xs text-gray-600 font-semibold">{m.total > 0 ? m.total : ''}</span>
-              <div
-                className="w-full rounded-t-lg transition-all"
-                style={{ height: `${Math.max((m.total / maxGrafico) * 120, m.total > 0 ? 8 : 2)}px`, backgroundColor: m.total > 0 ? '#3b82f6' : '#e5e7eb' }}
-              />
-              <span className="text-gray-400 whitespace-nowrap" style={{ fontSize: '9px' }}>{m.label}</span>
+              <span className="text-xs font-bold" style={{ color: m.total > 0 ? '#3b82f6' : 'transparent' }}>{m.total > 0 ? m.total : '.'}</span>
+              <div className="w-full rounded-t-md transition-all"
+                style={{
+                  height: `${Math.max((m.total / maxGrafico) * 110, m.total > 0 ? 8 : 2)}px`,
+                  background: m.total > 0 ? 'linear-gradient(180deg, #60a5fa, #1e40af)' : '#f1f5f9'
+                }} />
+              <span className="text-gray-400 whitespace-nowrap" style={{ fontSize: '8px' }}>{m.label}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Gráfico por hospital - mês atual */}
-      <div className="bg-white rounded-2xl shadow p-6 mb-6">
-        <h3 className="text-base font-bold text-gray-800 mb-4">🏥 Atendimentos por hospital — mês atual</h3>
+      {/* Gráfico hospitais */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div className="flex items-center gap-2 mb-5">
+          <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #a855f7, #7c3aed)' }}></div>
+          <h3 className="text-sm font-bold text-gray-700">Atendimentos por hospital — mês atual</h3>
+        </div>
         {dadosHospital.length === 0 ? (
           <p className="text-sm text-gray-400">Nenhum registro este mês.</p>
         ) : (
-          <div className="flex items-end gap-2 h-40">
+          <div className="flex items-end gap-2 h-36">
             {dadosHospital.map(([nome, total], i) => (
               <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                <span className="text-xs text-gray-600 font-semibold">{total}</span>
-                <div
-                  className="w-full rounded-t-lg transition-all"
-                  style={{ height: `${Math.max((total / maxHospital) * 120, 8)}px`, backgroundColor: '#a855f7' }}
-                />
-                <span className="text-gray-400 text-center leading-tight" style={{ fontSize: '9px' }}>{nome}</span>
+                <span className="text-xs font-bold text-purple-600">{total}</span>
+                <div className="w-full rounded-t-md transition-all"
+                  style={{
+                    height: `${Math.max((total / maxHospital) * 110, 8)}px`,
+                    background: 'linear-gradient(180deg, #c084fc, #7c3aed)'
+                  }} />
+                <span className="text-gray-400 text-center leading-tight" style={{ fontSize: '8px' }}>{nome}</span>
               </div>
             ))}
           </div>
