@@ -119,6 +119,11 @@ export default function Dashboard() {
     },
   ]
 
+  const cardStyle = {
+    background: 'rgba(59,130,246,0.15)',
+    border: '1px solid rgba(59,130,246,0.25)',
+  }
+
   return (
     <div className="p-4 md:p-6 min-h-screen" style={{ background: '#0f172a' }}>
 
@@ -151,11 +156,10 @@ export default function Dashboard() {
       {/* Cards */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
         {cards.map(card => (
-          <div key={card.key} className="rounded-2xl p-5"
-            style={{ background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.12)' }}>
+          <div key={card.key} className="rounded-2xl p-5" style={cardStyle}>
             <div className="flex items-center justify-between mb-3">
               <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-                style={{ background: 'rgba(59,130,246,0.1)' }}>
+                style={{ background: 'rgba(59,130,246,0.15)' }}>
                 {card.icon}
               </div>
               <button onClick={() => toggle(card.key)} style={{ color: '#475569' }} className="hover:text-blue-400 transition">
@@ -167,7 +171,7 @@ export default function Dashboard() {
             <p className="text-3xl font-bold mb-0.5" style={{ color: card.cor }}>{card.valor}</p>
             <p className="text-xs font-medium" style={{ color: '#64748b' }}>{card.label}</p>
             {aberto[card.key] && card.detalhes.length > 0 && (
-              <div className="mt-3 pt-3 space-y-1" style={{ borderTop: '1px solid rgba(59,130,246,0.1)' }}>
+              <div className="mt-3 pt-3 space-y-1" style={{ borderTop: '1px solid rgba(59,130,246,0.15)' }}>
                 {card.detalhes.map((d, i) => (
                   <p key={i} className="text-xs" style={{ color: '#94a3b8' }}>{d}</p>
                 ))}
@@ -178,8 +182,7 @@ export default function Dashboard() {
       </div>
 
       {/* Gráfico 12 meses */}
-      <div className="rounded-2xl p-6 mb-4"
-        style={{ background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.12)' }}>
+      <div className="rounded-2xl p-6 mb-4" style={cardStyle}>
         <div className="flex items-center gap-2 mb-5">
           <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #60a5fa, #1e40af)' }}></div>
           <h3 className="text-sm font-bold" style={{ color: '#cbd5e1' }}>Atendimentos mensais — últimos 12 meses</h3>
@@ -191,7 +194,7 @@ export default function Dashboard() {
               <div className="w-full rounded-t-md transition-all"
                 style={{
                   height: `${Math.max((m.total / maxGrafico) * 110, m.total > 0 ? 8 : 2)}px`,
-                  background: m.total > 0 ? 'linear-gradient(180deg, #60a5fa, #1e40af)' : 'rgba(59,130,246,0.05)'
+                  background: m.total > 0 ? 'linear-gradient(180deg, #60a5fa, #1e40af)' : 'rgba(59,130,246,0.08)'
                 }} />
               <span className="whitespace-nowrap" style={{ fontSize: '8px', color: '#475569' }}>{m.label}</span>
             </div>
@@ -200,8 +203,7 @@ export default function Dashboard() {
       </div>
 
       {/* Gráfico hospitais */}
-      <div className="rounded-2xl p-6 mb-6"
-        style={{ background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.12)' }}>
+      <div className="rounded-2xl p-6 mb-6" style={cardStyle}>
         <div className="flex items-center gap-2 mb-5">
           <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #c084fc, #7c3aed)' }}></div>
           <h3 className="text-sm font-bold" style={{ color: '#cbd5e1' }}>Atendimentos por hospital — mês atual</h3>
