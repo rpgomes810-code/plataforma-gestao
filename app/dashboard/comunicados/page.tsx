@@ -270,7 +270,7 @@ export default function Comunicados() {
                 </div>
 
                 {/* Conteúdo */}
-                <p style={{ color: '#cbd5e1', fontSize: 14, lineHeight: 1.6, margin: '12px 0' }}>{comunicado.conteudo}</p>
+                <p style={{ color: '#cbd5e1', fontSize: 14, lineHeight: 1.6, margin: '12px 0', wordBreak: 'break-word', overflowWrap: 'break-word' }}>{comunicado.conteudo}</p>
 
                 {/* Perfis destino */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
