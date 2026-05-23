@@ -52,66 +52,153 @@ export default async function Hospitais() {
     .order('nome', { ascending: true })
 
   return (
-    <div className="p-4 md:p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-xl font-bold text-gray-800">Hospitais</h2>
-          <p className="text-sm text-gray-500">{hospitais?.length} hospitais cadastrados</p>
-        </div>
-        {podeCriar && (
-          <a href="/dashboard/hospitais/novo"
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">
-            + Novo Hospital
-          </a>
-        )}
-      </div>
+    <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: '28px 40px' }}
+      className="hospitais-wrap">
+      <style>{`
+        @media (max-width: 768px) {
+          .hospitais-wrap { padding: 16px !important; }
+          .tabela-header { display: none !important; }
+        }
+      `}</style>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {hospitais?.map((hospital) => (
-          <div key={hospital.id} className="bg-white rounded-2xl shadow p-6 flex flex-col gap-3">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="font-bold text-gray-800 text-lg">{hospital.nome}</p>
-                <p className="text-sm text-gray-500 mt-1">📍 {hospital.endereco || '—'}</p>
-              </div>
-              <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                hospital.ativo ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
-              }`}>
-                {hospital.ativo ? 'Ativo' : 'Inativo'}
-              </span>
-            </div>
+      <div style={{ maxWidth: 1280, margin: '0 auto' }}>
 
-            <div className="border-t pt-3 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Turno</span>
-                <span className="font-medium text-gray-700">🕐 {hospital.turno || '—'}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Contato</span>
-                <span className="font-medium text-gray-700">📞 {hospital.contato || '—'}</span>
-              </div>
-              {hospital.observacoes && (
-                <div className="text-sm text-gray-500 bg-gray-50 rounded-lg p-2 mt-2">
-                  💬 {hospital.observacoes}
-                </div>
-              )}
-            </div>
-
-            {(podeEditar || podeExcluir) && (
-              <div className="flex gap-2 mt-2">
-                {podeEditar && (
-                  <a href={`/dashboard/hospitais/${hospital.id}/editar`}
-                    className="flex-1 text-center text-sm text-blue-600 border border-blue-200 rounded-lg py-1.5 hover:bg-blue-50 transition">
-                    ✏️ Editar
-                  </a>
-                )}
-                {podeExcluir && (
-                  <BotaoExcluirHospital id={hospital.id} nome={hospital.nome} usuarioNome={membroLogado?.nome} />
-                )}
-              </div>
-            )}
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+          <div>
+            <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>Hospitais</h1>
+            <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
+              {hospitais?.length} hospitais cadastrados
+            </p>
           </div>
-        ))}
+          {podeCriar && (
+            <a href="/dashboard/hospitais/novo" style={{
+              padding: '9px 18px',
+              borderRadius: 8,
+              background: '#2563eb',
+              color: '#fff',
+              fontSize: 13,
+              fontWeight: 600,
+              textDecoration: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Novo Hospital
+            </a>
+          )}
+        </div>
+
+        {/* Tabela */}
+        <div style={{
+          background: '#fff',
+          border: '1px solid #e2e8f0',
+          borderRadius: 12,
+          boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+          overflow: 'hidden',
+        }}>
+          {/* Cabeçalho */}
+          <div className="tabela-header" style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 200px 160px 120px 100px',
+            padding: '10px 20px',
+            borderBottom: '1px solid #f1f5f9',
+            background: '#f8fafc',
+          }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>HOSPITAL</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>ENDEREÇO</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>TURNO</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>STATUS</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, textAlign: 'right' }}>AÇÕES</span>
+          </div>
+
+          {/* Linhas */}
+          {!hospitais?.length ? (
+            <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: 14 }}>
+              Nenhum hospital cadastrado
+            </div>
+          ) : (
+            hospitais.map((hospital, index) => (
+              <div key={hospital.id}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 200px 160px 120px 100px',
+                  padding: '14px 20px',
+                  borderBottom: index < hospitais.length - 1 ? '1px solid #f1f5f9' : 'none',
+                  alignItems: 'center',
+                  transition: 'background 0.15s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+              >
+                {/* Nome */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{
+                    width: 38, height: 38, borderRadius: '50%',
+                    background: hospital.ativo ? '#1e3a5f' : '#94a3b8',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: '#fff', fontWeight: 700, fontSize: 15, flexShrink: 0,
+                  }}>
+                    {hospital.nome?.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, margin: 0, textTransform: 'uppercase', letterSpacing: 0.4 }}>
+                      {hospital.nome}
+                    </p>
+                    {hospital.contato && (
+                      <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>{hospital.contato}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Endereço */}
+                <span style={{ fontSize: 13, color: '#475569' }}>
+                  {hospital.endereco || <span style={{ color: '#cbd5e1' }}>—</span>}
+                </span>
+
+                {/* Turno */}
+                <span style={{ fontSize: 13, color: '#475569' }}>
+                  {hospital.turno || <span style={{ color: '#cbd5e1' }}>—</span>}
+                </span>
+
+                {/* Status */}
+                <span style={{
+                  fontSize: 11, fontWeight: 600,
+                  padding: '3px 10px', borderRadius: 999,
+                  background: hospital.ativo ? '#dcfce7' : '#f1f5f9',
+                  color: hospital.ativo ? '#16a34a' : '#64748b',
+                  display: 'inline-block',
+                }}>
+                  {hospital.ativo ? 'Ativo' : 'Inativo'}
+                </span>
+
+                {/* Ações */}
+                <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                  {podeEditar && (
+                    <a href={`/dashboard/hospitais/${hospital.id}/editar`} title="Editar"
+                      style={{
+                        width: 30, height: 30, borderRadius: 7, background: '#eff6ff',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        textDecoration: 'none',
+                      }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                    </a>
+                  )}
+                  {podeExcluir && (
+                    <BotaoExcluirHospital id={hospital.id} nome={hospital.nome} usuarioNome={membroLogado?.nome} />
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
       </div>
     </div>
   )
