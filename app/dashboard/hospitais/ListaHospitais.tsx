@@ -150,7 +150,7 @@ export default function ListaHospitais({ hospitais, membroLogado, podeCriar, pod
         }}>
           <div className="tabela-header" style={{
             display: 'grid',
-            gridTemplateColumns: '1fr 180px 120px 110px',
+            gridTemplateColumns: '1fr 180px 120px 120px',
             padding: '10px 20px',
             borderBottom: '1px solid #f1f5f9',
             background: '#f8fafc',
@@ -170,7 +170,7 @@ export default function ListaHospitais({ hospitais, membroLogado, podeCriar, pod
               <div key={hospital.id} className="hospital-row"
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: '1fr 180px 120px 110px',
+                  gridTemplateColumns: '1fr 180px 120px 120px',
                   padding: '14px 20px',
                   borderBottom: index < filtrados.length - 1 ? '1px solid #f1f5f9' : 'none',
                   alignItems: 'center',
@@ -215,8 +215,8 @@ export default function ListaHospitais({ hospitais, membroLogado, podeCriar, pod
 
                 {/* Ações */}
                 <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-                  {hospital.link_maps && (
-                    <a href={hospital.link_maps} target="_blank" rel="noopener noreferrer" title="Abrir no Maps"
+                  {hospital.localizacao && (
+                    <a href={hospital.localizacao} target="_blank" rel="noopener noreferrer" title="Abrir no Maps"
                       style={{
                         width: 30, height: 30, borderRadius: 7, background: '#f0fdf4',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
