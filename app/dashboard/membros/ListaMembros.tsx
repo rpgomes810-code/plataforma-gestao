@@ -33,7 +33,7 @@ export default function ListaMembros({ membros, membroLogado, podeEditar, podeEx
     const perfilOk = filtroPerfil === '' || m.perfil === filtroPerfil
     const instrOk = filtroInstrumento === '' || m.instrumento === filtroInstrumento
     return nomeOk && grupoOk && perfilOk && instrOk
-  })
+  }).sort((a, b) => a.nome?.localeCompare(b.nome, 'pt-BR'))
 
   const limparFiltros = () => {
     setBusca('')
@@ -44,20 +44,49 @@ export default function ListaMembros({ membros, membroLogado, podeEditar, podeEx
 
   const temFiltro = busca || filtroGrupo || filtroPerfil || filtroInstrumento
 
-  const selectStyle: React.CSSProperties = {
-    padding: '9px 14px',
-    borderRadius: 8,
-    border: '1px solid #e2e8f0',
-    background: '#fff',
-    fontSize: 13,
-    color: '#334155',
-    cursor: 'pointer',
-    outline: 'none',
-    minWidth: 170,
-  }
+  const FiltroSelect = ({ label, value, onChange, options, placeholder }: {
+    label: string
+    value: string
+    onChange: (v: string) => void
+    options: string[]
+    placeholder: string
+  }) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+      <label style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>{label}</label>
+      <div style={{ position: 'relative' }}>
+        <select
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          style={{
+            appearance: 'none',
+            WebkitAppearance: 'none',
+            padding: '9px 36px 9px 14px',
+            borderRadius: 8,
+            border: '1px solid #e2e8f0',
+            background: '#f8fafc',
+            fontSize: 13,
+            fontWeight: 500,
+            color: value ? '#1e293b' : '#64748b',
+            cursor: 'pointer',
+            outline: 'none',
+            minWidth: 180,
+            width: '100%',
+          }}
+        >
+          <option value="">{placeholder}</option>
+          {options.map(o => <option key={o} value={o}>{o}</option>)}
+        </select>
+        <svg
+          style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
+          width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </div>
+    </div>
+  )
 
   return (
-    <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: '28px 24px' }}
+    <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: '28px 16px' }}
       className="membros-wrap">
       <style>{`
         @media (max-width: 768px) {
@@ -85,51 +114,33 @@ export default function ListaMembros({ membros, membroLogado, podeEditar, podeEx
         marginBottom: 12,
         boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
       }}>
-        <div className="filtros-row" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <label style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>GRUPO</label>
-            <select value={filtroGrupo} onChange={e => setFiltroGrupo(e.target.value)} style={selectStyle}>
-              <option value="">Todos os Grupos</option>
-              {grupos.map(g => <option key={g} value={g}>{g}</option>)}
-            </select>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <label style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>PERFIL</label>
-            <select value={filtroPerfil} onChange={e => setFiltroPerfil(e.target.value)} style={selectStyle}>
-              <option value="">Todos os Perfis</option>
-              {perfis.map(p => <option key={p} value={p}>{p}</option>)}
-            </select>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <label style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>INSTRUMENTO</label>
-            <select value={filtroInstrumento} onChange={e => setFiltroInstrumento(e.target.value)} style={selectStyle}>
-              <option value="">Todos os Instrumentos</option>
-              {instrumentos.map(i => <option key={i} value={i}>{i}</option>)}
-            </select>
-          </div>
+        <div className="filtros-row" style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+          <FiltroSelect label="GRUPO" value={filtroGrupo} onChange={setFiltroGrupo} options={grupos} placeholder="Todos os Grupos" />
+          <FiltroSelect label="PERFIL" value={filtroPerfil} onChange={setFiltroPerfil} options={perfis} placeholder="Todos os Perfis" />
+          <FiltroSelect label="INSTRUMENTO" value={filtroInstrumento} onChange={setFiltroInstrumento} options={instrumentos} placeholder="Todos os Instrumentos" />
 
           {temFiltro && (
-            <button onClick={limparFiltros} style={{
-              padding: '9px 14px',
-              borderRadius: 8,
-              border: '1px solid #e2e8f0',
-              background: 'transparent',
-              fontSize: 12,
-              fontWeight: 600,
-              color: '#64748b',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              marginTop: 20,
-            }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-              Limpar filtros
-            </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+              <label style={{ fontSize: 11, color: 'transparent' }}>X</label>
+              <button onClick={limparFiltros} style={{
+                padding: '9px 14px',
+                borderRadius: 8,
+                border: '1px solid #e2e8f0',
+                background: 'transparent',
+                fontSize: 12,
+                fontWeight: 600,
+                color: '#64748b',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+              }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+                Limpar filtros
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -177,7 +188,6 @@ export default function ListaMembros({ membros, membroLogado, podeEditar, podeEx
         boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
         overflow: 'hidden',
       }}>
-        {/* Cabeçalho */}
         <div className="tabela-header" style={{
           display: 'grid',
           gridTemplateColumns: '1fr 180px 180px 160px 110px',
@@ -192,7 +202,6 @@ export default function ListaMembros({ membros, membroLogado, podeEditar, podeEx
           <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, textAlign: 'right' }}>AÇÕES</span>
         </div>
 
-        {/* Linhas */}
         {filtrados.length === 0 ? (
           <div style={{ padding: '40px 20px', textAlign: 'center', color: '#94a3b8', fontSize: 14 }}>
             Nenhum membro encontrado
@@ -212,7 +221,6 @@ export default function ListaMembros({ membros, membroLogado, podeEditar, podeEx
               onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')}
               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
             >
-              {/* Nome */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{
                   width: 38, height: 38, borderRadius: '50%',
@@ -223,7 +231,7 @@ export default function ListaMembros({ membros, membroLogado, podeEditar, podeEx
                   {membro.nome?.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <p style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, margin: 0, letterSpacing: 0.1 }}>
+                  <p style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, margin: 0 }}>
                     {membro.nome}
                   </p>
                   <span style={{
@@ -237,7 +245,6 @@ export default function ListaMembros({ membros, membroLogado, podeEditar, podeEx
                 </div>
               </div>
 
-              {/* Instrumento */}
               <span className="col-instrumento" style={{ fontSize: 13, color: '#475569', display: 'flex', alignItems: 'center', gap: 5 }}>
                 {membro.instrumento && membro.instrumento !== 'Nenhum' ? (
                   <>
@@ -249,7 +256,6 @@ export default function ListaMembros({ membros, membroLogado, podeEditar, podeEx
                 ) : <span style={{ color: '#cbd5e1' }}>—</span>}
               </span>
 
-              {/* Grupo */}
               <span className="col-grupo" style={{ fontSize: 13, color: '#475569' }}>
                 {membro.grupo ? (
                   <span style={{
@@ -262,12 +268,10 @@ export default function ListaMembros({ membros, membroLogado, podeEditar, podeEx
                 ) : <span style={{ color: '#cbd5e1' }}>—</span>}
               </span>
 
-              {/* Perfil */}
               <span className="col-perfil" style={{ fontSize: 13, color: '#475569' }}>
                 {membro.perfil || <span style={{ color: '#cbd5e1' }}>—</span>}
               </span>
 
-              {/* Ações */}
               <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                 <a href={`/dashboard/membros/${membro.id}/estatisticas`} title="Estatísticas"
                   style={{
