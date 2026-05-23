@@ -14,7 +14,16 @@ export default function Dashboard() {
   const [notificacaoAtiva, setNotificacaoAtiva] = useState<boolean | null>(null)
   const [calMes, setCalMes] = useState(new Date().getMonth())
   const [calAno, setCalAno] = useState(new Date().getFullYear())
+  const [diaPopup, setDiaPopup] = useState<number | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
   const toggle = (key: string) => setAberto(prev => ({ ...prev, [key]: !prev[key] }))
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   useEffect(() => {
     fetch('/api/confirmacoes/pagina').then(r => r.json()).then(d => {
@@ -37,7 +46,7 @@ export default function Dashboard() {
 
   const mesesNomes = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
   const mesesCompletos = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
-  const diasSemana = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']
+  const diasSemana = ['DOM','SEG','TER','QUA','QUI','SEX','SÁB']
   const hoje = new Date()
 
   const ultimos12 = Array.from({ length: 12 }, (_, i) => {
@@ -62,7 +71,6 @@ export default function Dashboard() {
   const dadosHospital = Object.entries(porHospital).sort((a, b) => b[1] - a[1])
   const maxHospital = Math.max(...dadosHospital.map(([, v]) => v), 1)
 
-  // Calendário
   const primeiroDia = new Date(calAno, calMes, 1).getDay()
   const diasNoMes = new Date(calAno, calMes + 1, 0).getDate()
   const escalasPorDia: Record<number, any[]> = {}
@@ -128,12 +136,12 @@ export default function Dashboard() {
   ]
 
   return (
-    <div style={{ padding: '24px', minHeight: '100vh', background: '#f1f5f9', boxSizing: 'border-box', overflowX: 'hidden' }}>
+    <div style={{ padding: '24px', minHeight: '100vh', background: '#f1f5f9', boxSizing: 'border-box', overflowX: 'hidden', fontFamily: "'Inter', sans-serif" }}>
 
       {/* Header */}
       <div style={{ marginBottom: 24 }}>
-        <p style={{ color: '#64748b', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>Bem-vindo de volta</p>
-        <h2 style={{ color: '#0f172a', fontSize: 26, fontWeight: 700, margin: '4px 0 0' }}>{membro?.nome || '...'}</h2>
+        <p style={{ color: '#64748b', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0, fontWeight: 600 }}>Bem-vindo de volta</p>
+        <h2 style={{ color: '#0f172a', fontSize: 28, fontWeight: 800, margin: '4px 0 0' }}>{membro?.nome || '...'}</h2>
       </div>
 
       {/* Vagas */}
@@ -142,19 +150,19 @@ export default function Dashboard() {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '14px 20px', borderRadius: 12, marginBottom: 24,
           background: 'linear-gradient(135deg, #d97706, #f59e0b)',
-          textDecoration: 'none', boxShadow: '0 4px 12px rgba(217,119,6,0.3)',
+          textDecoration: 'none', boxShadow: '0 4px 12px rgba(217,119,6,0.25)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
               <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
             </svg>
             <div>
-              <p style={{ color: 'white', fontWeight: 700, fontSize: 14, margin: 0 }}>{vagas.length} vaga{vagas.length > 1 ? 's' : ''} aberta{vagas.length > 1 ? 's' : ''}</p>
-              <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, margin: 0 }}>Clique para ver e preencher</p>
+              <p style={{ color: 'white', fontWeight: 800, fontSize: 14, margin: 0 }}>{vagas.length} vaga{vagas.length > 1 ? 's' : ''} aberta{vagas.length > 1 ? 's' : ''}</p>
+              <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, margin: 0, fontWeight: 500 }}>Clique para ver e preencher</p>
             </div>
           </div>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
         </a>
       )}
 
@@ -172,76 +180,94 @@ export default function Dashboard() {
                 </svg>
               </button>
             </div>
-            <p style={{ color: card.cor, fontSize: 30, fontWeight: 700, margin: '0 0 2px' }}>{card.valor}</p>
-            <p style={{ color: '#64748b', fontSize: 12, fontWeight: 500, margin: 0 }}>{card.label}</p>
-            {aberto[card.key] && card.detalhes.length > 0 && (
+            <p style={{ color: card.cor, fontSize: 32, fontWeight: 800, margin: '0 0 2px' }}>{card.valor}</p>
+            <p style={{ color: '#64748b', fontSize: 12, fontWeight: 600, margin: 0 }}>{card.label}</p>
+            {aberto[card.key] && (
               <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #f1f5f9' }}>
-                {card.detalhes.map((d, i) => (
-                  <p key={i} style={{ color: '#475569', fontSize: 12, margin: '0 0 4px' }}>• {d}</p>
-                ))}
-              </div>
-            )}
-            {aberto[card.key] && card.detalhes.length === 0 && (
-              <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #f1f5f9' }}>
-                <p style={{ color: '#94a3b8', fontSize: 12, margin: 0 }}>Nenhum pendente</p>
+                {card.detalhes.length > 0
+                  ? card.detalhes.map((d, i) => <p key={i} style={{ color: '#475569', fontSize: 12, margin: '0 0 4px', fontWeight: 500 }}>• {d}</p>)
+                  : <p style={{ color: '#94a3b8', fontSize: 12, margin: 0 }}>Nenhum pendente ✅</p>
+                }
               </div>
             )}
           </div>
         ))}
       </div>
 
-      {/* Calendário de escalas */}
+      {/* Calendário */}
       <div style={{ ...cardStyle, marginBottom: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <div>
-            <p style={{ color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.08em', margin: 0 }}>Agenda de Escalas</p>
-            <h3 style={{ color: '#0f172a', fontSize: 16, fontWeight: 700, margin: '2px 0 0' }}>{mesesCompletos[calMes]} {calAno}</h3>
+            <p style={{ color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0, fontWeight: 700 }}>Agenda de Escalas</p>
+            <h3 style={{ color: '#0f172a', fontSize: 18, fontWeight: 800, margin: '2px 0 0' }}>{mesesCompletos[calMes]} {calAno}</h3>
           </div>
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
             <button onClick={() => { if (calMes === 0) { setCalMes(11); setCalAno(calAno - 1) } else setCalMes(calMes - 1) }}
-              style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', color: '#64748b', fontSize: 14 }}>←</button>
+              style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
             <button onClick={() => { setCalMes(hoje.getMonth()); setCalAno(hoje.getFullYear()) }}
-              style={{ padding: '0 12px', height: 32, borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', color: '#1e40af', fontSize: 12, fontWeight: 600 }}>Hoje</button>
+              style={{ padding: '0 12px', height: 32, borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', color: '#1e40af', fontSize: 12, fontWeight: 700 }}>HOJE</button>
             <button onClick={() => { if (calMes === 11) { setCalMes(0); setCalAno(calAno + 1) } else setCalMes(calMes + 1) }}
-              style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', color: '#64748b', fontSize: 14 }}>→</button>
+              style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
           </div>
         </div>
 
         {/* Dias da semana */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, marginBottom: 4 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 8 }}>
           {diasSemana.map(d => (
-            <div key={d} style={{ textAlign: 'center', fontSize: 11, fontWeight: 600, color: '#94a3b8', padding: '4px 0', textTransform: 'uppercase' }}>{d}</div>
+            <div key={d} style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#94a3b8', padding: '6px 0', letterSpacing: '0.05em' }}>{d}</div>
           ))}
         </div>
 
-        {/* Dias do mês */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2 }}>
-          {Array.from({ length: primeiroDia }).map((_, i) => (
-            <div key={`empty-${i}`} />
-          ))}
+        {/* Dias */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
+          {Array.from({ length: primeiroDia }).map((_, i) => <div key={`e-${i}`} />)}
           {Array.from({ length: diasNoMes }, (_, i) => i + 1).map(dia => {
             const escalasNoDia = escalasPorDia[dia] || []
+            const temEscala = escalasNoDia.length > 0
             const ehHoje = dia === hoje.getDate() && calMes === hoje.getMonth() && calAno === hoje.getFullYear()
+            const popupAberto = diaPopup === dia
+
             return (
-              <div key={dia} style={{
-                minHeight: 48, borderRadius: 8, padding: '4px 6px',
-                background: ehHoje ? '#1e40af' : escalasNoDia.length > 0 ? '#eff6ff' : 'transparent',
-                border: ehHoje ? 'none' : escalasNoDia.length > 0 ? '1px solid #bfdbfe' : '1px solid transparent',
-                cursor: escalasNoDia.length > 0 ? 'pointer' : 'default',
-              }}>
-                <p style={{ fontSize: 12, fontWeight: ehHoje ? 700 : 400, color: ehHoje ? '#fff' : '#334155', margin: '0 0 2px' }}>{dia}</p>
-                {escalasNoDia.slice(0, 2).map((e: any, idx: number) => (
-                  <div key={idx} style={{
-                    fontSize: 9, fontWeight: 600, color: ehHoje ? '#bfdbfe' : '#1e40af',
-                    background: ehHoje ? 'rgba(255,255,255,0.15)' : '#dbeafe',
-                    borderRadius: 3, padding: '1px 4px', marginBottom: 1,
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              <div key={dia} style={{ position: 'relative', textAlign: 'center', padding: '8px 4px' }}
+                onMouseEnter={() => !isMobile && temEscala && setDiaPopup(dia)}
+                onMouseLeave={() => !isMobile && setDiaPopup(null)}
+                onClick={() => isMobile && temEscala && setDiaPopup(popupAberto ? null : dia)}>
+
+                <div style={{
+                  width: 36, height: 36, borderRadius: '50%', margin: '0 auto',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                  background: ehHoje ? '#1e3a5f' : temEscala ? '#1e3a5f' : 'transparent',
+                  cursor: temEscala ? 'pointer' : 'default',
+                  border: ehHoje && !temEscala ? '2px solid #1e3a5f' : 'none',
+                }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: ehHoje || temEscala ? '#fff' : '#334155', lineHeight: 1 }}>{dia}</span>
+                  {temEscala && (
+                    <span style={{ fontSize: 9, fontWeight: 800, color: ehHoje ? '#93c5fd' : '#bfdbfe', lineHeight: 1 }}>{escalasNoDia.length}</span>
+                  )}
+                </div>
+
+                {/* Popup */}
+                {popupAberto && (
+                  <div style={{
+                    position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)',
+                    zIndex: 50, background: '#fff', borderRadius: 10, padding: 12,
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)', border: '1px solid #e2e8f0',
+                    minWidth: 180, textAlign: 'left',
                   }}>
-                    {e.grupo || e.local_texto || '—'}
+                    <p style={{ color: '#1e3a5f', fontSize: 12, fontWeight: 800, margin: '0 0 8px' }}>
+                      {dia} de {mesesCompletos[calMes]}
+                    </p>
+                    {escalasNoDia.map((e: any, idx: number) => (
+                      <div key={idx} style={{ padding: '6px 0', borderTop: idx > 0 ? '1px solid #f1f5f9' : 'none' }}>
+                        <p style={{ color: '#0f172a', fontSize: 12, fontWeight: 700, margin: '0 0 2px' }}>{e.grupo}</p>
+                        <p style={{ color: '#64748b', fontSize: 11, margin: 0, fontWeight: 500 }}>{e.local_texto || '—'} · {e.hora_inicio}</p>
+                      </div>
+                    ))}
                   </div>
-                ))}
-                {escalasNoDia.length > 2 && (
-                  <p style={{ fontSize: 9, color: ehHoje ? '#bfdbfe' : '#64748b', margin: 0 }}>+{escalasNoDia.length - 2}</p>
                 )}
               </div>
             )
@@ -253,7 +279,7 @@ export default function Dashboard() {
       <div style={{ ...cardStyle, marginBottom: 16, overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
           <div style={{ width: 4, height: 20, borderRadius: 2, background: 'linear-gradient(180deg, #3b82f6, #1e40af)' }}></div>
-          <h3 style={{ color: '#0f172a', fontSize: 13, fontWeight: 700, margin: 0 }}>Atendimentos mensais — últimos 12 meses</h3>
+          <h3 style={{ color: '#0f172a', fontSize: 14, fontWeight: 800, margin: 0 }}>Atendimentos mensais — últimos 12 meses</h3>
         </div>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height: 120 }}>
           {ultimos12.map((m, i) => (
@@ -264,7 +290,7 @@ export default function Dashboard() {
                 height: `${Math.max((m.total / maxGrafico) * 80, m.total > 0 ? 6 : 2)}px`,
                 background: m.total > 0 ? 'linear-gradient(180deg, #60a5fa, #1e40af)' : '#f1f5f9'
               }} />
-              <span style={{ fontSize: 8, color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%', textAlign: 'center' }}>{m.label}</span>
+              <span style={{ fontSize: 8, color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%', textAlign: 'center', fontWeight: 600 }}>{m.label}</span>
             </div>
           ))}
         </div>
@@ -274,17 +300,17 @@ export default function Dashboard() {
       <div style={{ ...cardStyle, marginBottom: 24, overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
           <div style={{ width: 4, height: 20, borderRadius: 2, background: 'linear-gradient(180deg, #7c3aed, #a855f7)' }}></div>
-          <h3 style={{ color: '#0f172a', fontSize: 13, fontWeight: 700, margin: 0 }}>Atendimentos por hospital — mês atual</h3>
+          <h3 style={{ color: '#0f172a', fontSize: 14, fontWeight: 800, margin: 0 }}>Atendimentos por hospital — mês atual</h3>
         </div>
         {dadosHospital.length === 0 ? (
-          <p style={{ color: '#94a3b8', fontSize: 14 }}>Nenhum registro este mês.</p>
+          <p style={{ color: '#94a3b8', fontSize: 14, fontWeight: 500 }}>Nenhum registro este mês.</p>
         ) : (
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 120 }}>
             {dadosHospital.map(([nome, total], i) => (
               <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, minWidth: 0 }}>
                 <span style={{ fontSize: 10, fontWeight: 700, color: '#7c3aed' }}>{total}</span>
                 <div style={{ width: '100%', borderRadius: '3px 3px 0 0', height: `${Math.max((total / maxHospital) * 80, 8)}px`, background: 'linear-gradient(180deg, #a855f7, #7c3aed)' }} />
-                <span style={{ fontSize: 9, color: '#94a3b8', textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%' }}>{nome}</span>
+                <span style={{ fontSize: 9, color: '#94a3b8', textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%', fontWeight: 600 }}>{nome}</span>
               </div>
             ))}
           </div>
@@ -295,7 +321,7 @@ export default function Dashboard() {
       {notificacaoAtiva !== null && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8,
-          padding: '12px 16px', borderRadius: 10, fontSize: 13, fontWeight: 500,
+          padding: '12px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600,
           background: notificacaoAtiva ? '#f0fdf4' : '#fef2f2',
           border: `1px solid ${notificacaoAtiva ? '#bbf7d0' : '#fecaca'}`,
           color: notificacaoAtiva ? '#15803d' : '#dc2626',
