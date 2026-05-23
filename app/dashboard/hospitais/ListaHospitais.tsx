@@ -48,12 +48,13 @@ export default function ListaHospitais({ hospitais, membroLogado, podeCriar, pod
           </div>
           {podeCriar && (
             <a href="/dashboard/hospitais/novo" style={{
-              padding: '9px 18px', borderRadius: 8,
-              background: '#2563eb', color: '#fff',
+              padding: '9px 16px', borderRadius: 8,
+              background: '#fff', color: '#2563eb',
               fontSize: 13, fontWeight: 600, textDecoration: 'none',
               display: 'flex', alignItems: 'center', gap: 6,
+              border: '1px solid #2563eb',
             }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
               </svg>
               Novo Hospital
@@ -150,7 +151,7 @@ export default function ListaHospitais({ hospitais, membroLogado, podeCriar, pod
         }}>
           <div className="tabela-header" style={{
             display: 'grid',
-            gridTemplateColumns: '1fr 180px 120px 120px',
+            gridTemplateColumns: '2fr 160px 120px 110px',
             padding: '10px 20px',
             borderBottom: '1px solid #f1f5f9',
             background: '#f8fafc',
@@ -170,7 +171,7 @@ export default function ListaHospitais({ hospitais, membroLogado, podeCriar, pod
               <div key={hospital.id} className="hospital-row"
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: '1fr 180px 120px 120px',
+                  gridTemplateColumns: '2fr 160px 120px 110px',
                   padding: '14px 20px',
                   borderBottom: index < filtrados.length - 1 ? '1px solid #f1f5f9' : 'none',
                   alignItems: 'center',

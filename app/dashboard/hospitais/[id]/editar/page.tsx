@@ -121,7 +121,6 @@ export default function EditarHospital() {
           .grid-2 { grid-template-columns: 1fr !important; }
           .grid-3 { grid-template-columns: 1fr !important; }
           .grid-4 { grid-template-columns: 1fr !important; }
-          .grid-5 { grid-template-columns: 1fr !important; }
         }
         input:focus, select:focus, textarea:focus {
           border-color: #2563eb !important;
@@ -155,19 +154,17 @@ export default function EditarHospital() {
             overflow: 'hidden',
           }}>
 
-            {/* Dados principais */}
+            {/* Identificação */}
             <div style={{ padding: '24px 28px', borderBottom: '1px solid #f1f5f9' }}>
               <p style={secaoStyle}>Identificação</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 200px', gap: 16 }}>
-                  <div>
-                    <label style={labelStyle}>Nome do hospital *</label>
-                    <input name="nome" type="text" required value={form.nome} onChange={handleChange} style={inputStyle} />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Contato *</label>
-                    <input name="contato" type="text" required value={form.contato} onChange={handleChange} style={inputStyle} />
-                  </div>
+              <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 200px', gap: 16 }}>
+                <div>
+                  <label style={labelStyle}>Nome do hospital *</label>
+                  <input name="nome" type="text" required value={form.nome} onChange={handleChange} style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Contato *</label>
+                  <input name="contato" type="text" required value={form.contato} onChange={handleChange} style={inputStyle} />
                 </div>
               </div>
             </div>
@@ -176,7 +173,9 @@ export default function EditarHospital() {
             <div style={{ padding: '24px 28px', borderBottom: '1px solid #f1f5f9' }}>
               <p style={secaoStyle}>Endereço</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <div className="grid-4" style={{ display: 'grid', gridTemplateColumns: '1fr 100px 1fr 1fr', gap: 16 }}>
+
+                {/* Linha 1: Endereço, Número, Bairro */}
+                <div className="grid-3" style={{ display: 'grid', gridTemplateColumns: '1fr 100px 1fr', gap: 16 }}>
                   <div>
                     <label style={labelStyle}>Endereço *</label>
                     <input name="endereco" type="text" required value={form.endereco} onChange={handleChange} style={inputStyle} />
@@ -189,12 +188,14 @@ export default function EditarHospital() {
                     <label style={labelStyle}>Bairro *</label>
                     <input name="bairro" type="text" required value={form.bairro} onChange={handleChange} style={inputStyle} />
                   </div>
+                </div>
+
+                {/* Linha 2: Cidade, Estado */}
+                <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 120px', gap: 16 }}>
                   <div>
                     <label style={labelStyle}>Cidade *</label>
                     <input name="cidade" type="text" required value={form.cidade} onChange={handleChange} style={inputStyle} />
                   </div>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: 16 }}>
                   <div>
                     <label style={labelStyle}>Estado *</label>
                     <select name="estado" required value={form.estado} onChange={handleChange} style={inputStyle}>
@@ -202,11 +203,8 @@ export default function EditarHospital() {
                       {estados.map(uf => <option key={uf} value={uf}>{uf}</option>)}
                     </select>
                   </div>
-                  <div>
-                    <label style={labelStyle}>Link Google Maps</label>
-                    <input name="localizacao" type="text" value={form.localizacao} onChange={handleChange} style={inputStyle} placeholder="https://maps.google.com/..." />
-                  </div>
                 </div>
+
               </div>
             </div>
 
@@ -241,13 +239,19 @@ export default function EditarHospital() {
               </div>
             </div>
 
-            {/* Outros */}
+            {/* Informações adicionais */}
             <div style={{ padding: '24px 28px', borderBottom: '1px solid #f1f5f9' }}>
               <p style={secaoStyle}>Informações adicionais</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <div>
-                  <label style={labelStyle}>Site da instituição</label>
-                  <input name="site" type="text" value={form.site} onChange={handleChange} style={inputStyle} />
+                <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div>
+                    <label style={labelStyle}>Site da instituição</label>
+                    <input name="site" type="text" value={form.site} onChange={handleChange} style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Link Google Maps</label>
+                    <input name="localizacao" type="text" value={form.localizacao} onChange={handleChange} style={inputStyle} placeholder="https://maps.app.goo.gl/..." />
+                  </div>
                 </div>
                 <div>
                   <label style={labelStyle}>Observações / Regras específicas</label>
