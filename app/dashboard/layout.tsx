@@ -14,7 +14,7 @@ const todosNavItems = [
   { href: '/dashboard/hospitais',    label: 'Hospitais',     key: 'hospitais' },
   { href: '/dashboard/vagas',        label: 'Vagas',         key: 'vagas' },
   { href: '/dashboard/solicitacoes', label: 'Solicitações',  key: 'solicitacoes' },
-  { href: '/dashboard/comunicados', label: 'Comunicados', key: 'comunicados' },
+  { href: '/dashboard/comunicados',  label: 'Comunicados',   key: 'comunicados' },
   { href: '/dashboard/grupos',       label: 'Grupos',        key: 'grupos' },
   { href: '/dashboard/logs',         label: 'Logs',          key: 'logs' },
   { href: '/dashboard/permissoes',   label: 'Permissões',    key: null },
@@ -30,7 +30,7 @@ const icons: Record<string, React.ReactNode> = {
   '/dashboard/hospitais': <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
   '/dashboard/vagas': <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
   '/dashboard/solicitacoes': <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
- '/dashboard/comunicados': <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
+  '/dashboard/comunicados': <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
   '/dashboard/grupos': <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
   '/dashboard/logs': <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
   '/dashboard/permissoes': <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
@@ -48,7 +48,7 @@ function urlBase64ToUint8Array(base64String: string) {
 function NavItem({ href, label, active, onClick }: { href: string; label: string; active: boolean; onClick?: () => void }) {
   const [hovered, setHovered] = useState(false)
   return (
-    <a
+    
       href={href}
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
@@ -56,19 +56,18 @@ function NavItem({ href, label, active, onClick }: { href: string; label: string
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 12,
-        padding: '10px 16px',
-        borderRadius: 12,
+        gap: 10,
+        padding: '9px 12px',
+        borderRadius: 8,
         fontSize: 14,
-        fontWeight: 500,
+        fontWeight: active ? 600 : 400,
         textDecoration: 'none',
-        background: active ? 'rgba(59,130,246,0.15)' : hovered ? 'rgba(255,255,255,0.05)' : 'transparent',
-        color: active ? '#60a5fa' : hovered ? '#ffffff' : '#cbd5e1',
-        borderLeft: active ? '2px solid #3b82f6' : '2px solid transparent',
-        transition: 'all 0.2s',
+        background: active ? '#eff6ff' : hovered ? '#f8fafc' : 'transparent',
+        color: active ? '#1e40af' : hovered ? '#334155' : '#64748b',
+        transition: 'all 0.15s',
       }}
     >
-      <span style={{ color: 'inherit' }}>{icons[href]}</span>
+      <span style={{ color: active ? '#1e40af' : hovered ? '#475569' : '#94a3b8', flexShrink: 0 }}>{icons[href]}</span>
       <span>{label}</span>
     </a>
   )
@@ -77,30 +76,34 @@ function NavItem({ href, label, active, onClick }: { href: string; label: string
 function Sidebar({ navItems, pathname, onClose }: { navItems: typeof todosNavItems; pathname: string; onClose?: () => void }) {
   return (
     <div style={{
-      width: 256,
+      width: 220,
       height: '100%',
       minHeight: '100vh',
-      background: 'linear-gradient(180deg, #0f172a 0%, #1a2d4a 100%)',
-      borderRight: '1px solid rgba(255,255,255,0.06)',
+      background: '#ffffff',
+      borderRight: '1px solid #e2e8f0',
       display: 'flex',
       flexDirection: 'column',
     }}>
-      <div style={{ padding: '24px 24px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <p style={{ color: '#3b82f6', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600, margin: 0 }}>DARPE</p>
-          <h1 style={{ color: '#f1f5f9', fontWeight: 700, fontSize: 15, margin: '4px 0 0' }}>Setor 4 — Hospitais</h1>
+          <p style={{ color: '#1e40af', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, margin: 0 }}>DARPE</p>
+          <h1 style={{ color: '#0f172a', fontWeight: 700, fontSize: 14, margin: '3px 0 0', lineHeight: 1.3 }}>Setor 4 — Hospitais</h1>
         </div>
         {onClose && (
-          <button onClick={onClose} style={{ color: '#475569', background: 'none', border: 'none', cursor: 'pointer', fontSize: 18 }}>✕</button>
+          <button onClick={onClose} style={{ color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>✕</button>
         )}
       </div>
-      <nav style={{ flex: 1, padding: '12px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <nav style={{ flex: 1, padding: '8px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 1 }}>
         {navItems.map(item => (
           <NavItem key={item.href} href={item.href} label={item.label} active={pathname === item.href} onClick={onClose} />
         ))}
       </nav>
-      <div style={{ padding: '12px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-        <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', borderRadius: 12, fontSize: 14, fontWeight: 500, textDecoration: 'none', color: '#ef4444' }}>
+      <div style={{ padding: '8px', borderTop: '1px solid #e2e8f0' }}>
+        <a href="/" style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '9px 12px', borderRadius: 8,
+          fontSize: 14, fontWeight: 500, textDecoration: 'none', color: '#ef4444',
+        }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
             <polyline points="16 17 21 12 16 7"/>
@@ -181,9 +184,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   if (carregando) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f1f5f9' }}>
       <div style={{ textAlign: 'center' }}>
-        <div className="animate-spin" style={{ width: 48, height: 48, border: '4px solid #3b82f6', borderTopColor: 'transparent', borderRadius: '50%', margin: '0 auto 16px' }}></div>
+        <div className="animate-spin" style={{ width: 40, height: 40, border: '3px solid #1e40af', borderTopColor: 'transparent', borderRadius: '50%', margin: '0 auto 12px' }}></div>
         <p style={{ color: '#64748b', fontSize: 14 }}>Carregando...</p>
       </div>
     </div>
@@ -192,11 +195,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isDashboardHome = pathname === '/dashboard'
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#0f172a' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#f1f5f9' }}>
 
       {/* Overlay mobile */}
       {menuAberto && isMobile && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 30 }}
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.4)', zIndex: 30 }}
           onClick={() => setMenuAberto(false)} />
       )}
 
@@ -222,39 +225,39 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <header style={{
             position: 'sticky', top: 0, zIndex: 20,
             padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12,
-            background: '#0f172a', borderBottom: '1px solid rgba(255,255,255,0.06)',
+            background: '#ffffff', borderBottom: '1px solid #e2e8f0',
           }}>
-            <button onClick={() => setMenuAberto(true)} style={{ color: '#cbd5e1', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+            <button onClick={() => setMenuAberto(true)} style={{ color: '#64748b', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
               </svg>
             </button>
             {!isDashboardHome && (
-              <button onClick={() => router.back()} style={{ color: '#cbd5e1', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+              <button onClick={() => router.back()} style={{ color: '#64748b', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="15 18 9 12 15 6"/>
                 </svg>
               </button>
             )}
             <div style={{ flex: 1, textAlign: 'center' }}>
-              <p style={{ color: '#3b82f6', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600, margin: 0 }}>DARPE</p>
-              <p style={{ color: '#f1f5f9', fontWeight: 700, fontSize: 14, margin: 0 }}>Setor 4 — Hospitais</p>
+              <p style={{ color: '#1e40af', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, margin: 0 }}>DARPE</p>
+              <p style={{ color: '#0f172a', fontWeight: 700, fontSize: 14, margin: 0 }}>Setor 4 — Hospitais</p>
             </div>
-            <a href="/" style={{ color: '#ef4444', fontSize: 12, textDecoration: 'none' }}>Sair</a>
+            <a href="/" style={{ color: '#ef4444', fontSize: 12, textDecoration: 'none', fontWeight: 500 }}>Sair</a>
           </header>
         )}
 
         <main style={{ flex: 1, overflow: 'auto' }}>
           {mostrarPopup && (
-            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-              <div style={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 32, width: '100%', maxWidth: 360, textAlign: 'center' }}>
-                <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(59,130,246,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+              <div style={{ background: '#ffffff', borderRadius: 16, padding: 32, width: '100%', maxWidth: 360, textAlign: 'center', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
+                <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                   <span style={{ fontSize: 28 }}>🔔</span>
                 </div>
-                <h2 style={{ color: '#f1f5f9', fontWeight: 700, fontSize: 20, marginBottom: 8 }}>Ativar notificações</h2>
+                <h2 style={{ color: '#0f172a', fontWeight: 700, fontSize: 20, marginBottom: 8 }}>Ativar notificações</h2>
                 <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>Receba avisos quando o admin abrir as confirmações de presença.</p>
                 <button onClick={ativarNotificacoes} disabled={ativando}
-                  style={{ width: '100%', padding: 12, borderRadius: 12, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14, color: 'white', background: 'linear-gradient(135deg, #1e40af, #3b82f6)', opacity: ativando ? 0.5 : 1 }}>
+                  style={{ width: '100%', padding: 12, borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14, color: 'white', background: '#1e40af', opacity: ativando ? 0.5 : 1 }}>
                   {ativando ? 'Ativando...' : '🔔 Ativar notificações'}
                 </button>
               </div>
@@ -264,7 +267,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {semPermissao ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '96px 0' }}>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                <div style={{ width: 80, height: 80, borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                   <span style={{ fontSize: 36 }}>🔒</span>
                 </div>
                 <p style={{ color: '#64748b', fontWeight: 500 }}>Você não tem acesso a esta página</p>
