@@ -32,7 +32,10 @@ function getPeriodo(periodo: string) {
   }
 }
 
-export default async function EstatisticasMembro({ params, searchParams }: { params: Promise<{ id: string }>, searchParams: Promise<{ periodo?: string }> }) {
+export default async function EstatisticasMembro({ params, searchParams }: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ periodo?: string }>
+}) {
   const { id } = await params
   const sp = await searchParams
   const periodo = sp.periodo || 'todos'
@@ -102,107 +105,203 @@ export default async function EstatisticasMembro({ params, searchParams }: { par
 
   const periodos = ['todos', 'mes_atual', 'mes_anterior', 'bimestre', 'trimestre', 'semestre', 'ano']
 
+  const cards = [
+    { valor: totalConvocado, label: 'Convocado', sub: 'escalas', cor: '#2563eb', bg: '#eff6ff' },
+    { valor: `${pct(totalConfirmou)}%`, label: 'Confirmou', sub: `${totalConfirmou} vez${totalConfirmou !== 1 ? 'es' : ''}`, cor: '#16a34a', bg: '#dcfce7' },
+    { valor: `${pct(totalFoi)}%`, label: 'Foi efetivamente', sub: `${totalFoi} vez${totalFoi !== 1 ? 'es' : ''}`, cor: '#059669', bg: '#d1fae5' },
+    { valor: `${pct(totalAusente)}%`, label: 'Ausente', sub: `${totalAusente} vez${totalAusente !== 1 ? 'es' : ''}`, cor: '#dc2626', bg: '#fee2e2' },
+    { valor: `${pct(totalDispensado)}%`, label: 'Dispensado', sub: `${totalDispensado} vez${totalDispensado !== 1 ? 'es' : ''}`, cor: '#64748b', bg: '#f1f5f9' },
+    { valor: totalAvulso, label: 'Avulso', sub: 'participações', cor: '#7c3aed', bg: '#f5f3ff' },
+  ]
+
   return (
-    <div className="p-4 md:p-6 max-w-4xl">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-xl font-bold text-gray-800">📊 Estatísticas</h2>
-          <p className="text-sm text-gray-500">{membro?.nome} · {membro?.grupo}</p>
-        </div>
-        <a href="/dashboard/membros" className="text-gray-500 hover:text-gray-700 text-sm">← Voltar</a>
-      </div>
+    <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: '28px 40px' }}
+      className="estat-wrap">
+      <style>{`
+        @media (max-width: 768px) {
+          .estat-wrap { padding: 16px !important; }
+          .cards-grid { grid-template-columns: 1fr 1fr !important; }
+        }
+      `}</style>
 
-      {/* Filtro de período */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        {periodos.map(p => (
-          <a key={p} href={`/dashboard/membros/${id}/estatisticas?periodo=${p}`} className={`text-xs font-semibold px-3 py-1.5 rounded-full transition ${periodo === p ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}>
-            {nomePeriodo[p]}
-          </a>
-        ))}
-      </div>
+      <div style={{ maxWidth: 1280, margin: '0 auto' }}>
 
-      {/* Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white rounded-2xl shadow p-5 text-center">
-          <p className="text-3xl font-bold text-blue-600">{totalConvocado}</p>
-          <p className="text-sm text-gray-500 mt-1">📅 Convocado</p>
-        </div>
-        <div className="bg-white rounded-2xl shadow p-5 text-center">
-          <p className="text-3xl font-bold text-green-600">{pct(totalConfirmou)}%</p>
-          <p className="text-xs text-gray-400">{totalConfirmou} vez{totalConfirmou !== 1 ? 'es' : ''}</p>
-          <p className="text-sm text-gray-500 mt-1">✅ Confirmou</p>
-        </div>
-        <div className="bg-white rounded-2xl shadow p-5 text-center">
-          <p className="text-3xl font-bold text-emerald-600">{pct(totalFoi)}%</p>
-          <p className="text-xs text-gray-400">{totalFoi} vez{totalFoi !== 1 ? 'es' : ''}</p>
-          <p className="text-sm text-gray-500 mt-1">🏥 Foi efetivamente</p>
-        </div>
-        <div className="bg-white rounded-2xl shadow p-5 text-center">
-          <p className="text-3xl font-bold text-red-600">{pct(totalAusente)}%</p>
-          <p className="text-xs text-gray-400">{totalAusente} vez{totalAusente !== 1 ? 'es' : ''}</p>
-          <p className="text-sm text-gray-500 mt-1">❌ Ausente</p>
-        </div>
-        <div className="bg-white rounded-2xl shadow p-5 text-center">
-          <p className="text-3xl font-bold text-gray-500">{pct(totalDispensado)}%</p>
-          <p className="text-xs text-gray-400">{totalDispensado} vez{totalDispensado !== 1 ? 'es' : ''}</p>
-          <p className="text-sm text-gray-500 mt-1">🔕 Dispensado</p>
-        </div>
-        <div className="bg-white rounded-2xl shadow p-5 text-center">
-          <p className="text-3xl font-bold text-purple-600">{totalAvulso}</p>
-          <p className="text-xs text-gray-400">participações</p>
-          <p className="text-sm text-gray-500 mt-1">🔄 Avulso</p>
-        </div>
-      </div>
-
-      {/* Avulsos */}
-      {totalAvulso > 0 && (
-        <div className="bg-white rounded-2xl shadow p-6 mb-6">
-          <h3 className="text-base font-bold text-gray-800 mb-4">🔄 Participações como avulso</h3>
-          <div className="space-y-2">
-            {(confirmacoesAvulso || []).map((c: any) => (
-              <div key={c.id} className="flex items-center justify-between bg-purple-50 rounded-lg px-4 py-2">
-                <p className="text-sm font-medium text-gray-700">{c.escalas?.grupo} — {c.escalas?.local_texto}</p>
-                <span className="text-xs text-purple-600 font-semibold">{formatarData(c.escalas?.data)}</span>
-              </div>
-            ))}
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+          <div>
+            <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>Estatísticas</h1>
+            <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
+              {membro?.nome} · {membro?.grupo}
+            </p>
           </div>
+          <a href="/dashboard/membros" style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            fontSize: 13, fontWeight: 600, color: '#64748b', textDecoration: 'none',
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+            </svg>
+            Voltar
+          </a>
         </div>
-      )}
 
-      {/* Histórico */}
-      <div className="bg-white rounded-2xl shadow p-6">
-        <h3 className="text-base font-bold text-gray-800 mb-4">📋 Histórico de escalas</h3>
-        {(escalas || []).length === 0 ? (
-          <p className="text-sm text-gray-400">Nenhuma escala no período</p>
-        ) : (
-          <div className="space-y-2">
-            {(escalas || []).map(escala => {
+        {/* Filtros de período */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 24 }}>
+          {periodos.map(p => (
+            <a key={p} href={`/dashboard/membros/${id}/estatisticas?periodo=${p}`} style={{
+              fontSize: 12,
+              fontWeight: 600,
+              padding: '7px 14px',
+              borderRadius: 999,
+              textDecoration: 'none',
+              border: '1px solid',
+              borderColor: periodo === p ? '#2563eb' : '#e2e8f0',
+              background: periodo === p ? '#2563eb' : '#fff',
+              color: periodo === p ? '#fff' : '#64748b',
+              transition: 'all 0.15s',
+            }}>
+              {nomePeriodo[p]}
+            </a>
+          ))}
+        </div>
+
+        {/* Cards */}
+        <div className="cards-grid" style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: 12,
+          marginBottom: 20,
+        }}>
+          {cards.map((card, i) => (
+            <div key={i} style={{
+              background: '#fff',
+              border: '1px solid #e2e8f0',
+              borderRadius: 12,
+              boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+              padding: '20px 24px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              textAlign: 'center',
+              gap: 4,
+            }}>
+              <div style={{
+                width: 44, height: 44, borderRadius: '50%',
+                background: card.bg,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                marginBottom: 8,
+              }}>
+                <span style={{ fontSize: 22, fontWeight: 800, color: card.cor }}>{card.valor}</span>
+              </div>
+              <p style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: 0 }}>{card.label}</p>
+              <p style={{ fontSize: 11, color: '#94a3b8', margin: 0 }}>{card.sub}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Avulsos */}
+        {totalAvulso > 0 && (
+          <div style={{
+            background: '#fff',
+            border: '1px solid #e2e8f0',
+            borderRadius: 12,
+            boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+            padding: '20px 24px',
+            marginBottom: 16,
+          }}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: '0 0 16px' }}>
+              Participações como avulso
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {(confirmacoesAvulso || []).map((c: any) => (
+                <div key={c.id} style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  background: '#f5f3ff', borderRadius: 8, padding: '10px 14px',
+                }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: '#334155', margin: 0 }}>
+                    {c.escalas?.grupo} — {c.escalas?.local_texto}
+                  </p>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: '#7c3aed' }}>
+                    {formatarData(c.escalas?.data)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Histórico */}
+        <div style={{
+          background: '#fff',
+          border: '1px solid #e2e8f0',
+          borderRadius: 12,
+          boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+          overflow: 'hidden',
+        }}>
+          <div style={{ padding: '20px 24px', borderBottom: '1px solid #f1f5f9' }}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: 0 }}>Histórico de escalas</h3>
+          </div>
+
+          {(escalas || []).length === 0 ? (
+            <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: 14 }}>
+              Nenhuma escala no período
+            </div>
+          ) : (
+            (escalas || []).map((escala, index) => {
               const confirmacao = (confirmacoes || []).find(c => c.escala_id === escala.id)
               const registro = (todosRegistros || []).find(r => r.escala_id === escala.id)
-              const foi = registro ? (registro.membros_presentes || '').split(',').map((n: string) => n.trim()).includes(membro?.nome) : null
+              const foi = registro
+                ? (registro.membros_presentes || '').split(',').map((n: string) => n.trim()).includes(membro?.nome)
+                : null
               const status = confirmacao?.status || 'pendente'
 
+              const statusConfig: Record<string, { bg: string, color: string, label: string }> = {
+                confirmado: { bg: '#dcfce7', color: '#16a34a', label: 'Confirmou' },
+                ausente: { bg: '#fee2e2', color: '#dc2626', label: 'Ausente' },
+                dispensado: { bg: '#f1f5f9', color: '#64748b', label: 'Dispensado' },
+                pendente: { bg: '#fef9c3', color: '#854d0e', label: 'Pendente' },
+              }
+
+              const s = statusConfig[status] || statusConfig.pendente
+
               return (
-                <div key={escala.id} className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-2">
+                <div key={escala.id} style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  padding: '14px 24px',
+                  borderBottom: index < (escalas || []).length - 1 ? '1px solid #f1f5f9' : 'none',
+                }}
+                  onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                >
                   <div>
-                    <p className="text-sm font-medium text-gray-700">{escala.local_texto}</p>
-                    <p className="text-xs text-gray-400">{formatarData(escala.data)}</p>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: '#1e293b', margin: 0 }}>{escala.local_texto}</p>
+                    <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>{formatarData(escala.data)}</p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className={`text-xs font-semibold px-2 py-1 rounded-full ${status === 'confirmado' ? 'bg-green-100 text-green-700' : status === 'ausente' ? 'bg-red-100 text-red-700' : status === 'dispensado' ? 'bg-gray-100 text-gray-500' : 'bg-yellow-100 text-yellow-700'}`}>
-                      {status === 'confirmado' ? '✅ Confirmou' : status === 'ausente' ? '❌ Ausente' : status === 'dispensado' ? '🔕 Dispensado' : '⏳ Pendente'}
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <span style={{
+                      fontSize: 11, fontWeight: 600,
+                      padding: '4px 10px', borderRadius: 999,
+                      background: s.bg, color: s.color,
+                    }}>
+                      {s.label}
                     </span>
                     {escala.registrada && foi !== null && (
-                      <span className={`text-xs font-semibold px-2 py-1 rounded-full ${foi ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-                        {foi ? '🏥 Foi' : '🚫 Não foi'}
+                      <span style={{
+                        fontSize: 11, fontWeight: 600,
+                        padding: '4px 10px', borderRadius: 999,
+                        background: foi ? '#d1fae5' : '#fee2e2',
+                        color: foi ? '#059669' : '#dc2626',
+                      }}>
+                        {foi ? 'Foi' : 'Não foi'}
                       </span>
                     )}
                   </div>
                 </div>
               )
-            })}
-          </div>
-        )}
+            })
+          )}
+        </div>
+
       </div>
     </div>
   )
