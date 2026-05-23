@@ -71,7 +71,6 @@ export default function Dashboard() {
   const dadosHospital = Object.entries(porHospital).sort((a, b) => b[1] - a[1])
   const maxHospital = Math.max(...dadosHospital.map(([, v]) => v), 1)
 
-  // Calendário — inclui dias do mês anterior e próximo
   const primeiroDia = new Date(calAno, calMes, 1).getDay()
   const diasNoMes = new Date(calAno, calMes + 1, 0).getDate()
   const diasMesAnterior = new Date(calAno, calMes, 0).getDate()
@@ -136,7 +135,6 @@ export default function Dashboard() {
     },
   ]
 
-  // Células do calendário
   const celulas: { dia: number; mes: 'prev' | 'curr' | 'next' }[] = []
   for (let i = primeiroDia - 1; i >= 0; i--) celulas.push({ dia: diasMesAnterior - i, mes: 'prev' })
   for (let i = 1; i <= diasNoMes; i++) celulas.push({ dia: i, mes: 'curr' })
@@ -144,7 +142,14 @@ export default function Dashboard() {
   for (let i = 1; i <= restantes; i++) celulas.push({ dia: i, mes: 'next' })
 
   return (
-    <div style={{ padding: '32px 40px', minHeight: '100vh', background: '#f1f5f9', boxSizing: 'border-box' }}>
+    <div style={{
+      padding: isMobile ? '16px' : '32px 40px',
+      minHeight: '100vh',
+      background: '#f1f5f9',
+      boxSizing: 'border-box',
+      overflowX: 'hidden',
+      fontFamily: "'Inter', 'Geist', sans-serif",
+    }}>
       <div style={{ maxWidth: 960, margin: '0 auto' }}>
 
         {/* Header */}
@@ -208,35 +213,34 @@ export default function Dashboard() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1e40af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              <div>
-                <h3 style={{ color: '#0f172a', fontSize: 16, fontWeight: 800, margin: 0 }}>Agenda de Escalas</h3>
-                <p style={{ color: '#64748b', fontSize: 11, fontWeight: 600, margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Programação do mês</p>
-              </div>
+              <h3 style={{ color: '#0f172a', fontSize: 16, fontWeight: 800, margin: 0 }}>Agenda de Escalas</h3>
             </div>
             <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
               <button onClick={() => { if (calMes === 0) { setCalMes(11); setCalAno(calAno - 1) } else setCalMes(calMes - 1) }}
-                style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+                style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
               </button>
-              <span style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', minWidth: 120, textAlign: 'center' }}>{mesesCompletos[calMes]} {calAno}</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', minWidth: isMobile ? 90 : 130, textAlign: 'center' }}>
+                {isMobile ? `${mesesNomes[calMes]} ${calAno}` : `${mesesCompletos[calMes]} ${calAno}`}
+              </span>
               <button onClick={() => { if (calMes === 11) { setCalMes(0); setCalAno(calAno + 1) } else setCalMes(calMes + 1) }}
-                style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+                style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
               </button>
-              <button onClick={() => { setCalMes(hoje.getMonth()); setCalAno(hoje.getFullYear()) }}
-                style={{ padding: '0 10px', height: 28, borderRadius: 6, border: '1px solid #1e40af', background: '#eff6ff', cursor: 'pointer', color: '#1e40af', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em' }}>HOJE</button>
             </div>
           </div>
 
           {/* Dias da semana */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderBottom: '1px solid #f1f5f9', marginBottom: 0 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderBottom: '1px solid #f1f5f9' }}>
             {diasSemana.map(d => (
-              <div key={d} style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#94a3b8', padding: '8px 0', letterSpacing: '0.05em' }}>{d}</div>
+              <div key={d} style={{ textAlign: 'center', fontSize: isMobile ? 9 : 11, fontWeight: 700, color: '#94a3b8', padding: '6px 0', letterSpacing: '0.03em' }}>
+                {isMobile ? d.charAt(0) : d}
+              </div>
             ))}
           </div>
 
           {/* Células */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', overflow: 'hidden' }}>
             {celulas.map((cel, idx) => {
               const key = cel.mes === 'curr'
                 ? `${calAno}-${calMes}-${cel.dia}`
@@ -253,30 +257,43 @@ export default function Dashboard() {
                 <div key={idx} style={{
                   borderBottom: isUltimaLinha ? 'none' : '1px solid #f1f5f9',
                   borderRight: (idx + 1) % 7 === 0 ? 'none' : '1px solid #f1f5f9',
-                  padding: '10px 6px',
+                  padding: isMobile ? '6px 2px' : '10px 6px',
                   textAlign: 'center',
                   position: 'relative',
                   cursor: temEscala ? 'pointer' : 'default',
+                  borderRadius: 8,
                 }}
                   onMouseEnter={() => !isMobile && temEscala && setDiaPopup(idx)}
                   onMouseLeave={() => !isMobile && setDiaPopup(null)}
                   onClick={() => isMobile && temEscala && setDiaPopup(popupAberto ? null : idx)}>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+                    {/* Número do dia */}
                     <span style={{
-                      fontSize: 13, fontWeight: ehHoje ? 800 : cel.mes === 'curr' ? 600 : 400,
+                      fontSize: isMobile ? 11 : 13,
+                      fontWeight: ehHoje ? 800 : cel.mes === 'curr' ? 600 : 400,
                       color: cel.mes !== 'curr' ? '#cbd5e1' : ehHoje ? '#fff' : '#334155',
-                      width: 28, height: 28, borderRadius: '50%',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      background: ehHoje ? '#1e3a5f' : 'transparent',
+                      width: isMobile ? 22 : 28,
+                      height: isMobile ? 22 : 28,
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: ehHoje ? '#f59e0b' : 'transparent',
                     }}>{cel.dia}</span>
+
+                    {/* Bolinha de escala */}
                     {temEscala && (
                       <div style={{
-                        width: 22, height: 22, borderRadius: '50%',
+                        width: isMobile ? 18 : 22,
+                        height: isMobile ? 18 : 22,
+                        borderRadius: '50%',
                         background: '#1e3a5f',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                       }}>
-                        <span style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>{escalasNoDia.length}</span>
+                        <span style={{ fontSize: isMobile ? 8 : 10, fontWeight: 800, color: '#fff' }}>{escalasNoDia.length}</span>
                       </div>
                     )}
                   </div>
@@ -284,10 +301,19 @@ export default function Dashboard() {
                   {/* Popup */}
                   {popupAberto && (
                     <div style={{
-                      position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)',
-                      zIndex: 50, background: '#fff', borderRadius: 10, padding: 12,
-                      boxShadow: '0 8px 24px rgba(0,0,0,0.12)', border: '1px solid #e2e8f0',
-                      minWidth: 200, textAlign: 'left',
+                      position: 'absolute',
+                      top: '100%',
+                      left: idx % 7 > 4 ? 'auto' : '50%',
+                      right: idx % 7 > 4 ? 0 : 'auto',
+                      transform: idx % 7 > 4 ? 'none' : 'translateX(-50%)',
+                      zIndex: 50,
+                      background: '#fff',
+                      borderRadius: 10,
+                      padding: 12,
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                      border: '1px solid #e2e8f0',
+                      minWidth: 200,
+                      textAlign: 'left',
                     }}>
                       <p style={{ color: '#1e3a5f', fontSize: 12, fontWeight: 800, margin: '0 0 8px' }}>
                         {cel.dia} de {mesesCompletos[calMes]}
@@ -312,7 +338,7 @@ export default function Dashboard() {
             <div style={{ width: 4, height: 20, borderRadius: 2, background: 'linear-gradient(180deg, #3b82f6, #1e40af)' }}></div>
             <h3 style={{ color: '#0f172a', fontSize: 14, fontWeight: 800, margin: 0 }}>Atendimentos mensais — últimos 12 meses</h3>
           </div>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 140, paddingBottom: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: isMobile ? 4 : 8, height: 140, paddingBottom: 8 }}>
             {ultimos12.map((m, i) => (
               <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: m.total > 0 ? '#1e40af' : 'transparent' }}>{m.total > 0 ? m.total : '.'}</span>
@@ -321,7 +347,7 @@ export default function Dashboard() {
                   height: `${Math.max((m.total / maxGrafico) * 90, m.total > 0 ? 8 : 2)}px`,
                   background: m.total > 0 ? 'linear-gradient(180deg, #60a5fa, #1e40af)' : '#f1f5f9'
                 }} />
-                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>{m.label}</span>
+                <span style={{ fontSize: isMobile ? 9 : 11, color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>{m.label}</span>
               </div>
             ))}
           </div>
@@ -336,12 +362,12 @@ export default function Dashboard() {
           {dadosHospital.length === 0 ? (
             <p style={{ color: '#94a3b8', fontSize: 14, fontWeight: 500 }}>Nenhum registro este mês.</p>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, height: 140, paddingBottom: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: isMobile ? 8 : 16, height: 140, paddingBottom: 8 }}>
               {dadosHospital.map(([nome, total], i) => (
                 <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                   <span style={{ fontSize: 11, fontWeight: 700, color: '#7c3aed' }}>{total}</span>
                   <div style={{ width: '100%', borderRadius: '4px 4px 0 0', height: `${Math.max((total / maxHospital) * 90, 8)}px`, background: 'linear-gradient(180deg, #a855f7, #7c3aed)' }} />
-                  <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textAlign: 'center' }}>{nome}</span>
+                  <span style={{ fontSize: isMobile ? 9 : 11, color: '#64748b', fontWeight: 600, textAlign: 'center' }}>{nome}</span>
                 </div>
               ))}
             </div>
