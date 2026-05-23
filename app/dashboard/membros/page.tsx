@@ -1,238 +1,315 @@
-export const dynamic = 'force-dynamic'
+'use client'
 
-import { cookies } from 'next/headers'
-import { createServerClient } from '@supabase/ssr'
-import { createClient } from '@supabase/supabase-js'
+import { useState } from 'react'
 import BotaoExcluir from './BotaoExcluir'
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+export default function ListaMembros({ membros, membroLogado, podeEditar, podeExcluir }: {
+  membros: any[]
+  membroLogado: any
+  podeEditar: boolean
+  podeExcluir: boolean
+}) {
+  const [busca, setBusca] = useState('')
+  const [filtroGrupo, setFiltroGrupo] = useState('')
+  const [filtroPerfil, setFiltroPerfil] = useState('')
+  const [filtroInstrumento, setFiltroInstrumento] = useState('')
 
-export default async function Membros() {
-  const cookieStore = await cookies()
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll() },
-        setAll() {},
-      },
-    }
-  )
-
-  const { data: { user } } = await supabase.auth.getUser()
-
-  const { data: membroLogado } = await supabaseAdmin
-    .from('membros')
-    .select('id, nome, perfil')
-    .eq('user_id', user?.id)
-    .single()
-
-  let permissoes: any = {}
-  if (membroLogado?.perfil) {
-    const { data } = await supabaseAdmin
-      .from('permissoes')
-      .select('paginas')
-      .eq('perfil', membroLogado.perfil)
-      .single()
-    permissoes = data?.paginas || {}
-  }
-
-  const podeEditar = permissoes?.membros?.editar === true
-  const podeExcluir = permissoes?.membros?.excluir === true
-
-  const { data: membros } = await supabaseAdmin
-    .from('membros')
-    .select('*')
-    .order('nome', { ascending: true })
-
-  const grupos = [...new Set(membros?.map(m => m.grupo).filter(Boolean))].sort((a, b) => {
+  const grupos = [...new Set(membros.map(m => m.grupo).filter(Boolean))].sort((a, b) => {
     const numA = parseInt(a.replace(/\D/g, '')) || 0
     const numB = parseInt(b.replace(/\D/g, '')) || 0
     return numA - numB
   })
-  const semGrupo = membros?.filter(m => !m.grupo) || []
 
-  const subtitulo = (membro: any) => {
-    const perfil = membro.perfil || membro.tipo || ''
-    const instrumento = membro.instrumento && membro.instrumento !== 'Nenhum' ? membro.instrumento : ''
-    if (instrumento) return `${perfil} — ${instrumento}`
-    return perfil
+  const perfis = [...new Set(membros.map(m => m.perfil).filter(Boolean))].sort()
+
+  const instrumentos = [...new Set(membros
+    .map(m => m.instrumento)
+    .filter(i => i && i !== 'Nenhum')
+  )].sort()
+
+  const filtrados = membros.filter(m => {
+    const nomeOk = m.nome?.toLowerCase().includes(busca.toLowerCase())
+    const grupoOk = filtroGrupo === '' || m.grupo === filtroGrupo
+    const perfilOk = filtroPerfil === '' || m.perfil === filtroPerfil
+    const instrOk = filtroInstrumento === '' || m.instrumento === filtroInstrumento
+    return nomeOk && grupoOk && perfilOk && instrOk
+  })
+
+  const limparFiltros = () => {
+    setBusca('')
+    setFiltroGrupo('')
+    setFiltroPerfil('')
+    setFiltroInstrumento('')
   }
 
-  const CardMembro = ({ membro, avatarColor }: { membro: any, avatarColor: string }) => (
-    <div style={{
-      background: '#ffffff',
-      borderRadius: 12,
-      border: '1px solid #e2e8f0',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-      padding: '16px',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 12,
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{
-          width: 44,
-          height: 44,
-          borderRadius: '50%',
-          background: avatarColor,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#fff',
-          fontWeight: 700,
-          fontSize: 18,
-          flexShrink: 0,
-        }}>
-          {membro.nome.charAt(0).toUpperCase()}
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ fontWeight: 700, color: '#1e293b', fontSize: 14, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {membro.nome}
-          </p>
-          <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>
-            {subtitulo(membro)}
-          </p>
-        </div>
-        <span style={{
-          fontSize: 11,
-          fontWeight: 600,
-          padding: '3px 10px',
-          borderRadius: 999,
-          background: membro.status === 'Ativo' ? '#dcfce7' : '#f1f5f9',
-          color: membro.status === 'Ativo' ? '#16a34a' : '#64748b',
-          flexShrink: 0,
-        }}>
-          {membro.status || 'Pendente'}
-        </span>
-      </div>
+  const temFiltro = busca || filtroGrupo || filtroPerfil || filtroInstrumento
 
-      <div style={{
-        borderTop: '1px solid #f1f5f9',
-        paddingTop: 12,
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-      }}>
-        <span style={{ fontSize: 13, color: '#64748b', display: 'flex', alignItems: 'center', gap: 5 }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.63A2 2 0 012 .18h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>
-          </svg>
-          {membro.telefone || '—'}
-        </span>
-
-        <div style={{ display: 'flex', gap: 6 }}>
-          <a href={`/dashboard/membros/${membro.id}/estatisticas`}
-            title="Estatísticas"
-            style={{
-              width: 32, height: 32, borderRadius: 8,
-              background: '#f5f3ff',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              textDecoration: 'none',
-            }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="20" x2="18" y2="10"/>
-              <line x1="12" y1="20" x2="12" y2="4"/>
-              <line x1="6" y1="20" x2="6" y2="14"/>
-            </svg>
-          </a>
-
-          {podeEditar && (
-            <a href={`/dashboard/membros/${membro.id}/editar`}
-              title="Editar"
-              style={{
-                width: 32, height: 32, borderRadius: 8,
-                background: '#eff6ff',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                textDecoration: 'none',
-              }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
-                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
-              </svg>
-            </a>
-          )}
-
-          {podeExcluir && (
-            <BotaoExcluir id={membro.id} nome={membro.nome} usuarioNome={membroLogado?.nome} />
-          )}
-        </div>
-      </div>
-    </div>
-  )
+  const selectStyle = {
+    padding: '8px 12px',
+    borderRadius: 8,
+    border: '1px solid #e2e8f0',
+    background: '#fff',
+    fontSize: 13,
+    color: '#334155',
+    cursor: 'pointer',
+    outline: 'none',
+    minWidth: 160,
+  }
 
   return (
     <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: '32px 40px' }}
-      className="mobile-padding">
+      className="membros-wrap">
       <style>{`
         @media (max-width: 768px) {
-          .mobile-padding { padding: 16px !important; }
+          .membros-wrap { padding: 16px !important; }
+          .filtros-grid { flex-direction: column !important; }
+          .tabela-header { display: none !important; }
+          .col-instrumento, .col-grupo { display: none !important; }
         }
       `}</style>
 
       <div style={{ maxWidth: 960, margin: '0 auto' }}>
 
-        <div style={{ marginBottom: 28 }}>
+        {/* Header */}
+        <div style={{ marginBottom: 24 }}>
           <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>Membros</h1>
           <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
-            {membros?.length} membros cadastrados
+            {filtrados.length} de {membros.length} membros
           </p>
         </div>
 
-        {grupos.map(grupo => (
-          <div key={grupo} style={{ marginBottom: 32 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-              <span style={{ fontSize: 16 }}>🎻</span>
-              <h2 style={{ fontSize: 15, fontWeight: 700, color: '#334155', margin: 0 }}>{grupo}</h2>
-              <span style={{
-                fontSize: 11, fontWeight: 600,
-                background: '#e0e7ff', color: '#3730a3',
-                borderRadius: 999, padding: '2px 8px',
-              }}>
-                {membros?.filter(m => m.grupo === grupo).length}
-              </span>
+        {/* Filtros */}
+        <div style={{
+          background: '#fff',
+          border: '1px solid #e2e8f0',
+          borderRadius: 12,
+          padding: '16px 20px',
+          marginBottom: 16,
+          boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+        }}>
+          <div className="filtros-grid" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', letterSpacing: 1 }}>GRUPO</label>
+              <select value={filtroGrupo} onChange={e => setFiltroGrupo(e.target.value)} style={selectStyle}>
+                <option value="">Todos os Grupos</option>
+                {grupos.map(g => <option key={g} value={g}>{g}</option>)}
+              </select>
             </div>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-              gap: 12,
-            }}>
-              {membros?.filter(m => m.grupo === grupo).map(membro => (
-                <CardMembro key={membro.id} membro={membro} avatarColor="#1e3a5f" />
-              ))}
-            </div>
-          </div>
-        ))}
 
-        {semGrupo.length > 0 && (
-          <div style={{ marginBottom: 32 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-              <span style={{ fontSize: 16 }}>⏳</span>
-              <h2 style={{ fontSize: 15, fontWeight: 700, color: '#334155', margin: 0 }}>Sem grupo definido</h2>
-              <span style={{
-                fontSize: 11, fontWeight: 600,
-                background: '#fef9c3', color: '#854d0e',
-                borderRadius: 999, padding: '2px 8px',
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', letterSpacing: 1 }}>PERFIL</label>
+              <select value={filtroPerfil} onChange={e => setFiltroPerfil(e.target.value)} style={selectStyle}>
+                <option value="">Todos os Perfis</option>
+                {perfis.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', letterSpacing: 1 }}>INSTRUMENTO</label>
+              <select value={filtroInstrumento} onChange={e => setFiltroInstrumento(e.target.value)} style={selectStyle}>
+                <option value="">Todos os Instrumentos</option>
+                {instrumentos.map(i => <option key={i} value={i}>{i}</option>)}
+              </select>
+            </div>
+
+            {temFiltro && (
+              <button onClick={limparFiltros} style={{
+                padding: '8px 14px',
+                borderRadius: 8,
+                border: '1px solid #e2e8f0',
+                background: 'transparent',
+                fontSize: 12,
+                fontWeight: 600,
+                color: '#64748b',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                marginTop: 20,
               }}>
-                {semGrupo.length}
-              </span>
-            </div>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-              gap: 12,
-            }}>
-              {semGrupo.map(membro => (
-                <CardMembro key={membro.id} membro={membro} avatarColor="#94a3b8" />
-              ))}
-            </div>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+                Limpar filtros
+              </button>
+            )}
           </div>
-        )}
+        </div>
+
+        {/* Busca */}
+        <div style={{
+          background: '#fff',
+          border: '1px solid #e2e8f0',
+          borderRadius: 12,
+          padding: '12px 16px',
+          marginBottom: 16,
+          boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+        }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            type="text"
+            placeholder="Buscar por nome..."
+            value={busca}
+            onChange={e => setBusca(e.target.value)}
+            style={{
+              border: 'none',
+              outline: 'none',
+              fontSize: 14,
+              color: '#334155',
+              width: '100%',
+              background: 'transparent',
+            }}
+          />
+          {busca && (
+            <button onClick={() => setBusca('')} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#94a3b8', padding: 0 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          )}
+        </div>
+
+        {/* Tabela */}
+        <div style={{
+          background: '#fff',
+          border: '1px solid #e2e8f0',
+          borderRadius: 12,
+          boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+          overflow: 'hidden',
+        }}>
+          {/* Cabeçalho da tabela */}
+          <div className="tabela-header" style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 160px 160px 120px 100px',
+            padding: '10px 20px',
+            borderBottom: '1px solid #f1f5f9',
+            background: '#f8fafc',
+          }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>MEMBRO</span>
+            <span className="col-instrumento" style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>INSTRUMENTO</span>
+            <span className="col-grupo" style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>GRUPO</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>PERFIL</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, textAlign: 'right' }}>AÇÕES</span>
+          </div>
+
+          {/* Linhas */}
+          {filtrados.length === 0 ? (
+            <div style={{ padding: '40px 20px', textAlign: 'center', color: '#94a3b8', fontSize: 14 }}>
+              Nenhum membro encontrado
+            </div>
+          ) : (
+            filtrados.map((membro, index) => (
+              <div key={membro.id} style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 160px 160px 120px 100px',
+                padding: '14px 20px',
+                borderBottom: index < filtrados.length - 1 ? '1px solid #f1f5f9' : 'none',
+                alignItems: 'center',
+                transition: 'background 0.15s',
+              }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+              >
+                {/* Nome + status */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: '50%',
+                    background: membro.grupo ? '#1e3a5f' : '#94a3b8',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#fff',
+                    fontWeight: 700,
+                    fontSize: 14,
+                    flexShrink: 0,
+                  }}>
+                    {membro.nome?.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p style={{ fontWeight: 600, color: '#1e293b', fontSize: 14, margin: 0 }}>{membro.nome}</p>
+                    <span style={{
+                      fontSize: 11,
+                      fontWeight: 600,
+                      padding: '2px 8px',
+                      borderRadius: 999,
+                      background: membro.status === 'Ativo' ? '#dcfce7' : '#f1f5f9',
+                      color: membro.status === 'Ativo' ? '#16a34a' : '#64748b',
+                    }}>
+                      {membro.status || 'Pendente'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Instrumento */}
+                <span className="col-instrumento" style={{ fontSize: 13, color: '#475569', display: 'flex', alignItems: 'center', gap: 5 }}>
+                  {membro.instrumento && membro.instrumento !== 'Nenhum' ? (
+                    <>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+                      </svg>
+                      {membro.instrumento}
+                    </>
+                  ) : '—'}
+                </span>
+
+                {/* Grupo */}
+                <span className="col-grupo" style={{ fontSize: 13, color: '#475569' }}>
+                  {membro.grupo || <span style={{ color: '#cbd5e1' }}>—</span>}
+                </span>
+
+                {/* Perfil */}
+                <span style={{ fontSize: 13, color: '#475569' }}>
+                  {membro.perfil || '—'}
+                </span>
+
+                {/* Ações */}
+                <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                  <a href={`/dashboard/membros/${membro.id}/estatisticas`}
+                    title="Estatísticas"
+                    style={{
+                      width: 30, height: 30, borderRadius: 7,
+                      background: '#f5f3ff',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      textDecoration: 'none',
+                    }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="20" x2="18" y2="10"/>
+                      <line x1="12" y1="20" x2="12" y2="4"/>
+                      <line x1="6" y1="20" x2="6" y2="14"/>
+                    </svg>
+                  </a>
+
+                  {podeEditar && (
+                    <a href={`/dashboard/membros/${membro.id}/editar`}
+                      title="Editar"
+                      style={{
+                        width: 30, height: 30, borderRadius: 7,
+                        background: '#eff6ff',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        textDecoration: 'none',
+                      }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                    </a>
+                  )}
+
+                  {podeExcluir && (
+                    <BotaoExcluir id={membro.id} nome={membro.nome} usuarioNome={membroLogado?.nome} />
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
 
       </div>
     </div>
