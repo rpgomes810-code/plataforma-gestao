@@ -115,28 +115,67 @@ export default async function EstatisticasMembro({ params, searchParams }: {
   ]
 
   return (
-    <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: '28px 40px' }}
+    <div style={{ background: '#f4f6f9', minHeight: '100vh', padding: '28px 40px' }}
       className="estat-wrap">
       <style>{`
         @media (max-width: 768px) {
           .estat-wrap { padding: 16px !important; }
           .cards-grid { grid-template-columns: 1fr 1fr !important; }
+          .header-membro { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
         }
       `}</style>
 
       <div style={{ maxWidth: 1280, margin: '0 auto' }}>
 
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
-          <div>
-            <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>Estatísticas</h1>
-            <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
-              {membro?.nome} · {membro?.grupo}
-            </p>
+        {/* Header com destaque no nome */}
+        <div className="header-membro" style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          background: '#fff',
+          border: '1px solid #e2e8f0',
+          borderRadius: 16,
+          padding: '20px 24px',
+          marginBottom: 20,
+          boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{
+              width: 56, height: 56, borderRadius: '50%',
+              background: '#1e3a5f',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#fff', fontWeight: 800, fontSize: 22, flexShrink: 0,
+            }}>
+              {membro?.nome?.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0, letterSpacing: 0.2 }}>
+                {membro?.nome}
+              </h1>
+              <div style={{ display: 'flex', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
+                {membro?.instrumento && membro.instrumento !== 'Nenhum' && (
+                  <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999, background: '#eff6ff', color: '#2563eb' }}>
+                    {membro.instrumento}
+                  </span>
+                )}
+                {membro?.grupo && (
+                  <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999, background: '#f1f5f9', color: '#475569' }}>
+                    {membro.grupo}
+                  </span>
+                )}
+                <span style={{
+                  fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999,
+                  background: membro?.status === 'Ativo' ? '#dcfce7' : '#f1f5f9',
+                  color: membro?.status === 'Ativo' ? '#16a34a' : '#64748b',
+                }}>
+                  {membro?.status || 'Pendente'}
+                </span>
+              </div>
+            </div>
           </div>
+
           <a href="/dashboard/membros" style={{
             display: 'flex', alignItems: 'center', gap: 6,
             fontSize: 13, fontWeight: 600, color: '#64748b', textDecoration: 'none',
+            flexShrink: 0,
           }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
@@ -146,19 +185,15 @@ export default async function EstatisticasMembro({ params, searchParams }: {
         </div>
 
         {/* Filtros de período */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 24 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
           {periodos.map(p => (
             <a key={p} href={`/dashboard/membros/${id}/estatisticas?periodo=${p}`} style={{
-              fontSize: 12,
-              fontWeight: 600,
-              padding: '7px 14px',
-              borderRadius: 999,
-              textDecoration: 'none',
-              border: '1px solid',
+              fontSize: 12, fontWeight: 600,
+              padding: '7px 16px', borderRadius: 999,
+              textDecoration: 'none', border: '1px solid',
               borderColor: periodo === p ? '#2563eb' : '#e2e8f0',
               background: periodo === p ? '#2563eb' : '#fff',
               color: periodo === p ? '#fff' : '#64748b',
-              transition: 'all 0.15s',
             }}>
               {nomePeriodo[p]}
             </a>
@@ -176,22 +211,22 @@ export default async function EstatisticasMembro({ params, searchParams }: {
             <div key={i} style={{
               background: '#fff',
               border: '1px solid #e2e8f0',
-              borderRadius: 12,
+              borderRadius: 16,
               boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-              padding: '20px 24px',
+              padding: '24px 20px',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               textAlign: 'center',
-              gap: 4,
+              gap: 6,
             }}>
               <div style={{
-                width: 44, height: 44, borderRadius: '50%',
+                width: 52, height: 52, borderRadius: '50%',
                 background: card.bg,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                marginBottom: 8,
+                marginBottom: 4,
               }}>
-                <span style={{ fontSize: 22, fontWeight: 800, color: card.cor }}>{card.valor}</span>
+                <span style={{ fontSize: 20, fontWeight: 800, color: card.cor }}>{card.valor}</span>
               </div>
               <p style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: 0 }}>{card.label}</p>
               <p style={{ fontSize: 11, color: '#94a3b8', margin: 0 }}>{card.sub}</p>
@@ -202,12 +237,9 @@ export default async function EstatisticasMembro({ params, searchParams }: {
         {/* Avulsos */}
         {totalAvulso > 0 && (
           <div style={{
-            background: '#fff',
-            border: '1px solid #e2e8f0',
-            borderRadius: 12,
-            boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-            padding: '20px 24px',
-            marginBottom: 16,
+            background: '#fff', border: '1px solid #e2e8f0',
+            borderRadius: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+            padding: '20px 24px', marginBottom: 16,
           }}>
             <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: '0 0 16px' }}>
               Participações como avulso
@@ -216,7 +248,7 @@ export default async function EstatisticasMembro({ params, searchParams }: {
               {(confirmacoesAvulso || []).map((c: any) => (
                 <div key={c.id} style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  background: '#f5f3ff', borderRadius: 8, padding: '10px 14px',
+                  background: '#f5f3ff', borderRadius: 10, padding: '10px 14px',
                 }}>
                   <p style={{ fontSize: 13, fontWeight: 600, color: '#334155', margin: 0 }}>
                     {c.escalas?.grupo} — {c.escalas?.local_texto}
@@ -232,10 +264,8 @@ export default async function EstatisticasMembro({ params, searchParams }: {
 
         {/* Histórico */}
         <div style={{
-          background: '#fff',
-          border: '1px solid #e2e8f0',
-          borderRadius: 12,
-          boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+          background: '#fff', border: '1px solid #e2e8f0',
+          borderRadius: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
           overflow: 'hidden',
         }}>
           <div style={{ padding: '20px 24px', borderBottom: '1px solid #f1f5f9' }}>
