@@ -233,9 +233,9 @@ export default function ListaMembros({ membros, membroLogado, podeEditar, podeEx
                     {membro.nome?.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <p style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, margin: 0 }}>
-                      {membro.nome}
-                    </p>
+                  <p style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, margin: 0, textTransform: 'uppercase', letterSpacing: 0.4 }}>
+  {membro.nome}
+</p>
                     <span style={{
                       fontSize: 11, fontWeight: 600,
                       padding: '2px 8px', borderRadius: 999,
