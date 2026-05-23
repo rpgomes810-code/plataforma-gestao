@@ -97,7 +97,7 @@ export default function ListaMembros({ membros, membroLogado, podeEditar, podeEx
         }
       `}</style>
 
-      <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto' }}>
 
         {/* Header */}
         <div style={{ marginBottom: 20 }}>
