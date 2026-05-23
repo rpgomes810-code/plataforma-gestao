@@ -58,7 +58,9 @@ export default async function Hospitais() {
         @media (max-width: 768px) {
           .hospitais-wrap { padding: 16px !important; }
           .tabela-header { display: none !important; }
+          .col-endereco, .col-turno { display: none !important; }
         }
+        .hospital-row:hover { background: #f8fafc; }
       `}</style>
 
       <div style={{ maxWidth: 1280, margin: '0 auto' }}>
@@ -109,8 +111,8 @@ export default async function Hospitais() {
             background: '#f8fafc',
           }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>HOSPITAL</span>
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>ENDEREÇO</span>
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>TURNO</span>
+            <span className="col-endereco" style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>ENDEREÇO</span>
+            <span className="col-turno" style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>TURNO</span>
             <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>STATUS</span>
             <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, textAlign: 'right' }}>AÇÕES</span>
           </div>
@@ -122,7 +124,7 @@ export default async function Hospitais() {
             </div>
           ) : (
             hospitais.map((hospital, index) => (
-              <div key={hospital.id}
+              <div key={hospital.id} className="hospital-row"
                 style={{
                   display: 'grid',
                   gridTemplateColumns: '1fr 200px 160px 120px 100px',
@@ -131,8 +133,6 @@ export default async function Hospitais() {
                   alignItems: 'center',
                   transition: 'background 0.15s',
                 }}
-                onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
                 {/* Nome */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -155,12 +155,12 @@ export default async function Hospitais() {
                 </div>
 
                 {/* Endereço */}
-                <span style={{ fontSize: 13, color: '#475569' }}>
+                <span className="col-endereco" style={{ fontSize: 13, color: '#475569' }}>
                   {hospital.endereco || <span style={{ color: '#cbd5e1' }}>—</span>}
                 </span>
 
                 {/* Turno */}
-                <span style={{ fontSize: 13, color: '#475569' }}>
+                <span className="col-turno" style={{ fontSize: 13, color: '#475569' }}>
                   {hospital.turno || <span style={{ color: '#cbd5e1' }}>—</span>}
                 </span>
 
