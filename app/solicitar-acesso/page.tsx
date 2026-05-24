@@ -3,33 +3,31 @@
 import { useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 
-const inputClass = "w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
-const labelClass = "block text-sm font-medium text-gray-700 mb-1"
-
 function mascaraTelefone(valor: string) {
   const numeros = valor.replace(/\D/g, '').slice(0, 11)
   if (numeros.length <= 10) {
-    return numeros
-      .replace(/(\d{2})(\d)/, '($1) $2')
-      .replace(/(\d{4})(\d)/, '$1-$2')
+    return numeros.replace(/(\d{2})(\d)/, '($1) $2').replace(/(\d{4})(\d)/, '$1-$2')
   }
-  return numeros
-    .replace(/(\d{2})(\d)/, '($1) $2')
-    .replace(/(\d{5})(\d)/, '$1-$2')
+  return numeros.replace(/(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2')
+}
+
+const inputStyle: React.CSSProperties = {
+  width: '100%', padding: '10px 14px', borderRadius: 8,
+  border: '1px solid #e2e8f0', background: '#f8fafc',
+  fontSize: 14, color: '#1e293b', outline: 'none', boxSizing: 'border-box',
+}
+
+const labelStyle: React.CSSProperties = {
+  display: 'block', fontSize: 12, fontWeight: 600,
+  color: '#64748b', marginBottom: 6,
 }
 
 export default function SolicitarAcesso() {
   const [loading, setLoading] = useState(false)
   const [enviado, setEnviado] = useState(false)
   const [form, setForm] = useState({
-    nome: '',
-    email: '',
-    senha: '',
-    telefone: '',
-    data_nascimento: '',
-    comum: '',
-    cidade: '',
-    instrumento: '',
+    nome: '', email: '', senha: '', telefone: '',
+    data_nascimento: '', comum: '', cidade: '', instrumento: '',
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -43,118 +41,147 @@ export default function SolicitarAcesso() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-
     const supabase = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
-
-    const { error } = await supabase
-      .from('solicitacoes')
-      .insert([{ ...form, status: 'pendente' }])
-
-    if (error) {
-      alert('Erro ao enviar solicitação. Tente novamente.')
-      setLoading(false)
-    } else {
-      setEnviado(true)
-    }
+    const { error } = await supabase.from('solicitacoes').insert([{ ...form, status: 'pendente' }])
+    if (error) { alert('Erro ao enviar solicitação. Tente novamente.'); setLoading(false) }
+    else setEnviado(true)
   }
 
   if (enviado) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
-        <div className="bg-white rounded-2xl shadow p-8 w-full max-w-sm text-center">
-          <p className="text-5xl mb-4">🎉</p>
-          <h2 className="text-xl font-bold text-gray-800 mb-2">Solicitação enviada!</h2>
-          <p className="text-sm text-gray-500 mb-6">Aguarde a aprovação do administrador. Você receberá um contato em breve.</p>
-          <a href="/" className="text-blue-600 text-sm hover:underline">← Voltar para o login</a>
+      <div style={{
+        minHeight: '100vh', background: '#f1f5f9',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px 16px',
+      }}>
+        <div style={{
+          background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+          padding: 40, maxWidth: 400, width: '100%', textAlign: 'center',
+        }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>🎉</div>
+          <h2 style={{ fontSize: 20, fontWeight: 800, color: '#1e293b', margin: '0 0 8px' }}>Solicitação enviada!</h2>
+          <p style={{ fontSize: 13, color: '#64748b', marginBottom: 24 }}>
+            Aguarde a aprovação do administrador. Você receberá um contato em breve.
+          </p>
+          <a href="/" style={{ color: '#2563eb', fontSize: 13, textDecoration: 'none', fontWeight: 600 }}>← Voltar para o login</a>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 py-10">
-      <div className="bg-white rounded-2xl shadow p-8 w-full max-w-lg">
+    <div style={{
+      minHeight: '100vh', background: '#f1f5f9',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px 16px',
+    }}>
+      <div style={{ width: '100%', maxWidth: 480 }}>
 
-        <div className="mb-6">
-          <a href="/" className="text-gray-400 text-sm hover:text-gray-600">← Voltar para o login</a>
-          <div className="mt-3">
-            <p className="text-xs text-gray-400 uppercase tracking-wider">DARPE</p>
-            <h1 className="text-2xl font-bold text-gray-800">Solicitar Acesso</h1>
-            <p className="text-sm text-gray-500 mt-1">Preencha os dados abaixo para solicitar acesso à plataforma</p>
+        {/* Logo */}
+        <div style={{ textAlign: 'center', marginBottom: 28 }}>
+          <div style={{
+            width: 56, height: 56, borderRadius: 14, margin: '0 auto 12px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: '#1e3a5f',
+          }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
           </div>
+          <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>DARPE CCB</p>
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>Solicitar Acesso</h1>
+          <p style={{ fontSize: 13, color: '#64748b', marginTop: 6 }}>Preencha os dados para solicitar acesso à plataforma</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Card */}
+        <div style={{
+          background: '#fff', borderRadius: 16,
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+          padding: 28,
+        }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-          <div>
-            <label className={labelClass}>Nome completo *</label>
-            <input name="nome" type="text" required value={form.nome} onChange={handleChange}
-              placeholder="Seu nome completo" className={inputClass}/>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className={labelClass}>Telefone / WhatsApp *</label>
-              <input name="telefone" type="text" required value={form.telefone} onChange={handleChange}
-                placeholder="(11) 99999-0000" maxLength={15} className={inputClass}/>
+              <label style={labelStyle}>Nome Completo *</label>
+              <input name="nome" type="text" required value={form.nome} onChange={handleChange}
+                placeholder="Seu nome completo" style={inputStyle} />
             </div>
-            <div>
-              <label className={labelClass}>Data de nascimento *</label>
-              <input name="data_nascimento" type="date" required value={form.data_nascimento} onChange={handleChange}
-                className={inputClass}/>
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>Comum *</label>
-              <input name="comum" type="text" required value={form.comum} onChange={handleChange}
-                placeholder="Nome da sua Comum" className={inputClass}/>
-            </div>
-            <div>
-              <label className={labelClass}>Cidade *</label>
-              <input name="cidade" type="text" required value={form.cidade} onChange={handleChange}
-                placeholder="Sua Cidade" className={inputClass}/>
-            </div>
-          </div>
-
-          <div>
-            <label className={labelClass}>Instrumento</label>
-            <select name="instrumento" value={form.instrumento} onChange={handleChange} className={inputClass}>
-              <option value="">Selecione...</option>
-              <option value="Violino">Violino</option>
-              <option value="Viola">Viola</option>
-              <option value="Violoncelo">Violoncelo</option>
-              <option value="Canto">Canto</option>
-              <option value="Nenhum">Nenhum</option>
-            </select>
-          </div>
-
-          <div className="border-t pt-4">
-            <p className="text-sm font-medium text-gray-700 mb-3">Dados de acesso</p>
-            <div className="space-y-4">
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label className={labelClass}>E-mail *</label>
-                <input name="email" type="email" required value={form.email} onChange={handleChange}
-                  placeholder="seu@email.com" className={inputClass}/>
+                <label style={labelStyle}>Telefone / WhatsApp *</label>
+                <input name="telefone" type="text" required value={form.telefone} onChange={handleChange}
+                  placeholder="(11) 99999-0000" maxLength={15} style={inputStyle} />
               </div>
               <div>
-                <label className={labelClass}>Senha *</label>
-                <input name="senha" type="password" required minLength={6} value={form.senha} onChange={handleChange}
-                  placeholder="Mínimo 6 caracteres" className={inputClass}/>
+                <label style={labelStyle}>Data de nascimento *</label>
+                <input name="data_nascimento" type="date" required value={form.data_nascimento} onChange={handleChange}
+                  style={inputStyle} />
               </div>
             </div>
-          </div>
 
-          <button type="submit" disabled={loading}
-            className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 text-sm">
-            {loading ? 'Enviando...' : 'Enviar Solicitação'}
-          </button>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <label style={labelStyle}>Comum *</label>
+                <input name="comum" type="text" required value={form.comum} onChange={handleChange}
+                  placeholder="Nome da sua Comum" style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Cidade *</label>
+                <input name="cidade" type="text" required value={form.cidade} onChange={handleChange}
+                  placeholder="Sua cidade" style={inputStyle} />
+              </div>
+            </div>
 
-        </form>
+            <div>
+              <label style={labelStyle}>Instrumento</label>
+              <select name="instrumento" value={form.instrumento} onChange={handleChange} style={inputStyle}>
+                <option value="">Selecione...</option>
+                <option value="Violino">Violino</option>
+                <option value="Viola">Viola</option>
+                <option value="Violoncelo">Violoncelo</option>
+                <option value="Canto">Canto</option>
+                <option value="Nenhum">Nenhum</option>
+              </select>
+            </div>
+
+            <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 16 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 14 }}>
+                Dados de acesso
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div>
+                  <label style={labelStyle}>E-mail *</label>
+                  <input name="email" type="email" required value={form.email} onChange={handleChange}
+                    placeholder="seu@email.com" style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Senha *</label>
+                  <input name="senha" type="password" required minLength={6} value={form.senha} onChange={handleChange}
+                    placeholder="Mínimo 6 caracteres" style={inputStyle} />
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" disabled={loading} style={{
+              width: '100%', padding: '11px', borderRadius: 8, border: 'none',
+              background: '#2563eb', color: '#fff',
+              fontSize: 14, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer',
+              opacity: loading ? 0.6 : 1,
+            }}>
+              {loading ? 'Enviando...' : 'Enviar Solicitação'}
+            </button>
+
+            <a href="/" style={{ textAlign: 'center', color: '#94a3b8', fontSize: 13, textDecoration: 'none' }}>
+              ← Voltar para o login
+            </a>
+
+          </form>
+        </div>
       </div>
     </div>
   )
