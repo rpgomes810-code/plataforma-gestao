@@ -118,9 +118,7 @@ export default function CompletarCadastro() {
         {/* Header */}
         <div style={{ marginBottom: 24 }}>
           <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>Completar Cadastro</h1>
-          <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
-            Dados necessários para o DARPE Bras-SP — {membro?.nome}
-          </p>
+          <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>{membro?.nome}</p>
 
           {/* Prazo */}
           {diasRestantes !== null && (
@@ -151,8 +149,8 @@ export default function CompletarCadastro() {
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
               <path d="M7 11V7a5 5 0 0110 0v4"/>
             </svg>
-            <p style={{ fontSize: 13, color: '#15803d', margin: 0, lineHeight: 1.5 }}>
-              Fique tranquilo, essas informações terão o máximo sigilo e serão utilizadas apenas para o cadastramento no sistema SIGA do DARPE Bras-SP.
+            <p style={{ fontSize: 12, fontWeight: 700, color: '#15803d', margin: 0, lineHeight: 1.5, letterSpacing: 0.3 }}>
+              FIQUE TRANQUILO, ESSAS INFORMAÇÕES TERÃO O MÁXIMO SIGILO E SERÃO UTILIZADAS APENAS PARA O CADASTRAMENTO NO SISTEMA SIGA DO DARPE BRAS-SP.
             </p>
           </div>
         </div>
@@ -262,14 +260,6 @@ export default function CompletarCadastro() {
                   </label>
                 ))}
               </div>
-            </div>
-
-            {/* Declaração */}
-            <div style={{ padding: '24px 28px', borderBottom: '1px solid #f1f5f9', background: '#f8fafc' }}>
-              <p style={secaoStyle}>Declaração de Voluntariado</p>
-              <p style={{ fontSize: 13, color: '#475569', lineHeight: 1.6, margin: 0, fontStyle: 'italic' }}>
-                DECLARO ser de minha livre e espontânea vontade o propósito colaborar na realização das reuniões de evangelização promovidas pela Congregação Cristã no Brasil em estabelecimentos atendidos pelo DARPE. DECLARO ainda estar ciente dos riscos inerentes ao exercício destas atividades, não havendo objeção por parte de meus familiares.
-              </p>
             </div>
 
             {/* Botões */}
