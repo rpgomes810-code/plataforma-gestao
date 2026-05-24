@@ -36,6 +36,7 @@ export default function CompletarCadastro() {
   const [loading, setLoading] = useState(false)
   const [loadingData, setLoadingData] = useState(true)
   const [membro, setMembro] = useState<any>(null)
+  const [diasRestantes, setDiasRestantes] = useState<number | null>(null)
   const [form, setForm] = useState({
     cpf: '', rg: '', sexo: '', estado_civil: '', data_batismo: '',
     logradouro: '', numero_endereco: '', complemento: '', bairro: '',
@@ -47,6 +48,14 @@ export default function CompletarCadastro() {
       .then(r => r.json())
       .then(data => {
         setMembro(data)
+        if (data.data_inscricao_darpe) {
+          const dataInscricao = new Date(data.data_inscricao_darpe)
+          const prazo = new Date(dataInscricao)
+          prazo.setDate(prazo.getDate() + 15)
+          const hoje = new Date()
+          const diff = Math.ceil((prazo.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24))
+          setDiasRestantes(diff)
+        }
         setForm({
           cpf: data.cpf || '',
           rg: data.rg || '',
@@ -76,19 +85,13 @@ export default function CompletarCadastro() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-
     const res = await fetch('/api/membros/completar-cadastro', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...form, cadastro_completo: true }),
     })
-
-    if (res.ok) {
-      router.push('/dashboard')
-    } else {
-      alert('Erro ao salvar. Tente novamente.')
-      setLoading(false)
-    }
+    if (res.ok) router.push('/dashboard')
+    else { alert('Erro ao salvar. Tente novamente.'); setLoading(false) }
   }
 
   if (loadingData) return (
@@ -105,17 +108,53 @@ export default function CompletarCadastro() {
           .grid-2 { grid-template-columns: 1fr !important; }
           .grid-3 { grid-template-columns: 1fr !important; }
           .grid-4 { grid-template-columns: 1fr !important; }
+          .funcao-grid { grid-template-columns: 1fr 1fr !important; }
         }
         input:focus, select:focus { border-color: #2563eb !important; background: #fff !important; }
       `}</style>
 
       <div style={{ maxWidth: 1280, margin: '0 auto' }}>
 
+        {/* Header */}
         <div style={{ marginBottom: 24 }}>
           <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>Completar Cadastro</h1>
           <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
             Dados necessários para o DARPE Bras-SP — {membro?.nome}
           </p>
+
+          {/* Prazo */}
+          {diasRestantes !== null && (
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              marginTop: 8, padding: '6px 12px', borderRadius: 999,
+              background: diasRestantes > 0 ? '#eff6ff' : '#fee2e2',
+              border: `1px solid ${diasRestantes > 0 ? '#bfdbfe' : '#fecaca'}`,
+            }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={diasRestantes > 0 ? '#2563eb' : '#dc2626'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+              <span style={{ fontSize: 12, fontWeight: 600, color: diasRestantes > 0 ? '#2563eb' : '#dc2626' }}>
+                {diasRestantes > 0
+                  ? `Prazo: ${diasRestantes} dia${diasRestantes !== 1 ? 's' : ''} restante${diasRestantes !== 1 ? 's' : ''}`
+                  : 'Prazo encerrado'}
+              </span>
+            </div>
+          )}
+
+          {/* Mensagem de sigilo */}
+          <div style={{
+            display: 'flex', alignItems: 'flex-start', gap: 10,
+            padding: '12px 16px', borderRadius: 10, marginTop: 12,
+            background: '#f0fdf4', border: '1px solid #bbf7d0',
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0110 0v4"/>
+            </svg>
+            <p style={{ fontSize: 13, color: '#15803d', margin: 0, lineHeight: 1.5 }}>
+              Fique tranquilo, essas informações terão o máximo sigilo e serão utilizadas apenas para o cadastramento no sistema SIGA do DARPE Bras-SP.
+            </p>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit}>
@@ -207,7 +246,7 @@ export default function CompletarCadastro() {
             {/* Função DARPE */}
             <div style={{ padding: '24px 28px', borderBottom: '1px solid #f1f5f9' }}>
               <p style={secaoStyle}>Função no DARPE</p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+              <div className="funcao-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
                 {['Ministério', 'Atendente', 'Colaborador', 'Encarregado', 'Músico/Organista', 'Grupo de Canto'].map(funcao => (
                   <label key={funcao} style={{
                     display: 'flex', alignItems: 'center', gap: 10,

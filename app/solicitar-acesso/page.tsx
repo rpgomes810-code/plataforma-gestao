@@ -11,6 +11,11 @@ function mascaraTelefone(valor: string) {
   return numeros.replace(/(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2')
 }
 
+function mascaraData(valor: string) {
+  const v = valor.replace(/\D/g, '').slice(0, 8)
+  return v.replace(/(\d{2})(\d)/, '$1/$2').replace(/(\d{2})(\d)/, '$1/$2')
+}
+
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 14px', borderRadius: 8,
   border: '1px solid #e2e8f0', background: '#f8fafc',
@@ -31,10 +36,13 @@ export default function SolicitarAcesso() {
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    if (e.target.name === 'telefone') {
-      setForm({ ...form, telefone: mascaraTelefone(e.target.value) })
+    const { name, value } = e.target
+    if (name === 'telefone') {
+      setForm({ ...form, telefone: mascaraTelefone(value) })
+    } else if (name === 'data_nascimento') {
+      setForm({ ...form, data_nascimento: mascaraData(value) })
     } else {
-      setForm({ ...form, [e.target.name]: e.target.value })
+      setForm({ ...form, [name]: value })
     }
   }
 
@@ -119,8 +127,8 @@ export default function SolicitarAcesso() {
               </div>
               <div>
                 <label style={labelStyle}>Data de nascimento *</label>
-                <input name="data_nascimento" type="date" required value={form.data_nascimento} onChange={handleChange}
-                  style={inputStyle} />
+                <input name="data_nascimento" type="text" required value={form.data_nascimento} onChange={handleChange}
+                  placeholder="DD/MM/AAAA" maxLength={10} style={inputStyle} />
               </div>
             </div>
 
@@ -171,7 +179,7 @@ export default function SolicitarAcesso() {
               width: '100%', padding: '11px', borderRadius: 8, border: 'none',
               background: '#2563eb', color: '#fff',
               fontSize: 14, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.6 : 1,
+              opacity: loading ? 0.6 : 1, marginTop: 4,
             }}>
               {loading ? 'Enviando...' : 'Enviar Solicitação'}
             </button>

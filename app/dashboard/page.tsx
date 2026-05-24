@@ -17,6 +17,7 @@ export default function Dashboard() {
   const [diaPopup, setDiaPopup] = useState<number | null>(null)
   const [isMobile, setIsMobile] = useState(false)
   const [cadastroCompleto, setCadastroCompleto] = useState(true)
+  const [diasRestantes, setDiasRestantes] = useState<number | null>(null)
   const toggle = (key: string) => setAberto(prev => ({ ...prev, [key]: !prev[key] }))
 
   useEffect(() => {
@@ -38,6 +39,14 @@ export default function Dashboard() {
       setStats({ totalMembros: todosMembros.length, porTipo, totalEscalas: escalas.length, porGrupo })
       setEscalasTotal(escalas)
       setCadastroCompleto(d.membroLogado?.cadastro_completo === true)
+      if (!d.membroLogado?.cadastro_completo && d.membroLogado?.data_inscricao_darpe) {
+        const dataInscricao = new Date(d.membroLogado.data_inscricao_darpe)
+        const prazo = new Date(dataInscricao)
+        prazo.setDate(prazo.getDate() + 15)
+        const hoje = new Date()
+        const diff = Math.ceil((prazo.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24))
+        setDiasRestantes(diff)
+      }
     })
     fetch('/api/vagas').then(r => r.json()).then(setVagas)
     fetch('/api/hospitais').then(r => r.json()).then(data => { if (Array.isArray(data)) setHospitais(data) })
@@ -143,6 +152,18 @@ export default function Dashboard() {
   const restantes = 42 - celulas.length
   for (let i = 1; i <= restantes; i++) celulas.push({ dia: i, mes: 'next' })
 
+  const bannerBg = diasRestantes !== null && diasRestantes <= 0
+    ? 'linear-gradient(135deg, #dc2626, #ef4444)'
+    : 'linear-gradient(135deg, #1e3a5f, #2563eb)'
+  const bannerShadow = diasRestantes !== null && diasRestantes <= 0
+    ? '0 4px 12px rgba(220,38,38,0.25)'
+    : '0 4px 12px rgba(37,99,235,0.25)'
+  const bannerMsg = diasRestantes !== null
+    ? diasRestantes > 0
+      ? `Faltam ${diasRestantes} dia${diasRestantes !== 1 ? 's' : ''} para completar seu cadastro`
+      : 'O prazo para completar seu cadastro encerrou — complete para evitar bloqueio no acesso'
+    : 'Precisamos de mais informações para o DARPE Bras-SP'
+
   return (
     <div style={{
       padding: isMobile ? '16px' : '32px 40px',
@@ -166,8 +187,8 @@ export default function Dashboard() {
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               padding: '14px 20px', borderRadius: 12, marginBottom: 24,
-              background: 'linear-gradient(135deg, #1e3a5f, #2563eb)',
-              boxShadow: '0 4px 12px rgba(37,99,235,0.25)',
+              background: bannerBg,
+              boxShadow: bannerShadow,
               cursor: 'pointer',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -178,7 +199,7 @@ export default function Dashboard() {
                 </svg>
                 <div>
                   <p style={{ color: 'white', fontWeight: 800, fontSize: 14, margin: 0 }}>Complete seu cadastro</p>
-                  <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, margin: 0 }}>Precisamos de mais informações para o DARPE Bras-SP</p>
+                  <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, margin: 0 }}>{bannerMsg}</p>
                 </div>
               </div>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
