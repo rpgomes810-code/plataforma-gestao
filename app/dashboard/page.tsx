@@ -197,10 +197,17 @@ export default function Dashboard() {
                   <line x1="12" y1="8" x2="12" y2="12"/>
                   <line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
-                <div>
-                  <p style={{ color: 'white', fontWeight: 800, fontSize: 14, margin: 0 }}>Complete seu cadastro</p>
-                  <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, margin: 0 }}>{bannerMsg}</p>
-                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+  <p style={{ color: 'white', fontWeight: 800, fontSize: 14, margin: 0 }}>COMPLETE SEU CADASTRO</p>
+  <span style={{
+    background: 'rgba(255,255,255,0.2)',
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 700,
+    padding: '3px 10px',
+    borderRadius: 999,
+  }}>{bannerMsg}</span>
+</div>
               </div>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="9 18 15 12 9 6"/>
