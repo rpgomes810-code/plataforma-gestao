@@ -21,10 +21,10 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
 
   const { data: membroLogado } = await supabaseAdmin
-  .from('membros')
-  .select('id, nome, grupo, instrumento, tipo, nivel_acesso, cadastro_completo, data_inscricao_darpe')
-  .eq('user_id', user?.id)
-  .single()
+    .from('membros')
+    .select('id, nome, grupo, instrumento, tipo, nivel_acesso, cadastro_completo, data_inscricao_darpe')
+    .eq('user_id', user?.id)
+    .single()
 
   const { data: escalas } = await supabaseAdmin
     .from('escalas')
@@ -45,7 +45,7 @@ export async function GET() {
 
   const { data: todosMembros } = await supabaseAdmin
     .from('membros')
-    .select('id, nome, grupo, instrumento, tipo, status, telefone')
+    .select('id, nome, grupo, instrumento, tipo, perfil, status, telefone')
     .eq('status', 'Ativo')
 
   return NextResponse.json({ membroLogado, escalas, confirmacoes, todosMembros })
