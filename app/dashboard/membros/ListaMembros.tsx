@@ -251,7 +251,7 @@ export default function ListaMembros({ membros, membroLogado, podeEditar, podeEx
                   </a>
 
                   {podeVerFicha && membro.cadastro_completo && (
-                    <a href={`/dashboard/membros/${membro.id}/ficha`} title="Ficha SIGA" target="_blank"
+                    <a href={`/ficha/${membro.id}`} title="Ficha SIGA" target="_blank"
                       style={{ width: 30, height: 30, borderRadius: 7, background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
