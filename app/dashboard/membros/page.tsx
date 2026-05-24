@@ -44,6 +44,7 @@ export default async function Membros() {
 
   const podeEditar = permissoes?.membros?.editar === true
   const podeExcluir = permissoes?.membros?.excluir === true
+  const podeVerFicha = permissoes?.ficha_siga?.ver === true
 
   const { data: membros } = await supabaseAdmin
     .from('membros')
@@ -56,6 +57,7 @@ export default async function Membros() {
       membroLogado={membroLogado}
       podeEditar={podeEditar}
       podeExcluir={podeExcluir}
+      podeVerFicha={podeVerFicha}
     />
   )
 }

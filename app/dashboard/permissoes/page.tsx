@@ -8,6 +8,7 @@ const PAGINAS = [
   { key: 'registros', label: 'Registros', acoes: ['ver', 'criar', 'editar', 'excluir'] },
   { key: 'relatorios', label: 'Relatórios', acoes: ['ver'] },
   { key: 'membros', label: 'Membros', acoes: ['ver', 'criar', 'editar', 'excluir'] },
+  { key: 'ficha_siga', label: 'Ficha de Cadastro SIGA', acoes: ['ver'] },
   { key: 'hospitais', label: 'Hospitais', acoes: ['ver', 'criar', 'editar', 'excluir'] },
   { key: 'vagas', label: 'Vagas', acoes: ['ver'] },
   { key: 'comunicados', label: 'Comunicados', acoes: ['ver', 'criar', 'editar', 'excluir'] },
@@ -16,14 +17,11 @@ const PAGINAS = [
   { key: 'solicitacoes', label: 'Solicitações', acoes: ['ver'] },
 ]
 
-const COR_ACAO: Record<string, string> = {
-  ver: 'bg-blue-600 text-white hover:bg-blue-700',
-  criar: 'bg-green-600 text-white hover:bg-green-700',
-  editar: 'bg-yellow-500 text-white hover:bg-yellow-600',
-  excluir: 'bg-red-600 text-white hover:bg-red-700',
+const inputStyle: React.CSSProperties = {
+  width: '100%', padding: '10px 14px', borderRadius: 8,
+  border: '1px solid #e2e8f0', background: '#f8fafc',
+  fontSize: 14, color: '#1e293b', outline: 'none', boxSizing: 'border-box',
 }
-
-const COR_INATIVO = 'bg-gray-100 text-gray-400 hover:bg-gray-200'
 
 export default function Permissoes() {
   const [permissoes, setPermissoes] = useState<any[]>([])
@@ -67,74 +65,104 @@ export default function Permissoes() {
     setSalvando(null)
   }
 
-  if (temAcesso === null) return <div className="p-6 text-gray-500">Carregando...</div>
+  if (temAcesso === null) return (
+    <div style={{ background: '#f1f5f9', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <p style={{ color: '#64748b', fontSize: 14 }}>Carregando...</p>
+    </div>
+  )
 
   if (!temAcesso) return (
-    <div className="p-4 md:p-6">
-      <div className="text-center py-12 bg-white rounded-2xl shadow">
-        <p className="text-4xl mb-3">🔒</p>
-        <p className="text-gray-500">Você não tem acesso a esta página</p>
+    <div style={{ background: '#f1f5f9', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ textAlign: 'center', background: '#fff', borderRadius: 16, padding: 48, border: '1px solid #e2e8f0' }}>
+        <p style={{ fontSize: 40, marginBottom: 12 }}>🔒</p>
+        <p style={{ color: '#64748b', fontSize: 14 }}>Você não tem acesso a esta página</p>
       </div>
     </div>
   )
 
   return (
-    <div className="p-4 md:p-6">
-      <div className="mb-6">
-        <h2 className="text-xl font-bold text-gray-800">Permissões por Perfil</h2>
-        <p className="text-sm text-gray-500">Configure o que cada perfil pode fazer em cada página</p>
-      </div>
+    <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: '28px 40px' }} className="perm-wrap">
+      <style>{`
+        @media (max-width: 768px) { .perm-wrap { padding: 16px !important; } }
+      `}</style>
 
-      <div className="space-y-6">
-        {permissoes.map(item => (
-          <div key={item.perfil} className="bg-white rounded-2xl shadow p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-bold text-gray-800">{item.perfil}</h3>
-              {salvando === item.perfil && <span className="text-xs text-blue-500">Salvando...</span>}
+      <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+
+        <div style={{ marginBottom: 24 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>Permissões por Perfil</h1>
+          <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>Configure o que cada perfil pode fazer em cada página</p>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {permissoes.map(item => (
+            <div key={item.perfil} style={{
+              background: '#fff', border: '1px solid #e2e8f0',
+              borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+              padding: '20px 24px',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <h3 style={{ fontSize: 15, fontWeight: 700, color: '#1e293b', margin: 0 }}>{item.perfil}</h3>
+                {salvando === item.perfil && (
+                  <span style={{ fontSize: 12, color: '#2563eb', fontWeight: 600 }}>Salvando...</span>
+                )}
+              </div>
+
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ textAlign: 'left', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, paddingBottom: 10, paddingRight: 16 }}>PÁGINA</th>
+                      <th style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#2563eb', letterSpacing: 1, paddingBottom: 10, paddingLeft: 8, paddingRight: 8 }}>VER</th>
+                      <th style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#16a34a', letterSpacing: 1, paddingBottom: 10, paddingLeft: 8, paddingRight: 8 }}>CRIAR</th>
+                      <th style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#d97706', letterSpacing: 1, paddingBottom: 10, paddingLeft: 8, paddingRight: 8 }}>EDITAR</th>
+                      <th style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#dc2626', letterSpacing: 1, paddingBottom: 10, paddingLeft: 8, paddingRight: 8 }}>EXCLUIR</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {PAGINAS.map((pagina, idx) => {
+                      const paginaPerms = item.paginas?.[pagina.key] || {}
+                      return (
+                        <tr key={pagina.key} style={{ borderTop: idx > 0 ? '1px solid #f1f5f9' : 'none' }}>
+                          <td style={{ padding: '10px 16px 10px 0', fontWeight: 600, color: '#334155' }}>{pagina.label}</td>
+                          {['ver', 'criar', 'editar', 'excluir'].map(acao => {
+                            const temAcao = pagina.acoes.includes(acao)
+                            const ativo = paginaPerms[acao] === true
+                            const cores: Record<string, { on: string, text: string }> = {
+                              ver: { on: '#2563eb', text: '#fff' },
+                              criar: { on: '#16a34a', text: '#fff' },
+                              editar: { on: '#d97706', text: '#fff' },
+                              excluir: { on: '#dc2626', text: '#fff' },
+                            }
+                            return (
+                              <td key={acao} style={{ padding: '10px 8px', textAlign: 'center' }}>
+                                {temAcao ? (
+                                  <button
+                                    onClick={() => toggleAcao(item.perfil, pagina.key, acao, !ativo)}
+                                    style={{
+                                      width: 32, height: 32, borderRadius: 8, border: 'none',
+                                      background: ativo ? cores[acao].on : '#f1f5f9',
+                                      color: ativo ? cores[acao].text : '#94a3b8',
+                                      fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                                      transition: 'all 0.15s',
+                                    }}
+                                  >
+                                    {ativo ? '✓' : '×'}
+                                  </button>
+                                ) : (
+                                  <span style={{ color: '#e2e8f0' }}>—</span>
+                                )}
+                              </td>
+                            )
+                          })}
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr>
-                    <th className="text-left text-xs font-semibold text-gray-400 uppercase pb-2 pr-4">Página</th>
-                    <th className="text-center text-xs font-semibold text-blue-400 uppercase pb-2 px-2">Ver</th>
-                    <th className="text-center text-xs font-semibold text-green-400 uppercase pb-2 px-2">Criar</th>
-                    <th className="text-center text-xs font-semibold text-yellow-400 uppercase pb-2 px-2">Editar</th>
-                    <th className="text-center text-xs font-semibold text-red-400 uppercase pb-2 px-2">Excluir</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {PAGINAS.map(pagina => {
-                    const paginaPerms = item.paginas?.[pagina.key] || {}
-                    return (
-                      <tr key={pagina.key}>
-                        <td className="py-2 pr-4 font-medium text-gray-700">{pagina.label}</td>
-                        {['ver', 'criar', 'editar', 'excluir'].map(acao => {
-                          const temAcao = pagina.acoes.includes(acao)
-                          const ativo = paginaPerms[acao] === true
-                          return (
-                            <td key={acao} className="py-2 px-2 text-center">
-                              {temAcao ? (
-                                <button
-                                  onClick={() => toggleAcao(item.perfil, pagina.key, acao, !ativo)}
-                                  className={`w-8 h-8 rounded-lg text-xs font-bold transition ${ativo ? COR_ACAO[acao] : COR_INATIVO}`}
-                                >
-                                  {ativo ? '✓' : '×'}
-                                </button>
-                              ) : (
-                                <span className="text-gray-200">—</span>
-                              )}
-                            </td>
-                          )
-                        })}
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   )
