@@ -16,6 +16,7 @@ export default function Dashboard() {
   const [calAno, setCalAno] = useState(new Date().getFullYear())
   const [diaPopup, setDiaPopup] = useState<number | null>(null)
   const [isMobile, setIsMobile] = useState(false)
+  const [cadastroCompleto, setCadastroCompleto] = useState(true)
   const toggle = (key: string) => setAberto(prev => ({ ...prev, [key]: !prev[key] }))
 
   useEffect(() => {
@@ -36,6 +37,7 @@ export default function Dashboard() {
       escalas.forEach((e: any) => { porGrupo[e.grupo || 'Sem grupo'] = (porGrupo[e.grupo || 'Sem grupo'] || 0) + 1 })
       setStats({ totalMembros: todosMembros.length, porTipo, totalEscalas: escalas.length, porGrupo })
       setEscalasTotal(escalas)
+      setCadastroCompleto(d.membroLogado?.cadastro_completo === true)
     })
     fetch('/api/vagas').then(r => r.json()).then(setVagas)
     fetch('/api/hospitais').then(r => r.json()).then(data => { if (Array.isArray(data)) setHospitais(data) })
@@ -158,6 +160,34 @@ export default function Dashboard() {
           <h2 style={{ color: '#0f172a', fontSize: 28, fontWeight: 800, margin: '4px 0 0' }}>{membro?.nome || '...'}</h2>
         </div>
 
+        {/* Banner cadastro incompleto */}
+        {!cadastroCompleto && (
+          <a href="/dashboard/completar-cadastro" style={{ textDecoration: 'none' }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '14px 20px', borderRadius: 12, marginBottom: 24,
+              background: 'linear-gradient(135deg, #1e3a5f, #2563eb)',
+              boxShadow: '0 4px 12px rgba(37,99,235,0.25)',
+              cursor: 'pointer',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="12"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <div>
+                  <p style={{ color: 'white', fontWeight: 800, fontSize: 14, margin: 0 }}>Complete seu cadastro</p>
+                  <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, margin: 0 }}>Precisamos de mais informações para o DARPE Bras-SP</p>
+                </div>
+              </div>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </div>
+          </a>
+        )}
+
         {/* Vagas */}
         {vagas.length > 0 && (
           <a href="/dashboard/vagas" style={{
@@ -230,7 +260,6 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Dias da semana */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderBottom: '1px solid #f1f5f9' }}>
             {diasSemana.map(d => (
               <div key={d} style={{ textAlign: 'center', fontSize: isMobile ? 9 : 11, fontWeight: 700, color: '#94a3b8', padding: '6px 0', letterSpacing: '0.03em' }}>
@@ -239,7 +268,6 @@ export default function Dashboard() {
             ))}
           </div>
 
-          {/* Células */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', overflow: 'hidden' }}>
             {celulas.map((cel, idx) => {
               const key = cel.mes === 'curr'
@@ -258,62 +286,34 @@ export default function Dashboard() {
                   borderBottom: isUltimaLinha ? 'none' : '1px solid #f1f5f9',
                   borderRight: (idx + 1) % 7 === 0 ? 'none' : '1px solid #f1f5f9',
                   padding: isMobile ? '6px 2px' : '10px 6px',
-                  textAlign: 'center',
-                  position: 'relative',
-                  cursor: temEscala ? 'pointer' : 'default',
-                  borderRadius: 8,
+                  textAlign: 'center', position: 'relative',
+                  cursor: temEscala ? 'pointer' : 'default', borderRadius: 8,
                 }}
                   onMouseEnter={() => !isMobile && temEscala && setDiaPopup(idx)}
                   onMouseLeave={() => !isMobile && setDiaPopup(null)}
                   onClick={() => isMobile && temEscala && setDiaPopup(popupAberto ? null : idx)}>
-
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-                    {/* Número do dia */}
                     <span style={{
-                      fontSize: isMobile ? 11 : 13,
-                      fontWeight: ehHoje ? 800 : cel.mes === 'curr' ? 600 : 400,
+                      fontSize: isMobile ? 11 : 13, fontWeight: ehHoje ? 800 : cel.mes === 'curr' ? 600 : 400,
                       color: cel.mes !== 'curr' ? '#cbd5e1' : ehHoje ? '#fff' : '#334155',
-                      width: isMobile ? 22 : 28,
-                      height: isMobile ? 22 : 28,
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
+                      width: isMobile ? 22 : 28, height: isMobile ? 22 : 28, borderRadius: '50%',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
                       background: ehHoje ? '#f59e0b' : 'transparent',
                     }}>{cel.dia}</span>
-
-                    {/* Bolinha de escala */}
                     {temEscala && (
-                      <div style={{
-                        width: isMobile ? 18 : 22,
-                        height: isMobile ? 18 : 22,
-                        borderRadius: '50%',
-                        background: '#1e3a5f',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}>
+                      <div style={{ width: isMobile ? 18 : 22, height: isMobile ? 18 : 22, borderRadius: '50%', background: '#1e3a5f', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <span style={{ fontSize: isMobile ? 8 : 10, fontWeight: 800, color: '#fff' }}>{escalasNoDia.length}</span>
                       </div>
                     )}
                   </div>
-
-                  {/* Popup */}
                   {popupAberto && (
                     <div style={{
-                      position: 'absolute',
-                      top: '100%',
-                      left: idx % 7 > 4 ? 'auto' : '50%',
-                      right: idx % 7 > 4 ? 0 : 'auto',
+                      position: 'absolute', top: '100%',
+                      left: idx % 7 > 4 ? 'auto' : '50%', right: idx % 7 > 4 ? 0 : 'auto',
                       transform: idx % 7 > 4 ? 'none' : 'translateX(-50%)',
-                      zIndex: 50,
-                      background: '#fff',
-                      borderRadius: 10,
-                      padding: 12,
-                      boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                      border: '1px solid #e2e8f0',
-                      minWidth: 200,
-                      textAlign: 'left',
+                      zIndex: 50, background: '#fff', borderRadius: 10, padding: 12,
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.12)', border: '1px solid #e2e8f0',
+                      minWidth: 200, textAlign: 'left',
                     }}>
                       <p style={{ color: '#1e3a5f', fontSize: 12, fontWeight: 800, margin: '0 0 8px' }}>
                         {cel.dia} de {mesesCompletos[calMes]}
