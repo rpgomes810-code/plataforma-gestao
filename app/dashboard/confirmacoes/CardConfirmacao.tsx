@@ -54,17 +54,10 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
   const dispensar = async (membro_id: string, statusAnterior: string) => {
     const confirmado = confirm('Deseja dispensar este membro por excesso?')
     if (!confirmado) return
-
     const res = await fetch('/api/confirmacoes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        escala_id: escala.id,
-        membro_id,
-        status: 'dispensado',
-        status_anterior: statusAnterior,
-        tipo: 'normal',
-      }),
+      body: JSON.stringify({ escala_id: escala.id, membro_id, status: 'dispensado', status_anterior: statusAnterior, tipo: 'normal' }),
     })
     if (res.ok) {
       setConfirmacoes((prev: any[]) => {
@@ -108,34 +101,18 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
       setMostraMotivo(true)
       return
     }
-
     setLoading(true)
     setErro('')
-
     const id = membro_id || membroLogado?.id
-
     const res = await fetch('/api/confirmacoes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        escala_id: escala.id,
-        membro_id: id,
-        status,
-        motivo: status === 'ausente' ? motivo : null,
-      }),
+      body: JSON.stringify({ escala_id: escala.id, membro_id: id, status, motivo: status === 'ausente' ? motivo : null }),
     })
-
     if (res.ok) {
       setConfirmacoes((prev: any[]) => {
         const semMinha = prev.filter((c: any) => c.membro_id !== id)
-        return [...semMinha, {
-          id: Date.now(),
-          escala_id: escala.id,
-          membro_id: id,
-          status,
-          tipo: 'normal',
-          membros: { nome: getMembro(id)?.nome || membroLogado?.nome }
-        }]
+        return [...semMinha, { id: Date.now(), escala_id: escala.id, membro_id: id, status, tipo: 'normal', membros: { nome: getMembro(id)?.nome || membroLogado?.nome } }]
       })
       setMostraMotivo(false)
       setMotivo('')
@@ -144,17 +121,40 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
       const data = await res.json()
       setErro(data.error || 'Erro ao confirmar')
     }
-
     setLoading(false)
   }
 
+  const badgeStatus = (status: string) => {
+    const config: Record<string, { bg: string, color: string, label: string }> = {
+      confirmado: { bg: '#dcfce7', color: '#16a34a', label: '✅ Confirmado' },
+      ausente: { bg: '#fee2e2', color: '#dc2626', label: '❌ Ausente' },
+      dispensado: { bg: '#f1f5f9', color: '#64748b', label: '🔕 Dispensado' },
+      pendente: { bg: '#fef9c3', color: '#854d0e', label: '⏳ Pendente' },
+    }
+    const c = config[status] || config.pendente
+    return (
+      <span style={{
+        fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999,
+        background: c.bg, color: c.color,
+      }}>{c.label}</span>
+    )
+  }
+
   return (
-    <div className="bg-white rounded-2xl shadow overflow-hidden">
-      <div className="bg-blue-600 px-6 py-4">
-        <div className="flex justify-between items-start">
+    <div style={{
+      background: '#fff', borderRadius: 12,
+      border: '1px solid #e2e8f0',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+      overflow: 'hidden',
+    }}>
+      {/* Header */}
+      <div style={{ background: '#1e3a5f', padding: '16px 20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <h3 className="text-white font-bold text-lg">{escala.grupo}</h3>
-            <p className="text-blue-100 text-sm">{formatarData(escala.data)} · {escala.hora_inicio} · {escala.local_texto}</p>
+            <h3 style={{ color: '#fff', fontWeight: 800, fontSize: 16, margin: 0 }}>{escala.grupo}</h3>
+            <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13, margin: '4px 0 0' }}>
+              {formatarData(escala.data)} · {escala.hora_inicio} · {escala.local_texto}
+            </p>
           </div>
           {isAdmin && (
             <button
@@ -162,7 +162,11 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
                 await fetch(`/api/escalas/${escala.id}/confirmacao`, { method: 'PATCH' })
                 onAtualizar()
               }}
-              className="text-xs bg-white/20 text-white px-3 py-1 rounded-full hover:bg-white/30 transition"
+              style={{
+                fontSize: 11, fontWeight: 600, padding: '5px 12px', borderRadius: 999,
+                background: 'rgba(255,255,255,0.15)', color: '#fff', border: 'none', cursor: 'pointer',
+                flexShrink: 0,
+              }}
             >
               {escala.confirmacao_aberta ? 'Fechar confirmações' : 'Abrir confirmações'}
             </button>
@@ -170,65 +174,70 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
         </div>
       </div>
 
-      <div className="p-6 space-y-4">
+      <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+        {/* Barra de progresso */}
         <div>
-          <div className="flex justify-between text-sm mb-2">
-            <span className="text-gray-500">{confirmados.length} de {totalGrupo} confirmados</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+            <span style={{ fontSize: 12, color: '#64748b' }}>{confirmados.length} de {totalGrupo} confirmados</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: '#1e3a5f' }}>
+              {totalGrupo > 0 ? Math.round((confirmados.length / totalGrupo) * 100) : 0}%
+            </span>
           </div>
-          <div className="w-full bg-gray-100 rounded-full h-2.5">
-            <div className="bg-green-500 h-2.5 rounded-full transition-all"
-              style={{ width: `${totalGrupo > 0 ? (confirmados.length / totalGrupo) * 100 : 0}%` }} />
+          <div style={{ background: '#f1f5f9', borderRadius: 999, height: 8 }}>
+            <div style={{
+              background: '#16a34a', height: 8, borderRadius: 999,
+              width: `${totalGrupo > 0 ? (confirmados.length / totalGrupo) * 100 : 0}%`,
+              transition: 'width 0.3s',
+            }} />
           </div>
         </div>
 
+        {/* Atendente */}
         {escala.atendentes && (
-          <div className="bg-blue-50 rounded-xl px-4 py-3">
-            <p className="text-xs font-semibold text-blue-400 uppercase mb-2">🎙️ Atendente</p>
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-gray-800">{escala.atendentes}</p>
-              <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                statusAtendente === 'confirmado' ? 'bg-green-100 text-green-700' :
-                statusAtendente === 'ausente' ? 'bg-red-100 text-red-700' :
-                statusAtendente === 'dispensado' ? 'bg-gray-100 text-gray-500' :
-                'bg-yellow-100 text-yellow-700'
-              }`}>
-                {statusAtendente === 'confirmado' ? '✅ Confirmado' :
-                 statusAtendente === 'ausente' ? '❌ Ausente' :
-                 statusAtendente === 'dispensado' ? '🔕 Dispensado' :
-                 '⏳ Pendente'}
-              </span>
+          <div style={{ background: '#eff6ff', borderRadius: 10, padding: '12px 16px' }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: '#2563eb', letterSpacing: 1, marginBottom: 8 }}>🎙️ ATENDENTE</p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <p style={{ fontSize: 14, fontWeight: 600, color: '#1e293b', margin: 0 }}>{escala.atendentes}</p>
+              {badgeStatus(statusAtendente || 'pendente')}
             </div>
 
             {euSouOAtendente && (
-              <div className="mt-3 border-t border-blue-100 pt-3">
-                <p className="text-sm font-medium text-gray-700 mb-2">Podemos contar com você?</p>
+              <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #bfdbfe' }}>
+                <p style={{ fontSize: 13, fontWeight: 600, color: '#1e293b', marginBottom: 8 }}>Podemos contar com você?</p>
                 {statusAtendente === 'confirmado' && (
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm text-green-600 font-semibold">✅ Você confirmou presença</span>
-                    <button onClick={() => cancelarConfirmacao(atendenteMembro?.id)} disabled={loading} className="text-xs text-gray-400 hover:text-gray-600">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontSize: 13, color: '#16a34a', fontWeight: 600 }}>✅ Você confirmou presença</span>
+                    <button onClick={() => cancelarConfirmacao(atendenteMembro?.id)} disabled={loading}
+                      style={{ fontSize: 11, color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer' }}>
                       {loading ? 'Aguarde...' : 'Cancelar'}
                     </button>
                   </div>
                 )}
                 {statusAtendente === 'ausente' && (
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm text-red-600 font-semibold">❌ Você informou ausência</span>
-                    <button onClick={() => cancelarConfirmacao(atendenteMembro?.id)} disabled={loading} className="text-xs text-gray-400 hover:text-gray-600">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontSize: 13, color: '#dc2626', fontWeight: 600 }}>❌ Você informou ausência</span>
+                    <button onClick={() => cancelarConfirmacao(atendenteMembro?.id)} disabled={loading}
+                      style={{ fontSize: 11, color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer' }}>
                       {loading ? 'Aguarde...' : 'Cancelar'}
                     </button>
                   </div>
                 )}
                 {statusAtendente === 'dispensado' && (
-                  <span className="text-sm text-gray-500 font-semibold">🔕 Você foi dispensado</span>
+                  <span style={{ fontSize: 13, color: '#64748b', fontWeight: 600 }}>🔕 Você foi dispensado</span>
                 )}
                 {!statusAtendente && (
-                  <div className="flex gap-2">
-                    <button onClick={() => confirmar('confirmado', atendenteMembro?.id)} disabled={loading}
-                      className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-600 transition disabled:opacity-50">
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={() => confirmar('confirmado', atendenteMembro?.id)} disabled={loading} style={{
+                      padding: '8px 16px', borderRadius: 8, border: 'none',
+                      background: '#16a34a', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                    }}>
                       {loading ? 'Salvando...' : '✅ Confirmar presença'}
                     </button>
-                    <button onClick={() => confirmar('ausente', atendenteMembro?.id)} disabled={loading}
-                      className="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-100 transition disabled:opacity-50">
+                    <button onClick={() => confirmar('ausente', atendenteMembro?.id)} disabled={loading} style={{
+                      padding: '8px 16px', borderRadius: 8, border: 'none',
+                      background: '#fee2e2', color: '#dc2626', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                    }}>
                       ❌ Não poderei
                     </button>
                   </div>
@@ -237,94 +246,101 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
             )}
 
             {isAdmin && atendenteMembro && statusAtendente && statusAtendente !== 'dispensado' && (
-              <button onClick={() => dispensar(atendenteMembro.id, statusAtendente)} className="text-xs text-gray-400 hover:text-orange-600 mt-2">
+              <button onClick={() => dispensar(atendenteMembro.id, statusAtendente)}
+                style={{ fontSize: 11, color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', marginTop: 8 }}>
                 Dispensar atendente
               </button>
             )}
             {isAdmin && atendenteMembro && statusAtendente === 'dispensado' && (
-              <button onClick={() => desfazerDispensa(atendenteMembro.id, confirmacaoAtendente?.status_anterior)} className="text-xs text-gray-400 hover:text-blue-600 mt-2">
+              <button onClick={() => desfazerDispensa(atendenteMembro.id, confirmacaoAtendente?.status_anterior)}
+                style={{ fontSize: 11, color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', marginTop: 8 }}>
                 Desfazer dispensa
               </button>
             )}
           </div>
         )}
 
-        {isAdmin && (
-          <div>
-            <button onClick={() => setMostraDetalhes(!mostraDetalhes)} className="text-xs text-blue-600 hover:text-blue-800 font-semibold">
-              {mostraDetalhes ? '▲ Ocultar detalhes' : '▼ Ver detalhes'}
-            </button>
+        {/* Ver detalhes — disponível para todos */}
+        <div>
+          <button onClick={() => setMostraDetalhes(!mostraDetalhes)} style={{
+            fontSize: 12, fontWeight: 600, color: '#2563eb',
+            background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+            display: 'flex', alignItems: 'center', gap: 4,
+          }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              {mostraDetalhes ? <polyline points="18 15 12 9 6 15"/> : <polyline points="6 9 12 15 18 9"/>}
+            </svg>
+            {mostraDetalhes ? 'Ocultar detalhes' : 'Ver detalhes'}
+          </button>
 
-            {mostraDetalhes && (
-              <div className="mt-3 space-y-2">
-                {membrosDoGrupo.map((membro: any) => {
-                  const confirmacao = confirmacoes.find((c: any) => c.membro_id === membro.id)
-                  const status = confirmacao?.status || 'pendente'
-                  const statusAnterior = confirmacao?.status_anterior || 'pendente'
-                  return (
-                    <div key={membro.id} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
-                      <div>
-                        <p className="text-sm font-medium text-gray-700">{membro.nome}</p>
-                        <p className="text-xs text-gray-400">{membro.instrumento || membro.tipo}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                          status === 'confirmado' ? 'bg-green-100 text-green-700' :
-                          status === 'ausente' ? 'bg-red-100 text-red-700' :
-                          status === 'dispensado' ? 'bg-gray-100 text-gray-500' :
-                          'bg-yellow-100 text-yellow-700'
-                        }`}>
-                          {status === 'confirmado' ? '✅ Confirmado' :
-                           status === 'ausente' ? '❌ Ausente' :
-                           status === 'dispensado' ? '🔕 Dispensado' :
-                           '⏳ Pendente'}
-                        </span>
-                        {(status === 'confirmado' || status === 'pendente') && (
-                          <button onClick={() => dispensar(membro.id, status)} className="text-xs text-gray-400 hover:text-orange-600 transition">
-                            Dispensar
-                          </button>
-                        )}
-                        {status === 'dispensado' && (
-                          <button onClick={() => desfazerDispensa(membro.id, statusAnterior)} className="text-xs text-gray-400 hover:text-blue-600 transition">
-                            Desfazer
-                          </button>
-                        )}
-                      </div>
+          {mostraDetalhes && (
+            <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {membrosDoGrupo.map((membro: any) => {
+                const confirmacao = confirmacoes.find((c: any) => c.membro_id === membro.id)
+                const status = confirmacao?.status || 'pendente'
+                const statusAnterior = confirmacao?.status_anterior || 'pendente'
+                return (
+                  <div key={membro.id} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    background: '#f8fafc', borderRadius: 8, padding: '10px 14px',
+                  }}>
+                    <div>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: '#1e293b', margin: 0 }}>{membro.nome}</p>
+                      <p style={{ fontSize: 11, color: '#94a3b8', margin: 0 }}>{membro.instrumento || membro.perfil || membro.tipo}</p>
                     </div>
-                  )
-                })}
-
-                {avulsos.length > 0 && (
-                  <div className="mt-2">
-                    <p className="text-xs font-semibold text-blue-400 uppercase mb-2">🔄 Avulsos</p>
-                    {avulsos.map((c: any) => {
-                      const membroAvulso = getMembro(c.membro_id)
-                      return (
-                        <div key={c.id} className="flex items-center justify-between bg-blue-50 rounded-lg px-3 py-2">
-                          <div>
-                            <p className="text-sm font-medium text-gray-700">{membroAvulso?.nome || '—'}</p>
-                            <p className="text-xs text-gray-400">{membroAvulso?.grupo || '—'}</p>
-                            {membroAvulso?.telefone && <p className="text-xs text-blue-600">📱 {membroAvulso.telefone}</p>}
-                          </div>
-                          <span className="text-xs font-semibold px-2 py-1 rounded-full bg-blue-100 text-blue-700">✅ Avulso</span>
-                        </div>
-                      )
-                    })}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {badgeStatus(status)}
+                      {isAdmin && (status === 'confirmado' || status === 'pendente') && (
+                        <button onClick={() => dispensar(membro.id, status)}
+                          style={{ fontSize: 11, color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer' }}>
+                          Dispensar
+                        </button>
+                      )}
+                      {isAdmin && status === 'dispensado' && (
+                        <button onClick={() => desfazerDispensa(membro.id, statusAnterior)}
+                          style={{ fontSize: 11, color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer' }}>
+                          Desfazer
+                        </button>
+                      )}
+                    </div>
                   </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
+                )
+              })}
 
+              {avulsos.length > 0 && (
+                <div style={{ marginTop: 8 }}>
+                  <p style={{ fontSize: 11, fontWeight: 700, color: '#2563eb', letterSpacing: 1, marginBottom: 6 }}>🔄 AVULSOS</p>
+                  {avulsos.map((c: any) => {
+                    const membroAvulso = getMembro(c.membro_id)
+                    return (
+                      <div key={c.id} style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        background: '#eff6ff', borderRadius: 8, padding: '10px 14px', marginBottom: 6,
+                      }}>
+                        <div>
+                          <p style={{ fontSize: 13, fontWeight: 600, color: '#1e293b', margin: 0 }}>{membroAvulso?.nome || '—'}</p>
+                          <p style={{ fontSize: 11, color: '#94a3b8', margin: 0 }}>{membroAvulso?.grupo || '—'}</p>
+                          {membroAvulso?.telefone && <p style={{ fontSize: 11, color: '#2563eb', margin: 0 }}>📱 {membroAvulso.telefone}</p>}
+                        </div>
+                        <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999, background: '#dbeafe', color: '#1d4ed8' }}>✅ Avulso</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Confirmados */}
         {confirmados.length > 0 && (
           <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase mb-2">✅ Confirmados ({confirmados.length})</p>
-            <div className="flex flex-wrap gap-2">
+            <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, marginBottom: 8 }}>✅ CONFIRMADOS ({confirmados.length})</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {confirmados.map((c: any) => {
                 const membroAvulso = c.tipo === 'avulso' ? getMembro(c.membro_id) : null
                 return (
-                  <span key={c.id} className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full">
+                  <span key={c.id} style={{ fontSize: 12, background: '#dcfce7', color: '#16a34a', padding: '3px 10px', borderRadius: 999, fontWeight: 600 }}>
                     {c.tipo === 'avulso' ? `${membroAvulso?.nome || '—'} (avulso)` : c.membros?.nome}
                   </span>
                 )
@@ -333,14 +349,15 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
           </div>
         )}
 
+        {/* Dispensados */}
         {dispensados.length > 0 && (
           <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase mb-2">🔕 Dispensados ({dispensados.length})</p>
-            <div className="flex flex-wrap gap-2">
+            <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, marginBottom: 8 }}>🔕 DISPENSADOS ({dispensados.length})</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {dispensados.map((c: any) => {
                 const m = getMembro(c.membro_id)
                 return (
-                  <span key={c.id} className="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded-full">
+                  <span key={c.id} style={{ fontSize: 12, background: '#f1f5f9', color: '#64748b', padding: '3px 10px', borderRadius: 999, fontWeight: 600 }}>
                     {m?.nome || c.membros?.nome || '—'}
                   </span>
                 )
@@ -349,24 +366,30 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
           </div>
         )}
 
+        {/* Vagas abertas */}
         {ausentes.filter((a: any) => !a.substituto_id).length > 0 && (
           <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase mb-2">⚠️ Vagas abertas ({ausentes.filter((a: any) => !a.substituto_id).length})</p>
-            <div className="space-y-2">
+            <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, marginBottom: 8 }}>
+              ⚠️ VAGAS ABERTAS ({ausentes.filter((a: any) => !a.substituto_id).length})
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {ausentes.filter((a: any) => !a.substituto_id).map((a: any, i: number) => {
                 const membroAusente = getMembro(a.membro_id)
-                const tipo = (membroAusente?.tipo ?? '').toString().trim().toLowerCase()
+                const perfil = (membroAusente?.perfil ?? membroAusente?.tipo ?? '').toString().trim()
                 const instrumento = (membroAusente?.instrumento ?? '').toString().trim()
-                const tipoVaga = tipo === 'atendente'
+                const tipoVaga = perfil === 'Atendente'
                   ? 'Atendente'
                   : instrumento && instrumento !== 'Nenhum'
                     ? instrumento
-                    : '—'
+                    : perfil || '—'
                 return (
-                  <div key={i} className="flex items-center justify-between bg-yellow-50 rounded-lg px-3 py-2">
+                  <div key={i} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    background: '#fef9c3', borderRadius: 8, padding: '10px 14px',
+                  }}>
                     <div>
-                      <p className="text-sm font-medium text-gray-700">{tipoVaga}</p>
-                      <p className="text-xs text-gray-500">Ausência de: {membroAusente?.nome || '—'}</p>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: '#1e293b', margin: 0 }}>{tipoVaga}</p>
+                      <p style={{ fontSize: 11, color: '#64748b', margin: 0 }}>Ausência de: {membroAusente?.nome || '—'}</p>
                     </div>
                   </div>
                 )
@@ -375,75 +398,87 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
           </div>
         )}
 
+        {/* Confirmação avulso */}
         {souAvulso && (
-          <div className="border-t pt-4">
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-blue-600 font-semibold">✅ Você confirmou presença como avulso</span>
-              <button onClick={() => cancelarConfirmacao()} disabled={loading} className="text-xs text-gray-400 hover:text-gray-600">
+          <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 13, color: '#2563eb', fontWeight: 600 }}>✅ Você confirmou presença como avulso</span>
+              <button onClick={() => cancelarConfirmacao()} disabled={loading}
+                style={{ fontSize: 11, color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer' }}>
                 {loading ? 'Aguarde...' : 'Cancelar'}
               </button>
             </div>
           </div>
         )}
 
+        {/* Ação do membro do grupo */}
         {euSouDoGrupo && (
-          <div className="border-t pt-4">
-            <p className="text-sm font-medium text-gray-700 mb-3">Podemos contar com você?</p>
-            {erro && <p className="text-xs text-red-500 mb-2">{erro}</p>}
+          <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 16 }}>
+            <p style={{ fontSize: 13, fontWeight: 600, color: '#1e293b', marginBottom: 12 }}>Podemos contar com você?</p>
+            {erro && <p style={{ fontSize: 12, color: '#dc2626', marginBottom: 8 }}>{erro}</p>}
 
             {statusAtual === 'confirmado' && (
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-green-600 font-semibold">✅ Você confirmou presença</span>
-                <button onClick={() => cancelarConfirmacao()} disabled={loading} className="text-xs text-gray-400 hover:text-gray-600">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 13, color: '#16a34a', fontWeight: 600 }}>✅ Você confirmou presença</span>
+                <button onClick={() => cancelarConfirmacao()} disabled={loading}
+                  style={{ fontSize: 11, color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer' }}>
                   {loading ? 'Aguarde...' : 'Cancelar'}
                 </button>
               </div>
             )}
 
             {statusAtual === 'ausente' && (
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-red-600 font-semibold">❌ Você informou ausência</span>
-                <button onClick={() => cancelarConfirmacao()} disabled={loading} className="text-xs text-gray-400 hover:text-gray-600">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 13, color: '#dc2626', fontWeight: 600 }}>❌ Você informou ausência</span>
+                <button onClick={() => cancelarConfirmacao()} disabled={loading}
+                  style={{ fontSize: 11, color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer' }}>
                   {loading ? 'Aguarde...' : 'Cancelar'}
                 </button>
               </div>
             )}
 
             {statusAtual === 'dispensado' && (
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-gray-500 font-semibold">🔕 Você foi dispensado por excesso</span>
-              </div>
+              <span style={{ fontSize: 13, color: '#64748b', fontWeight: 600 }}>🔕 Você foi dispensado por excesso</span>
             )}
 
             {!statusAtual && (
               mostraMotivo ? (
-                <div className="space-y-2">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <input
-                    type="text"
-                    value={motivo}
-                    onChange={e => setMotivo(e.target.value)}
+                    type="text" value={motivo} onChange={e => setMotivo(e.target.value)}
                     placeholder="Motivo da ausência (opcional)"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{
+                      border: '1px solid #e2e8f0', borderRadius: 8, padding: '10px 14px',
+                      fontSize: 13, outline: 'none', color: '#1e293b', background: '#f8fafc',
+                    }}
                   />
-                  <div className="flex gap-2">
-                    <button onClick={() => confirmar('ausente')} disabled={loading}
-                      className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-600 transition disabled:opacity-50">
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={() => confirmar('ausente')} disabled={loading} style={{
+                      padding: '8px 16px', borderRadius: 8, border: 'none',
+                      background: '#dc2626', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                    }}>
                       {loading ? 'Salvando...' : 'Confirmar ausência'}
                     </button>
-                    <button onClick={() => setMostraMotivo(false)}
-                      className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-200 transition">
+                    <button onClick={() => setMostraMotivo(false)} style={{
+                      padding: '8px 16px', borderRadius: 8, border: 'none',
+                      background: '#f1f5f9', color: '#475569', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                    }}>
                       Cancelar
                     </button>
                   </div>
                 </div>
               ) : (
-                <div className="flex gap-2">
-                  <button onClick={() => confirmar('confirmado')} disabled={loading}
-                    className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-600 transition disabled:opacity-50">
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <button onClick={() => confirmar('confirmado')} disabled={loading} style={{
+                    padding: '8px 16px', borderRadius: 8, border: 'none',
+                    background: '#16a34a', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                  }}>
                     {loading ? 'Salvando...' : '✅ Confirmar presença'}
                   </button>
-                  <button onClick={() => confirmar('ausente')} disabled={loading}
-                    className="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-100 transition disabled:opacity-50">
+                  <button onClick={() => confirmar('ausente')} disabled={loading} style={{
+                    padding: '8px 16px', borderRadius: 8, border: 'none',
+                    background: '#fee2e2', color: '#dc2626', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                  }}>
                     ❌ Não poderei estar presente
                   </button>
                 </div>
@@ -451,6 +486,7 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
             )}
           </div>
         )}
+
       </div>
     </div>
   )

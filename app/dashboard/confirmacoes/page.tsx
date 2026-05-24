@@ -16,7 +16,11 @@ export default function Confirmacoes() {
     carregar()
   }, [])
 
-  if (!dados) return <div className="p-6 text-gray-500">Carregando...</div>
+  if (!dados) return (
+    <div style={{ background: '#f1f5f9', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <p style={{ color: '#64748b', fontSize: 14 }}>Carregando...</p>
+    </div>
+  )
 
   const { membroLogado, escalas, confirmacoes, todosMembros } = dados
   const isAdmin = membroLogado?.nivel_acesso === 'Administrador'
@@ -31,42 +35,53 @@ export default function Confirmacoes() {
   const abertas = escalasVisiveis.filter((e: any) => e.confirmacao_aberta)
 
   return (
-    <div className="p-4 md:p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-xl font-bold text-gray-800">Confirmações de Presença</h2>
-          <p className="text-sm text-gray-500">{abertas.length} escala(s) aguardando confirmação</p>
+    <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: '28px 40px' }} className="conf-wrap">
+      <style>{`
+        @media (max-width: 768px) { .conf-wrap { padding: 16px !important; } }
+      `}</style>
+
+      <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+
+        <div style={{ marginBottom: 24 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>Confirmações de Presença</h1>
+          <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
+            {abertas.length} escala{abertas.length !== 1 ? 's' : ''} aguardando confirmação
+          </p>
         </div>
+
+        {escalasVisiveis.length === 0 ? (
+          <div style={{
+            background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+            padding: '48px 24px', textAlign: 'center',
+          }}>
+            <p style={{ fontSize: 36, marginBottom: 12 }}>✅</p>
+            <p style={{ color: '#64748b', fontSize: 14 }}>Nenhuma escala aguardando confirmação</p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {escalasVisiveis.map((escala: any) => {
+              const confirmacoesEscala = confirmacoes?.filter((c: any) => c.escala_id === escala.id) || []
+              const membrosDoGrupo = todosMembros?.filter((m: any) => m.grupo === escala.grupo) || []
+              const totalGrupo = membrosDoGrupo.length
+
+              return (
+                <CardConfirmacao
+                  key={escala.id}
+                  escala={escala}
+                  confirmacoesIniciais={confirmacoesEscala}
+                  membroLogado={membroLogado}
+                  totalGrupo={totalGrupo}
+                  membrosDoGrupo={membrosDoGrupo}
+                  todosMembros={todosMembros}
+                  isAdmin={isAdmin}
+                  onAtualizar={carregar}
+                />
+              )
+            })}
+          </div>
+        )}
       </div>
-
-      {escalasVisiveis.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-2xl shadow">
-          <p className="text-4xl mb-3">✅</p>
-          <p className="text-gray-500">Nenhuma escala aguardando confirmação</p>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {escalasVisiveis.map((escala: any) => {
-            const confirmacoesEscala = confirmacoes?.filter((c: any) => c.escala_id === escala.id) || []
-            const membrosDoGrupo = todosMembros?.filter((m: any) => m.grupo === escala.grupo) || []
-            const totalGrupo = membrosDoGrupo.length
-
-            return (
-              <CardConfirmacao
-                key={escala.id}
-                escala={escala}
-                confirmacoesIniciais={confirmacoesEscala}
-                membroLogado={membroLogado}
-                totalGrupo={totalGrupo}
-                membrosDoGrupo={membrosDoGrupo}
-                todosMembros={todosMembros}
-                isAdmin={isAdmin}
-                onAtualizar={carregar}
-              />
-            )
-          })}
-        </div>
-      )}
     </div>
   )
 }
