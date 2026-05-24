@@ -14,10 +14,7 @@ type Escala = {
   confirmacao_aberta: boolean
 }
 
-const meses = [
-  'Janeiro','Fevereiro','Março','Abril','Maio','Junho',
-  'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'
-]
+const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
 
 export default function Escalas() {
   const hoje = new Date()
@@ -37,127 +34,144 @@ export default function Escalas() {
   const podeCriar = permissoes?.escalas?.criar === true
   const podeEditar = permissoes?.escalas?.editar === true
   const podeExcluir = permissoes?.escalas?.excluir === true
-  const podeAbrirConfirmacao = podeEditar
 
   const carregarEscalas = () => {
     setLoading(true)
     fetch(`/api/escalas?mes=${mes + 1}&ano=${ano}`)
       .then(res => res.json())
       .then(data => {
-        setEscalas(Array.isArray(data) ? data : [])
+        const todas = Array.isArray(data) ? data : []
+        const ontem = new Date()
+        ontem.setHours(0, 0, 0, 0)
+        const futuras = todas.filter((e: Escala) => new Date(e.data + 'T12:00:00') >= ontem)
+        setEscalas(futuras)
         setLoading(false)
       })
-      .catch(() => {
-        setEscalas([])
-        setLoading(false)
-      })
+      .catch(() => { setEscalas([]); setLoading(false) })
   }
 
   useEffect(() => { carregarEscalas() }, [mes, ano])
 
-  const toggleConfirmacao = async (id: string, aberta: boolean) => {
-    await fetch(`/api/escalas/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ confirmacao_aberta: !aberta }),
-    })
-    if (!aberta) {
-      await fetch('/api/push/notificar', { method: 'POST' })
-    }
-    carregarEscalas()
-  }
-
-  const datasPorSemana = escalas.reduce((acc, escala) => {
-    const data = escala.data
-    if (!acc[data]) acc[data] = []
-    acc[data].push(escala)
+  const datasPorDia = escalas.reduce((acc, escala) => {
+    if (!acc[escala.data]) acc[escala.data] = []
+    acc[escala.data].push(escala)
     return acc
   }, {} as Record<string, Escala[]>)
 
   const formatarData = (dataStr: string) => {
-    const data = new Date(dataStr + 'T12:00:00')
-    const dia = data.getDate()
-    const diaSemana = data.toLocaleDateString('pt-BR', { weekday: 'long' })
-    return `${dia.toString().padStart(2, '0')}/${(mes + 1).toString().padStart(2, '0')} (${diaSemana})`
+    return new Date(dataStr + 'T12:00:00').toLocaleDateString('pt-BR', {
+      weekday: 'long', day: '2-digit', month: '2-digit'
+    })
   }
 
   return (
-    <div className="p-4 md:p-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-        <div>
-          <h2 className="text-xl font-bold text-gray-800">Escalas</h2>
-          <p className="text-sm text-gray-500">{escalas.length} escalas em {meses[mes]} {ano}</p>
-        </div>
-        <div className="flex gap-2 items-center">
-          <button onClick={() => {
-            if (mes === 0) { setMes(11); setAno(ano - 1) } else setMes(mes - 1)
-          }} className="px-3 py-2 bg-white border rounded-lg text-gray-600 hover:bg-gray-50">←</button>
-          <span className="px-4 py-2 bg-white border rounded-lg font-medium text-gray-700 text-sm">
-            {meses[mes]} {ano}
-          </span>
-          <button onClick={() => {
-            if (mes === 11) { setMes(0); setAno(ano + 1) } else setMes(mes + 1)
-          }} className="px-3 py-2 bg-white border rounded-lg text-gray-600 hover:bg-gray-50">→</button>
-          {podeCriar && (
-            <a href="/dashboard/escalas/nova"
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">
-              + Nova Escala
-            </a>
-          )}
-        </div>
-      </div>
+    <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: '28px 40px' }} className="escalas-wrap">
+      <style>{`
+        @media (max-width: 768px) {
+          .escalas-wrap { padding: 16px !important; }
+          .escalas-header { flex-direction: column !important; align-items: flex-start !important; }
+          .col-atendente, .col-hora { display: none !important; }
+          .tabela-header { display: none !important; }
+        }
+        .escala-row:hover { background: #f8fafc; }
+      `}</style>
 
-      {loading ? (
-        <div className="text-center py-12 text-gray-500">Carregando...</div>
-      ) : escalas.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-2xl shadow">
-          <p className="text-4xl mb-3">📅</p>
-          <p className="text-gray-500">Nenhuma escala em {meses[mes]} {ano}</p>
+      <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+
+        <div className="escalas-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, gap: 16 }}>
+          <div>
+            <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>Escalas</h1>
+            <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>{escalas.length} escalas em {meses[mes]} {ano}</p>
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button onClick={() => { if (mes === 0) { setMes(11); setAno(ano - 1) } else setMes(mes - 1) }}
+                style={{ width: 34, height: 34, borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', color: '#475569', fontSize: 14 }}>←</button>
+              <span style={{ padding: '7px 16px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 13, fontWeight: 600, color: '#334155' }}>
+                {meses[mes]} {ano}
+              </span>
+              <button onClick={() => { if (mes === 11) { setMes(0); setAno(ano + 1) } else setMes(mes + 1) }}
+                style={{ width: 34, height: 34, borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', color: '#475569', fontSize: 14 }}>→</button>
+            </div>
+            <a href="/dashboard/historico" style={{
+              padding: '8px 16px', borderRadius: 8, border: '1px solid #e2e8f0',
+              background: '#fff', color: '#475569', fontSize: 13, fontWeight: 600, textDecoration: 'none',
+              display: 'flex', alignItems: 'center', gap: 6,
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 8 12 12 14 14"/>
+              </svg>
+              Histórico
+            </a>
+            {podeCriar && (
+              <a href="/dashboard/escalas/nova" style={{
+                padding: '8px 16px', borderRadius: 8, background: '#2563eb',
+                color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none',
+                display: 'flex', alignItems: 'center', gap: 6,
+              }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Nova Escala
+              </a>
+            )}
+          </div>
         </div>
-      ) : (
-        <div className="space-y-6">
-          {Object.entries(datasPorSemana)
-            .sort(([a], [b]) => a.localeCompare(b))
-            .map(([data, itens]) => (
-              <div key={data} className="bg-white rounded-2xl shadow overflow-hidden">
-                <div className="bg-blue-600 px-6 py-3">
-                  <h3 className="text-white font-bold">{formatarData(data)}</h3>
+
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: 48, color: '#64748b' }}>Carregando...</div>
+        ) : escalas.length === 0 ? (
+          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 48, textAlign: 'center' }}>
+            <p style={{ fontSize: 36, marginBottom: 12 }}>📅</p>
+            <p style={{ color: '#64748b', fontSize: 14 }}>Nenhuma escala em {meses[mes]} {ano}</p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {Object.entries(datasPorDia).sort(([a], [b]) => a.localeCompare(b)).map(([data, itens]) => (
+              <div key={data} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
+                <div style={{ background: '#1e3a5f', padding: '12px 20px' }}>
+                  <h3 style={{ color: '#fff', fontWeight: 700, fontSize: 14, margin: 0, textTransform: 'capitalize' }}>{formatarData(data)}</h3>
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50 border-b">
-                      <tr>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Grupo</th>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Local</th>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Hora</th>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Atendente(s)</th>
-                        <th className="px-4 py-3"></th>
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                    <thead>
+                      <tr style={{ background: '#f8fafc', borderBottom: '1px solid #f1f5f9' }}>
+                        <th style={{ textAlign: 'left', padding: '10px 20px', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>GRUPO</th>
+                        <th style={{ textAlign: 'left', padding: '10px 16px', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>LOCAL</th>
+                        <th className="col-hora" style={{ textAlign: 'left', padding: '10px 16px', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>HORA</th>
+                        <th className="col-atendente" style={{ textAlign: 'left', padding: '10px 16px', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>ATENDENTE</th>
+                        <th style={{ textAlign: 'right', padding: '10px 20px', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>AÇÕES</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {itens.map(escala => (
-                        <tr key={escala.id} className="hover:bg-gray-50">
-                          <td className="px-4 py-3 text-sm font-medium text-gray-800">{escala.grupo}</td>
-                          <td className="px-4 py-3 text-sm text-gray-600">{escala.local_texto}</td>
-                          <td className="px-4 py-3 text-sm text-gray-600">🕐 {escala.hora_inicio}</td>
-                          <td className="px-4 py-3 text-sm text-gray-600">👤 {escala.atendentes}</td>
-                          <td className="px-4 py-3 flex items-center gap-2 flex-wrap">
-                            {podeEditar && (
-                              <a href={`/dashboard/escalas/${escala.id}/editar`}
-                                className="text-xs text-blue-600 hover:underline">Editar</a>
-                            )}
-                            {podeAbrirConfirmacao && (
-                              <button
-                                onClick={() => toggleConfirmacao(escala.id, escala.confirmacao_aberta)}
-                                className={`text-xs font-semibold px-2 py-1 rounded-full transition ${
-                                  escala.confirmacao_aberta
-                                    ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                }`}>
-                                {escala.confirmacao_aberta ? '✅ Confirmações abertas' : 'Abrir confirmações'}
-                              </button>
-                            )}
-                            {podeExcluir && <BotaoExcluirEscala id={escala.id} />}
+                    <tbody>
+                      {itens.map((escala, idx) => (
+                        <tr key={escala.id} className="escala-row" style={{ borderBottom: idx < itens.length - 1 ? '1px solid #f1f5f9' : 'none', transition: 'background 0.15s' }}>
+                          <td style={{ padding: '14px 20px', fontWeight: 600, color: '#1e293b' }}>{escala.grupo}</td>
+                          <td style={{ padding: '14px 16px', color: '#475569' }}>{escala.local_texto}</td>
+                          <td className="col-hora" style={{ padding: '14px 16px', color: '#475569' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                              </svg>
+                              {escala.hora_inicio}
+                            </span>
+                          </td>
+                          <td className="col-atendente" style={{ padding: '14px 16px', color: '#475569' }}>
+                            {escala.atendentes || <span style={{ color: '#cbd5e1' }}>—</span>}
+                          </td>
+                          <td style={{ padding: '14px 20px' }}>
+                            <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                              {podeEditar && (
+                                <a href={`/dashboard/escalas/${escala.id}/editar`} title="Editar"
+                                  style={{ width: 30, height: 30, borderRadius: 7, background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                                    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                  </svg>
+                                </a>
+                              )}
+                              {podeExcluir && <BotaoExcluirEscala id={escala.id} />}
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -166,8 +180,9 @@ export default function Escalas() {
                 </div>
               </div>
             ))}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
