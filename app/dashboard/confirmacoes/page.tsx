@@ -25,12 +25,17 @@ export default function Confirmacoes() {
   const { membroLogado, escalas, confirmacoes, todosMembros } = dados
   const isAdmin = membroLogado?.nivel_acesso === 'Administrador'
 
+  const ontem = new Date()
+  ontem.setHours(0, 0, 0, 0)
+
   const escalasVisiveis = (escalas?.filter((escala: any) => {
+    const dataEscala = new Date(escala.data + 'T12:00:00')
+    if (dataEscala < ontem) return false
     const eDoGrupo = membroLogado?.grupo === escala.grupo
     const temConfirmacao = confirmacoes?.some((c: any) => c.escala_id === escala.id && c.membro_id === membroLogado?.id)
     const eOAtendente = membroLogado?.nome === escala.atendentes
     return isAdmin || eDoGrupo || temConfirmacao || eOAtendente
-  }) || []).sort((a: any, b: any) => new Date(b.criado_em || b.data).getTime() - new Date(a.criado_em || a.data).getTime())
+  }) || []).sort((a: any, b: any) => new Date(a.data).getTime() - new Date(b.data).getTime())
 
   const abertas = escalasVisiveis.filter((e: any) => e.confirmacao_aberta)
 
