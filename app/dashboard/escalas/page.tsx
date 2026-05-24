@@ -14,12 +14,7 @@ type Escala = {
   confirmacao_aberta: boolean
 }
 
-const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
-
 export default function Escalas() {
-  const hoje = new Date()
-  const [mes, setMes] = useState(hoje.getMonth())
-  const [ano, setAno] = useState(hoje.getFullYear())
   const [escalas, setEscalas] = useState<Escala[]>([])
   const [loading, setLoading] = useState(true)
   const [permissoes, setPermissoes] = useState<any>(null)
@@ -37,7 +32,11 @@ export default function Escalas() {
 
   const carregarEscalas = () => {
     setLoading(true)
-    fetch(`/api/escalas?mes=${mes + 1}&ano=${ano}`)
+    // Busca os próximos 3 meses
+    const hoje = new Date()
+    const mes = hoje.getMonth() + 1
+    const ano = hoje.getFullYear()
+    fetch(`/api/escalas?mes=${mes}&ano=${ano}`)
       .then(res => res.json())
       .then(data => {
         const todas = Array.isArray(data) ? data : []
@@ -50,7 +49,7 @@ export default function Escalas() {
       .catch(() => { setEscalas([]); setLoading(false) })
   }
 
-  useEffect(() => { carregarEscalas() }, [mes, ano])
+  useEffect(() => { carregarEscalas() }, [])
 
   const datasPorDia = escalas.reduce((acc, escala) => {
     if (!acc[escala.data]) acc[escala.data] = []
@@ -71,51 +70,32 @@ export default function Escalas() {
           .escalas-wrap { padding: 16px !important; }
           .escalas-header { flex-direction: column !important; align-items: flex-start !important; }
           .col-atendente, .col-hora { display: none !important; }
-          .tabela-header { display: none !important; }
         }
         .escala-row:hover { background: #f8fafc; }
       `}</style>
 
       <div style={{ maxWidth: 1280, margin: '0 auto' }}>
 
+        {/* Header */}
         <div className="escalas-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, gap: 16 }}>
           <div>
             <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>Escalas</h1>
-            <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>{escalas.length} escalas em {meses[mes]} {ano}</p>
+            <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>{escalas.length} escalas próximas</p>
           </div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', gap: 6 }}>
-              <button onClick={() => { if (mes === 0) { setMes(11); setAno(ano - 1) } else setMes(mes - 1) }}
-                style={{ width: 34, height: 34, borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', color: '#475569', fontSize: 14 }}>←</button>
-              <span style={{ padding: '7px 16px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 13, fontWeight: 600, color: '#334155' }}>
-                {meses[mes]} {ano}
-              </span>
-              <button onClick={() => { if (mes === 11) { setMes(0); setAno(ano + 1) } else setMes(mes + 1) }}
-                style={{ width: 34, height: 34, borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', color: '#475569', fontSize: 14 }}>→</button>
-            </div>
-            <a href="/dashboard/historico" style={{
-              padding: '8px 16px', borderRadius: 8, border: '1px solid #e2e8f0',
-              background: '#fff', color: '#475569', fontSize: 13, fontWeight: 600, textDecoration: 'none',
+          {podeCriar && (
+            <a href="/dashboard/escalas/nova" style={{
+              padding: '9px 18px', borderRadius: 8,
+              background: '#fff', color: '#2563eb',
+              fontSize: 13, fontWeight: 600, textDecoration: 'none',
               display: 'flex', alignItems: 'center', gap: 6,
+              border: '1px solid #2563eb',
             }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"/><polyline points="12 8 12 12 14 14"/>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
               </svg>
-              Histórico
+              Nova Escala
             </a>
-            {podeCriar && (
-              <a href="/dashboard/escalas/nova" style={{
-                padding: '8px 16px', borderRadius: 8, background: '#2563eb',
-                color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none',
-                display: 'flex', alignItems: 'center', gap: 6,
-              }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-                Nova Escala
-              </a>
-            )}
-          </div>
+          )}
         </div>
 
         {loading ? (
@@ -123,7 +103,7 @@ export default function Escalas() {
         ) : escalas.length === 0 ? (
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 48, textAlign: 'center' }}>
             <p style={{ fontSize: 36, marginBottom: 12 }}>📅</p>
-            <p style={{ color: '#64748b', fontSize: 14 }}>Nenhuma escala em {meses[mes]} {ano}</p>
+            <p style={{ color: '#64748b', fontSize: 14 }}>Nenhuma escala próxima</p>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
