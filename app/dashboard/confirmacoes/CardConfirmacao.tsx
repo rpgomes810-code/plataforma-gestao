@@ -156,21 +156,7 @@ export default function CardConfirmacao({ escala, confirmacoesIniciais, membroLo
               {formatarData(escala.data)} · {escala.hora_inicio} · {escala.local_texto}
             </p>
           </div>
-          {isAdmin && (
-            <button
-              onClick={async () => {
-                await fetch(`/api/escalas/${escala.id}/confirmacao`, { method: 'PATCH' })
-                onAtualizar()
-              }}
-              style={{
-                fontSize: 11, fontWeight: 600, padding: '5px 12px', borderRadius: 999,
-                background: 'rgba(255,255,255,0.15)', color: '#fff', border: 'none', cursor: 'pointer',
-                flexShrink: 0,
-              }}
-            >
-              {escala.confirmacao_aberta ? 'Fechar confirmações' : 'Abrir confirmações'}
-            </button>
-          )}
+          
         </div>
       </div>
 
