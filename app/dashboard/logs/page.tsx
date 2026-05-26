@@ -7,28 +7,24 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
+
 const CAMPOS_IGNORAR = ['id', 'user_id', 'aprovado', 'criado_em', 'escala_id', 'criado_por', 'data_registro', 'ativo', 'logo_url', 'created_at', 'registrada', 'confirmacao_aberta', 'hospital_id']
 
 function DiffView({ antes, depois }: { antes: any, depois: any }) {
   if (!antes || !depois) return null
-
   const campos = new Set([...Object.keys(antes), ...Object.keys(depois)])
   const alterados = Array.from(campos).filter(campo => {
     if (CAMPOS_IGNORAR.includes(campo)) return false
-    const a = JSON.stringify(antes[campo])
-    const d = JSON.stringify(depois[campo])
-    return a !== d
+    return JSON.stringify(antes[campo]) !== JSON.stringify(depois[campo])
   })
-
-  if (alterados.length === 0) return <p className="text-xs text-gray-400">Nenhuma alteração detectada</p>
-
+  if (alterados.length === 0) return <p style={{ fontSize: 11, color: '#94a3b8', margin: 0 }}>Nenhuma alteração detectada</p>
   return (
-    <div className="space-y-2 mt-2">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
       {alterados.map(campo => (
-        <div key={campo} className="text-xs rounded-lg overflow-hidden border border-gray-100">
-          <div className="bg-gray-50 px-2 py-1 font-semibold text-gray-600">{campo}</div>
-          <div className="bg-red-50 px-2 py-1 text-red-700">— {String(antes[campo] ?? '—')}</div>
-          <div className="bg-green-50 px-2 py-1 text-green-700">+ {String(depois[campo] ?? '—')}</div>
+        <div key={campo} style={{ borderRadius: 6, overflow: 'hidden', border: '1px solid #f1f5f9', fontSize: 11 }}>
+          <div style={{ background: '#f8fafc', padding: '3px 8px', fontWeight: 700, color: '#475569' }}>{campo}</div>
+          <div style={{ background: '#fee2e2', padding: '3px 8px', color: '#dc2626' }}>— {String(antes[campo] ?? '—')}</div>
+          <div style={{ background: '#dcfce7', padding: '3px 8px', color: '#16a34a' }}>+ {String(depois[campo] ?? '—')}</div>
         </div>
       ))}
     </div>
@@ -37,102 +33,93 @@ function DiffView({ antes, depois }: { antes: any, depois: any }) {
 
 export default async function Logs() {
   const { data: logs } = await supabase
-    .from('logs')
-    .select('*')
+    .from('logs').select('*')
     .order('criado_em', { ascending: false })
     .limit(200)
 
-  const formatarDataHora = (data: string) => {
-    return new Date(data).toLocaleDateString('pt-BR', {
-      day: '2-digit', month: '2-digit', year: 'numeric',
-      hour: '2-digit', minute: '2-digit', second: '2-digit',
-      timeZone: 'America/Sao_Paulo'
-    })
+  const formatarDataHora = (data: string) => new Date(data).toLocaleDateString('pt-BR', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    timeZone: 'America/Sao_Paulo'
+  })
+
+  const badgeAcao = (acao: string) => {
+    let bg = '#f1f5f9', color = '#475569'
+    if (acao.includes('[REVERTIDO]')) { bg = '#fff7ed'; color = '#d97706' }
+    else if (acao.includes('Excluiu')) { bg = '#fee2e2'; color = '#dc2626' }
+    else if (acao.includes('Criou') || acao.includes('Aprovou') || acao.includes('Registrou')) { bg = '#dcfce7'; color = '#16a34a' }
+    else if (acao.includes('Editou') || acao.includes('Atualizou')) { bg = '#fef9c3'; color = '#854d0e' }
+    return { bg, color }
   }
 
-  const corAcao = (acao: string) => {
-    if (acao.includes('[REVERTIDO]')) return 'bg-orange-50 text-orange-700'
-    if (acao.includes('Excluiu')) return 'bg-red-50 text-red-700'
-    if (acao.includes('Criou') || acao.includes('Aprovou') || acao.includes('Registrou')) return 'bg-green-50 text-green-700'
-    if (acao.includes('Editou') || acao.includes('Atualizou')) return 'bg-yellow-50 text-yellow-700'
-    return 'bg-gray-50 text-gray-700'
-  }
-
-  const podeReverter = (log: any) => {
-    return log.acao.includes('Excluiu membro') &&
-      !log.acao.includes('[REVERTIDO]') &&
-      log.dados_antes &&
-      log.tabela === 'membros'
-  }
+  const podeReverter = (log: any) =>
+    log.acao.includes('Excluiu membro') && !log.acao.includes('[REVERTIDO]') && log.dados_antes && log.tabela === 'membros'
 
   return (
-    <div className="p-4 md:p-6">
-      <div className="mb-6">
-        <h2 className="text-xl font-bold text-gray-800">Log de Auditoria</h2>
-        <p className="text-sm text-gray-500">{logs?.length} registros — últimas 200 ações</p>
-      </div>
+    <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: '28px 40px' }} className="logs-wrap">
+      <style>{`@media (max-width: 768px) { .logs-wrap { padding: 16px !important; } .col-alteracoes { display: none !important; } }`}</style>
 
-      {logs?.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-2xl shadow">
-          <p className="text-4xl mb-3">📋</p>
-          <p className="text-gray-500">Nenhuma ação registrada ainda</p>
+      <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+
+        <div style={{ marginBottom: 24 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>Log de Auditoria</h1>
+          <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>{logs?.length} registros — últimas 200 ações</p>
         </div>
-      ) : (
-        <div className="bg-white rounded-2xl shadow overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b">
-                <tr>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Data/Hora</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Usuário</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Ação</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Tabela</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Alterações</th>
-                  <th className="px-4 py-3"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {logs?.map(log => (
-                  <tr key={log.id} className="hover:bg-gray-50 align-top">
-                    <td className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">{formatarDataHora(log.criado_em)}</td>
-                    <td className="px-4 py-3 text-sm font-medium text-gray-700">{log.usuario_nome || '—'}</td>
-                    <td className="px-4 py-3">
-                      <span className={`text-xs font-semibold px-2 py-1 rounded-full ${corAcao(log.acao)}`}>
-                        {log.acao}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-500">{log.tabela || '—'}</td>
-                    <td className="px-4 py-3 max-w-sm">
-                      {log.dados_antes && log.dados_depois && !log.dados_depois.excluido ? (
-                        <details>
-                          <summary className="cursor-pointer text-blue-600 hover:underline text-xs">Ver o que mudou</summary>
-                          <DiffView antes={log.dados_antes} depois={log.dados_depois} />
-                        </details>
-                      ) : log.dados_antes && (
-                        <details>
-                          <summary className="cursor-pointer text-blue-600 hover:underline text-xs">Ver dados</summary>
-                          <div className="mt-2 bg-red-50 rounded p-2">
-                            <pre className="text-xs text-red-700 whitespace-pre-wrap">{JSON.stringify(log.dados_antes, null, 2)}</pre>
-                          </div>
-                        </details>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      {podeReverter(log) && (
-                        <BotaoReverter
-                          logId={log.id}
-                          tabela={log.tabela}
-                          dadosAntes={log.dados_antes}
-                        />
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+
+        {!logs?.length ? (
+          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: '48px 24px', textAlign: 'center' }}>
+            <p style={{ fontSize: 36, marginBottom: 12 }}>📋</p>
+            <p style={{ color: '#64748b', fontSize: 14 }}>Nenhuma ação registrada ainda</p>
           </div>
-        </div>
-      )}
+        ) : (
+          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '160px 160px 1fr 100px 1fr 80px', padding: '10px 20px', background: '#f8fafc', borderBottom: '1px solid #f1f5f9' }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>DATA/HORA</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>USUÁRIO</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>AÇÃO</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>TABELA</span>
+              <span className="col-alteracoes" style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>ALTERAÇÕES</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}></span>
+            </div>
+
+            {logs?.map((log, idx) => {
+              const { bg, color } = badgeAcao(log.acao)
+              return (
+                <div key={log.id} style={{
+                  display: 'grid', gridTemplateColumns: '160px 160px 1fr 100px 1fr 80px',
+                  padding: '12px 20px', borderBottom: idx < logs.length - 1 ? '1px solid #f1f5f9' : 'none',
+                  alignItems: 'start',
+                }}>
+                  <span style={{ fontSize: 11, color: '#94a3b8' }}>{formatarDataHora(log.criado_em)}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: '#1e293b' }}>{log.usuario_nome || '—'}</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999, background: bg, color, display: 'inline-block', width: 'fit-content' }}>
+                    {log.acao}
+                  </span>
+                  <span style={{ fontSize: 12, color: '#64748b' }}>{log.tabela || '—'}</span>
+                  <div className="col-alteracoes">
+                    {log.dados_antes && log.dados_depois && !log.dados_depois.excluido ? (
+                      <details>
+                        <summary style={{ cursor: 'pointer', color: '#2563eb', fontSize: 12, fontWeight: 600 }}>Ver o que mudou</summary>
+                        <DiffView antes={log.dados_antes} depois={log.dados_depois} />
+                      </details>
+                    ) : log.dados_antes && (
+                      <details>
+                        <summary style={{ cursor: 'pointer', color: '#2563eb', fontSize: 12, fontWeight: 600 }}>Ver dados</summary>
+                        <div style={{ marginTop: 8, background: '#fee2e2', borderRadius: 6, padding: 8 }}>
+                          <pre style={{ fontSize: 11, color: '#dc2626', whiteSpace: 'pre-wrap', margin: 0 }}>{JSON.stringify(log.dados_antes, null, 2)}</pre>
+                        </div>
+                      </details>
+                    )}
+                  </div>
+                  <div>
+                    {podeReverter(log) && <BotaoReverter logId={log.id} tabela={log.tabela} dadosAntes={log.dados_antes} />}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

@@ -30,23 +30,15 @@ export default function Solicitacoes() {
 
   const carregar = () => {
     setLoading(true)
-    supabase
-      .from('solicitacoes')
-      .select('*')
-      .eq('status', filtro)
+    supabase.from('solicitacoes').select('*').eq('status', filtro)
       .order('created_at', { ascending: false })
-      .then(({ data }) => {
-        setSolicitacoes(data || [])
-        setLoading(false)
-      })
+      .then(({ data }) => { setSolicitacoes(data || []); setLoading(false) })
   }
 
   useEffect(() => { carregar() }, [filtro])
 
   useEffect(() => {
-    fetch('/api/membros/eu')
-      .then(res => res.json())
-      .then(data => { if (data?.nome) setUsuarioNome(data.nome) })
+    fetch('/api/membros/eu').then(res => res.json()).then(data => { if (data?.nome) setUsuarioNome(data.nome) })
   }, [])
 
   const aprovar = async (id: string) => {
@@ -56,33 +48,19 @@ export default function Solicitacoes() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, aprovadoPor: usuarioNome }),
     })
-
-    if (res.ok) {
-      carregar()
-    } else {
-      const data = await res.json()
-      alert('Erro ao aprovar: ' + data.error)
-    }
+    if (res.ok) carregar()
+    else { const data = await res.json(); alert('Erro ao aprovar: ' + data.error) }
     setProcessando(null)
   }
 
   const rejeitar = async (id: string) => {
     setProcessando(id)
     await supabase.from('solicitacoes').update({ status: 'rejeitado' }).eq('id', id)
-
     await fetch('/api/logs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        usuario_nome: usuarioNome,
-        acao: `Rejeitou solicitação`,
-        tabela: 'solicitacoes',
-        registro_id: id,
-        dados_antes: { status: 'pendente' },
-        dados_depois: { status: 'rejeitado' },
-      }),
+      body: JSON.stringify({ usuario_nome: usuarioNome, acao: `Rejeitou solicitação`, tabela: 'solicitacoes', registro_id: id, dados_antes: { status: 'pendente' }, dados_depois: { status: 'rejeitado' } }),
     })
-
     carregar()
     setProcessando(null)
   }
@@ -93,9 +71,7 @@ export default function Solicitacoes() {
     const nascimento = new Date(dataNascimento + 'T12:00:00')
     let idade = hoje.getFullYear() - nascimento.getFullYear()
     const mes = hoje.getMonth() - nascimento.getMonth()
-    if (mes < 0 || (mes === 0 && hoje.getDate() < nascimento.getDate())) {
-      idade--
-    }
+    if (mes < 0 || (mes === 0 && hoje.getDate() < nascimento.getDate())) idade--
     return `${idade} anos`
   }
 
@@ -104,102 +80,115 @@ export default function Solicitacoes() {
     return new Date(data + 'T12:00:00').toLocaleDateString('pt-BR')
   }
 
-  const formatarDataHora = (data: string) => {
-    return new Date(data).toLocaleDateString('pt-BR', {
-      day: '2-digit', month: '2-digit', year: 'numeric',
-      hour: '2-digit', minute: '2-digit'
-    })
-  }
+  const formatarDataHora = (data: string) => new Date(data).toLocaleDateString('pt-BR', {
+    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+  })
+
+  const filtroStyle = (f: string): React.CSSProperties => ({
+    padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
+    fontSize: 13, fontWeight: 600,
+    background: filtro === f ? '#1e3a5f' : '#fff',
+    color: filtro === f ? '#fff' : '#475569',
+    border: filtro === f ? 'none' : '1px solid #e2e8f0',
+  } as React.CSSProperties)
 
   return (
-    <div className="p-4 md:p-6">
+    <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: '28px 40px' }} className="solic-wrap">
+      <style>{`@media (max-width: 768px) { .solic-wrap { padding: 16px !important; } .solic-grid { grid-template-columns: 1fr 1fr !important; } }`}</style>
 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-        <div>
-          <h2 className="text-xl font-bold text-gray-800">Solicitações de Acesso</h2>
-          <p className="text-sm text-gray-500">{solicitacoes.length} solicitações {filtro}s</p>
-        </div>
-        <div className="flex gap-2">
-          {['pendente', 'aprovado', 'rejeitado'].map(f => (
-            <button key={f} onClick={() => setFiltro(f)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                filtro === f
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-600 border hover:bg-gray-50'
-              }`}>
-              {f === 'pendente' ? '⏳ Pendentes' : f === 'aprovado' ? '✅ Aprovados' : '❌ Rejeitados'}
-            </button>
-          ))}
-        </div>
-      </div>
+      <div style={{ maxWidth: 1280, margin: '0 auto' }}>
 
-      {loading ? (
-        <div className="text-center py-12 text-gray-500">Carregando...</div>
-      ) : solicitacoes.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-2xl shadow">
-          <p className="text-4xl mb-3">📭</p>
-          <p className="text-gray-500">Nenhuma solicitação {filtro}</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, gap: 16, flexWrap: 'wrap' }}>
+          <div>
+            <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>Solicitações de Acesso</h1>
+            <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>{solicitacoes.length} solicitações {filtro}s</p>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {['pendente', 'aprovado', 'rejeitado'].map(f => (
+              <button key={f} onClick={() => setFiltro(f)} style={filtroStyle(f)}>
+                {f === 'pendente' ? '⏳ Pendentes' : f === 'aprovado' ? '✅ Aprovados' : '❌ Rejeitados'}
+              </button>
+            ))}
+          </div>
         </div>
-      ) : (
-        <div className="space-y-4">
-          {solicitacoes.map(s => (
-            <div key={s.id} className="bg-white rounded-2xl shadow p-6">
-              <div className="flex flex-col md:flex-row justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
-                      {s.nome.charAt(0)}
+
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: 48, color: '#64748b' }}>Carregando...</div>
+        ) : solicitacoes.length === 0 ? (
+          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: '48px 24px', textAlign: 'center' }}>
+            <p style={{ fontSize: 36, marginBottom: 12 }}>📭</p>
+            <p style={{ color: '#64748b', fontSize: 14 }}>Nenhuma solicitação {filtro}</p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {solicitacoes.map(s => (
+              <div key={s.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', padding: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                      <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#1e3a5f', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 16, flexShrink: 0 }}>
+                        {s.nome.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p style={{ fontWeight: 700, color: '#1e293b', fontSize: 15, margin: 0 }}>{s.nome}</p>
+                        <p style={{ fontSize: 11, color: '#94a3b8', margin: 0 }}>Solicitado em {formatarDataHora(s.created_at)}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-bold text-gray-800">{s.nome}</p>
-                      <p className="text-xs text-gray-400">Solicitado em {formatarDataHora(s.created_at)}</p>
+
+                    <div className="solic-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+                      <div>
+                        <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, margin: '0 0 4px' }}>TELEFONE</p>
+                        <p style={{ fontSize: 13, color: '#475569', margin: 0 }}>📱 {s.telefone || '—'}</p>
+                      </div>
+                      <div>
+                        <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, margin: '0 0 4px' }}>E-MAIL</p>
+                        <p style={{ fontSize: 13, color: '#475569', margin: 0 }}>✉️ {s.email || '—'}</p>
+                      </div>
+                      <div>
+                        <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, margin: '0 0 4px' }}>NASCIMENTO</p>
+                        <p style={{ fontSize: 13, color: '#475569', margin: 0 }}>🎂 {formatarData(s.data_nascimento)} — {calcularIdade(s.data_nascimento)}</p>
+                      </div>
+                      <div>
+                        <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, margin: '0 0 4px' }}>COMUM</p>
+                        <p style={{ fontSize: 13, color: '#475569', margin: 0 }}>⛪ {s.comum || '—'}</p>
+                      </div>
+                      <div>
+                        <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, margin: '0 0 4px' }}>CIDADE</p>
+                        <p style={{ fontSize: 13, color: '#475569', margin: 0 }}>📍 {s.cidade || '—'}</p>
+                      </div>
+                      <div>
+                        <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, margin: '0 0 4px' }}>INSTRUMENTO</p>
+                        <p style={{ fontSize: 13, color: '#475569', margin: 0 }}>🎵 {s.instrumento || '—'}</p>
+                      </div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                    <div>
-                      <p className="text-gray-400 text-xs">Telefone</p>
-                      <p className="text-gray-700 font-medium">📱 {s.telefone || '—'}</p>
+
+                  {filtro === 'pendente' && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, justifyContent: 'center' }}>
+                      <button onClick={() => aprovar(s.id)} disabled={processando === s.id} style={{
+                        padding: '9px 20px', borderRadius: 8, border: 'none',
+                        background: '#16a34a', color: '#fff', fontSize: 13, fontWeight: 600,
+                        cursor: processando === s.id ? 'not-allowed' : 'pointer',
+                        opacity: processando === s.id ? 0.5 : 1,
+                      }}>
+                        {processando === s.id ? 'Processando...' : '✅ Aprovar'}
+                      </button>
+                      <button onClick={() => rejeitar(s.id)} disabled={processando === s.id} style={{
+                        padding: '9px 20px', borderRadius: 8, border: '1px solid #fecaca',
+                        background: '#fff', color: '#dc2626', fontSize: 13, fontWeight: 600,
+                        cursor: processando === s.id ? 'not-allowed' : 'pointer',
+                        opacity: processando === s.id ? 0.5 : 1,
+                      }}>
+                        ❌ Rejeitar
+                      </button>
                     </div>
-                    <div>
-                      <p className="text-gray-400 text-xs">E-mail</p>
-                      <p className="text-gray-700 font-medium">✉️ {s.email || '—'}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400 text-xs">Nascimento / Idade</p>
-                      <p className="text-gray-700 font-medium">🎂 {formatarData(s.data_nascimento)} — {calcularIdade(s.data_nascimento)}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400 text-xs">Comum</p>
-                      <p className="text-gray-700 font-medium">⛪ {s.comum || '—'}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400 text-xs">Cidade</p>
-                      <p className="text-gray-700 font-medium">📍 {s.cidade || '—'}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400 text-xs">Instrumento</p>
-                      <p className="text-gray-700 font-medium">🎵 {s.instrumento || '—'}</p>
-                    </div>
-                  </div>
+                  )}
                 </div>
-
-                {filtro === 'pendente' && (
-                  <div className="flex md:flex-col gap-2 justify-end">
-                    <button onClick={() => aprovar(s.id)} disabled={processando === s.id}
-                      className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-600 transition disabled:opacity-50">
-                      {processando === s.id ? 'Processando...' : '✅ Aprovar'}
-                    </button>
-                    <button onClick={() => rejeitar(s.id)} disabled={processando === s.id}
-                      className="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-100 transition disabled:opacity-50">
-                      ❌ Rejeitar
-                    </button>
-                  </div>
-                )}
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
