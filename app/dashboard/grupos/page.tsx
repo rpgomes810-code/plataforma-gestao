@@ -73,13 +73,15 @@ export default function Grupos() {
                 }}
               />
               <button onClick={adicionar} disabled={loading} style={{
-                padding: '9px 18px', borderRadius: 8, border: 'none',
-                background: '#2563eb', color: '#fff',
-                fontSize: 13, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer',
+                padding: '9px 18px', borderRadius: 8,
+                border: '1px solid #2563eb',
+                background: '#fff', color: '#2563eb',
+                fontSize: 13, fontWeight: 600,
+                cursor: loading ? 'not-allowed' : 'pointer',
                 opacity: loading ? 0.5 : 1,
                 display: 'flex', alignItems: 'center', gap: 6,
               }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
                 </svg>
                 Adicionar

@@ -84,14 +84,6 @@ export default function Solicitacoes() {
     day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
   })
 
-  const filtroStyle = (f: string): React.CSSProperties => ({
-    padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
-    fontSize: 13, fontWeight: 600,
-    background: filtro === f ? '#1e3a5f' : '#fff',
-    color: filtro === f ? '#fff' : '#475569',
-    border: filtro === f ? 'none' : '1px solid #e2e8f0',
-  } as React.CSSProperties)
-
   return (
     <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: '28px 40px' }} className="solic-wrap">
       <style>{`@media (max-width: 768px) { .solic-wrap { padding: 16px !important; } .solic-grid { grid-template-columns: 1fr 1fr !important; } }`}</style>
@@ -105,8 +97,14 @@ export default function Solicitacoes() {
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             {['pendente', 'aprovado', 'rejeitado'].map(f => (
-              <button key={f} onClick={() => setFiltro(f)} style={filtroStyle(f)}>
-                {f === 'pendente' ? '⏳ Pendentes' : f === 'aprovado' ? '✅ Aprovados' : '❌ Rejeitados'}
+              <button key={f} onClick={() => setFiltro(f)} style={{
+                padding: '8px 16px', borderRadius: 8, cursor: 'pointer',
+                fontSize: 13, fontWeight: 600,
+                background: filtro === f ? '#1e3a5f' : '#fff',
+                color: filtro === f ? '#fff' : '#475569',
+                border: filtro === f ? '1px solid #1e3a5f' : '1px solid #e2e8f0',
+              }}>
+                {f === 'pendente' ? 'Pendentes' : f === 'aprovado' ? 'Aprovados' : 'Rejeitados'}
               </button>
             ))}
           </div>
