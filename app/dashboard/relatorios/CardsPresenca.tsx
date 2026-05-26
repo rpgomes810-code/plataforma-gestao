@@ -4,38 +4,46 @@ import { useState } from 'react'
 
 type Item = { nome: string; grupo: string; escala: string; data: string }
 
-function CardPresenca({ emoji, titulo, cor, items, corBg, corTexto }: {
-  emoji: string
+function CardPresenca({ titulo, items, bg, color }: {
   titulo: string
-  cor: string
   items: Item[]
-  corBg: string
-  corTexto: string
+  bg: string
+  color: string
 }) {
   const [aberto, setAberto] = useState(false)
-
   const formatarData = (data: string) => new Date(data + 'T12:00:00').toLocaleDateString('pt-BR')
 
   return (
-    <div className="bg-white rounded-2xl shadow overflow-hidden">
-      <button onClick={() => setAberto(!aberto)} className="w-full p-5 text-center hover:bg-gray-50 transition">
-        <p className={`text-3xl font-bold ${cor}`}>{items.length}</p>
-        <p className="text-sm text-gray-500 mt-1">{emoji} {titulo}</p>
-        <p className="text-xs text-gray-400 mt-1">{aberto ? '▲ Ocultar' : '▼ Ver detalhes'}</p>
+    <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
+      <button onClick={() => setAberto(!aberto)} style={{
+        width: '100%', padding: '20px', textAlign: 'center',
+        background: 'none', border: 'none', cursor: 'pointer',
+      }}>
+        <p style={{ fontSize: 32, fontWeight: 800, color, margin: 0 }}>{items.length}</p>
+        <p style={{ fontSize: 13, color: '#64748b', margin: '6px 0 4px' }}>{titulo}</p>
+        <p style={{ fontSize: 11, color: '#94a3b8', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            {aberto ? <polyline points="18 15 12 9 6 15"/> : <polyline points="6 9 12 15 18 9"/>}
+          </svg>
+          {aberto ? 'Ocultar' : 'Ver detalhes'}
+        </p>
       </button>
 
       {aberto && (
-        <div className="px-4 pb-4 space-y-2">
+        <div style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
           {items.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-2">Nenhuma ocorrência ✅</p>
+            <p style={{ fontSize: 13, color: '#94a3b8', textAlign: 'center', padding: '8px 0' }}>Nenhuma ocorrência ✅</p>
           ) : (
             items.map((item, i) => (
-              <div key={i} className={`flex items-center justify-between ${corBg} rounded-lg px-3 py-2`}>
+              <div key={i} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                background: bg, borderRadius: 8, padding: '10px 12px',
+              }}>
                 <div>
-                  <p className="text-sm font-semibold text-gray-800">{item.nome}</p>
-                  <p className="text-xs text-gray-500">{item.grupo} · {item.escala}</p>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: '#1e293b', margin: 0 }}>{item.nome}</p>
+                  <p style={{ fontSize: 11, color: '#64748b', margin: 0 }}>{item.grupo} · {item.escala}</p>
                 </div>
-                <span className={`text-xs font-semibold ${corTexto}`}>{formatarData(item.data)}</span>
+                <span style={{ fontSize: 11, fontWeight: 600, color, flexShrink: 0 }}>{formatarData(item.data)}</span>
               </div>
             ))
           )}
@@ -51,31 +59,11 @@ export default function CardsPresenca({ confirmouMasNaoFoi, naoConfirmouMasFoi, 
   faltou: Item[]
 }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-      <CardPresenca
-        emoji="⚠️"
-        titulo="Confirmou mas não foi"
-        cor="text-orange-500"
-        corBg="bg-orange-50"
-        corTexto="text-orange-600"
-        items={confirmouMasNaoFoi}
-      />
-      <CardPresenca
-        emoji="🔵"
-        titulo="Não confirmou mas foi"
-        cor="text-blue-500"
-        corBg="bg-blue-50"
-        corTexto="text-blue-600"
-        items={naoConfirmouMasFoi}
-      />
-      <CardPresenca
-        emoji="❌"
-        titulo="Não confirmou e não foi"
-        cor="text-red-500"
-        corBg="bg-red-50"
-        corTexto="text-red-600"
-        items={faltou}
-      />
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }} className="cards-presenca">
+      <style>{`@media (max-width: 768px) { .cards-presenca { grid-template-columns: 1fr !important; } }`}</style>
+      <CardPresenca titulo="Confirmou mas não foi" items={confirmouMasNaoFoi} bg="#fff7ed" color="#d97706" />
+      <CardPresenca titulo="Não confirmou mas foi" items={naoConfirmouMasFoi} bg="#eff6ff" color="#2563eb" />
+      <CardPresenca titulo="Não confirmou e não foi" items={faltou} bg="#fee2e2" color="#dc2626" />
     </div>
   )
 }

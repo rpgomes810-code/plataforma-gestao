@@ -51,28 +51,21 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
   }
 
   const { data: registros } = await supabase
-    .from('registros')
-    .select('*, hospitais(nome)')
-    .gte('data', dataInicio)
-    .lte('data', dataFim)
+    .from('registros').select('*, hospitais(nome)')
+    .gte('data', dataInicio).lte('data', dataFim)
     .order('data', { ascending: false })
 
   const { data: membros } = await supabase
-    .from('membros')
-    .select('*')
-    .order('nome', { ascending: true })
+    .from('membros').select('*').order('nome', { ascending: true })
 
   const { data: escalas } = await supabase
-    .from('escalas')
-    .select('id, data, grupo, local_texto, registrada')
-    .gte('data', dataInicio)
-    .lte('data', dataFim)
+    .from('escalas').select('id, data, grupo, local_texto, registrada')
+    .gte('data', dataInicio).lte('data', dataFim)
 
   const escalasIds = (escalas || []).map(e => e.id)
 
   const { data: confirmacoes } = escalasIds.length > 0 ? await supabase
-    .from('confirmacoes')
-    .select('*, membros!confirmacoes_membro_id_fkey(nome, grupo)')
+    .from('confirmacoes').select('*, membros!confirmacoes_membro_id_fkey(nome, grupo)')
     .in('escala_id', escalasIds) : { data: [] }
 
   type SituacaoMembro = { nome: string; grupo: string; escala: string; data: string }
@@ -84,7 +77,6 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
   ;(escalas || []).filter(e => e.registrada).forEach(escala => {
     const registro = (registros || []).find(r => r.escala_id === escala.id)
     if (!registro) return
-
     const membrosDoGrupo = (membros || []).filter(m => m.grupo === escala.grupo)
     const membrosPresentes = (registro.membros_presentes || '').split(',').map((n: string) => n.trim()).filter(Boolean)
 
@@ -93,11 +85,8 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
       const confirmou = confirmacao?.status === 'confirmado'
       const dispensado = confirmacao?.status === 'dispensado'
       const foi = membrosPresentes.includes(membro.nome)
-
       if (dispensado) return
-
       const item = { nome: membro.nome, grupo: membro.grupo || '—', escala: `${escala.grupo} — ${escala.local_texto}`, data: escala.data }
-
       if (confirmou && !foi) confirmouMasNaoFoi.push(item)
       else if (!confirmou && foi) naoConfirmouMasFoi.push(item)
       else if (!confirmou && !foi) faltou.push(item)
@@ -127,18 +116,13 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
   const presencaOrdenada = Object.entries(presenca).sort((a, b) => b[1] - a[1])
   const maisPresentes = presencaOrdenada.slice(0, 5)
   const menosPresentes = [...presencaOrdenada].reverse().slice(0, 5)
+  const maxPresenca = maisPresentes[0]?.[1] || 1
 
   const porGrupo: Record<string, number> = {}
-  ;(membros || []).forEach(m => {
-    const g = m.grupo || 'Sem grupo'
-    porGrupo[g] = (porGrupo[g] || 0) + 1
-  })
+  ;(membros || []).forEach(m => { const g = m.grupo || 'Sem grupo'; porGrupo[g] = (porGrupo[g] || 0) + 1 })
 
   const porTipo: Record<string, number> = {}
-  ;(membros || []).forEach(m => {
-    const t = m.tipo || 'Sem tipo'
-    porTipo[t] = (porTipo[t] || 0) + 1
-  })
+  ;(membros || []).forEach(m => { const t = m.tipo || 'Sem tipo'; porTipo[t] = (porTipo[t] || 0) + 1 })
 
   const novosNoPeriodo = (membros || []).filter(m => {
     if (!m.criado_em) return false
@@ -146,159 +130,178 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
     return d >= dataInicio && d <= dataFim
   })
 
-  const maxPresenca = maisPresentes[0]?.[1] || 1
-
   const nomePeriodo: Record<string, string> = {
-    mes_atual: 'Mês atual',
-    mes_anterior: 'Mês anterior',
-    bimestre: 'Último bimestre',
-    trimestre: 'Último trimestre',
-    semestre: 'Último semestre',
-    ano: 'Último ano',
-    personalizado: 'Período personalizado',
+    mes_atual: 'Mês atual', mes_anterior: 'Mês anterior', bimestre: 'Último bimestre',
+    trimestre: 'Último trimestre', semestre: 'Último semestre', ano: 'Último ano', personalizado: 'Período personalizado',
+  }
+
+  const cardStyle = {
+    background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.06)', padding: '20px 24px',
   }
 
   return (
-    <div className="p-4 md:p-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-        <div>
-          <h2 className="text-xl font-bold text-gray-800">Relatórios</h2>
-          <p className="text-sm text-gray-500">{nomePeriodo[periodo]} · {dataInicio} até {dataFim}</p>
-        </div>
-        <FiltroRelatorio periodoAtual={periodo} inicioAtual={params.inicio} fimAtual={params.fim} />
-      </div>
+    <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: '28px 40px' }} className="rel-wrap">
+      <style>{`
+        @media (max-width: 768px) {
+          .rel-wrap { padding: 16px !important; }
+          .rel-header { flex-direction: column !important; align-items: flex-start !important; }
+          .rel-cards { grid-template-columns: 1fr 1fr !important; }
+          .rel-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-        <div className="bg-white rounded-2xl shadow p-5 text-center">
-          <p className="text-3xl font-bold text-blue-600">{totalRegistros}</p>
-          <p className="text-sm text-gray-500 mt-1">Atendimentos</p>
-        </div>
-        <div className="bg-white rounded-2xl shadow p-5 text-center">
-          <p className="text-3xl font-bold text-green-600">{totalMembros}</p>
-          <p className="text-sm text-gray-500 mt-1">Membros</p>
-        </div>
-        <div className="bg-white rounded-2xl shadow p-5 text-center">
-          <p className="text-3xl font-bold text-purple-600">{totalHinos}</p>
-          <p className="text-sm text-gray-500 mt-1">Hinos executados</p>
-        </div>
-        <div className="bg-white rounded-2xl shadow p-5 text-center">
-          <p className="text-3xl font-bold text-yellow-600">{totalOracoes}</p>
-          <p className="text-sm text-gray-500 mt-1">Atendimentos c/ oração</p>
-        </div>
-      </div>
+      <div style={{ maxWidth: 1280, margin: '0 auto' }}>
 
-      <CardsPresenca
-        confirmouMasNaoFoi={confirmouMasNaoFoi}
-        naoConfirmouMasFoi={naoConfirmouMasFoi}
-        faltou={faltou}
-      />
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white rounded-2xl shadow p-6">
-          <h3 className="text-base font-bold text-gray-800 mb-4">🏥 Atendimentos por hospital</h3>
-          {hospitalOrdenado.length === 0 ? (
-            <p className="text-sm text-gray-400">Nenhum atendimento no período</p>
-          ) : (
-            <div className="space-y-3">
-              {hospitalOrdenado.map(([nome, total]) => (
-                <div key={nome}>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="font-medium text-gray-700">{nome}</span>
-                    <span className="text-gray-500">{total} atendimento{total > 1 ? 's' : ''}</span>
-                  </div>
-                  <div className="w-full bg-gray-100 rounded-full h-2">
-                    <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${(total / (hospitalOrdenado[0][1] || 1)) * 100}%` }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="bg-white rounded-2xl shadow p-6">
-          <h3 className="text-base font-bold text-gray-800 mb-4">🎻 Membros por grupo</h3>
-          <div className="space-y-3">
-            {Object.entries(porGrupo).map(([grupo, total]) => (
-              <div key={grupo} className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">{grupo}</span>
-                <span className="text-xs font-semibold px-2 py-1 rounded-full bg-blue-50 text-blue-700">{total} membro{total > 1 ? 's' : ''}</span>
-              </div>
-            ))}
+        {/* Header */}
+        <div className="rel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, gap: 16 }}>
+          <div>
+            <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>Relatórios</h1>
+            <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
+              {nomePeriodo[periodo]} · {dataInicio} até {dataFim}
+            </p>
           </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white rounded-2xl shadow p-6">
-          <h3 className="text-base font-bold text-gray-800 mb-4">⭐ Membros mais presentes</h3>
-          {maisPresentes.length === 0 ? (
-            <p className="text-sm text-gray-400">Nenhum atendimento no período</p>
-          ) : (
-            <div className="space-y-3">
-              {maisPresentes.map(([nome, total]) => (
-                <div key={nome}>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="font-medium text-gray-700">{nome}</span>
-                    <span className="text-gray-500">{total}x</span>
-                  </div>
-                  <div className="w-full bg-gray-100 rounded-full h-2">
-                    <div className="bg-green-500 h-2 rounded-full" style={{ width: `${(total / maxPresenca) * 100}%` }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <FiltroRelatorio periodoAtual={periodo} inicioAtual={params.inicio} fimAtual={params.fim} />
         </div>
 
-        <div className="bg-white rounded-2xl shadow p-6">
-          <h3 className="text-base font-bold text-gray-800 mb-4">⚠️ Membros menos frequentes</h3>
-          {menosPresentes.length === 0 ? (
-            <p className="text-sm text-gray-400">Nenhum atendimento no período</p>
-          ) : (
-            <div className="space-y-3">
-              {menosPresentes.map(([nome, total]) => (
-                <div key={nome}>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="font-medium text-gray-700">{nome}</span>
-                    <span className="text-gray-500">{total}x</span>
-                  </div>
-                  <div className="w-full bg-gray-100 rounded-full h-2">
-                    <div className="bg-yellow-400 h-2 rounded-full" style={{ width: `${(total / maxPresenca) * 100}%` }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-2xl shadow p-6">
-          <h3 className="text-base font-bold text-gray-800 mb-4">👥 Membros por tipo</h3>
-          <div className="space-y-3">
-            {Object.entries(porTipo).map(([tipo, total]) => (
-              <div key={tipo} className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">{tipo}</span>
-                <span className="text-xs font-semibold px-2 py-1 rounded-full bg-purple-50 text-purple-700">{total}</span>
+        {/* Cards resumo */}
+        <div className="rel-cards" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
+          {[
+            { valor: totalRegistros, label: 'Atendimentos', cor: '#1e40af', bg: '#eff6ff' },
+            { valor: totalMembros, label: 'Membros', cor: '#16a34a', bg: '#dcfce7' },
+            { valor: totalHinos, label: 'Hinos executados', cor: '#7c3aed', bg: '#f5f3ff' },
+            { valor: totalOracoes, label: 'Atend. c/ oração', cor: '#d97706', bg: '#fff7ed' },
+          ].map((c, i) => (
+            <div key={i} style={{ ...cardStyle, textAlign: 'center' }}>
+              <div style={{ width: 48, height: 48, borderRadius: '50%', background: c.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
+                <span style={{ fontSize: 22, fontWeight: 800, color: c.cor }}>{c.valor}</span>
               </div>
-            ))}
-          </div>
+              <p style={{ fontSize: 12, color: '#64748b', margin: 0, fontWeight: 600 }}>{c.label}</p>
+            </div>
+          ))}
         </div>
 
-        <div className="bg-white rounded-2xl shadow p-6">
-          <h3 className="text-base font-bold text-gray-800 mb-4">🆕 Novos membros no período</h3>
-          {novosNoPeriodo.length === 0 ? (
-            <p className="text-sm text-gray-400">Nenhum membro adicionado no período</p>
-          ) : (
-            <div className="space-y-2">
-              {novosNoPeriodo.map((m: any) => (
-                <div key={m.id} className="flex justify-between items-center text-sm">
-                  <span className="font-medium text-gray-700">{m.nome}</span>
-                  <span className="text-gray-400 text-xs">{m.criado_em ? new Date(m.criado_em).toLocaleDateString('pt-BR') : '—'}</span>
+        {/* Cards presença */}
+        <CardsPresenca
+          confirmouMasNaoFoi={confirmouMasNaoFoi}
+          naoConfirmouMasFoi={naoConfirmouMasFoi}
+          faltou={faltou}
+        />
+
+        {/* Gráficos */}
+        <div className="rel-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+
+          {/* Atendimentos por hospital */}
+          <div style={cardStyle}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: '0 0 16px' }}>🏥 Atendimentos por hospital</h3>
+            {hospitalOrdenado.length === 0 ? (
+              <p style={{ fontSize: 13, color: '#94a3b8' }}>Nenhum atendimento no período</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {hospitalOrdenado.map(([nome, total]) => (
+                  <div key={nome}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{nome}</span>
+                      <span style={{ fontSize: 12, color: '#64748b' }}>{total} atend.</span>
+                    </div>
+                    <div style={{ background: '#f1f5f9', borderRadius: 999, height: 6 }}>
+                      <div style={{ background: '#2563eb', height: 6, borderRadius: 999, width: `${(total / (hospitalOrdenado[0][1] || 1)) * 100}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Membros por grupo */}
+          <div style={cardStyle}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: '0 0 16px' }}>🎻 Membros por grupo</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {Object.entries(porGrupo).map(([grupo, total]) => (
+                <div key={grupo} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{grupo}</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999, background: '#eff6ff', color: '#1e40af' }}>
+                    {total} membro{total > 1 ? 's' : ''}
+                  </span>
                 </div>
               ))}
             </div>
-          )}
+          </div>
+
+          {/* Mais presentes */}
+          <div style={cardStyle}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: '0 0 16px' }}>⭐ Membros mais presentes</h3>
+            {maisPresentes.length === 0 ? (
+              <p style={{ fontSize: 13, color: '#94a3b8' }}>Nenhum atendimento no período</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {maisPresentes.map(([nome, total]) => (
+                  <div key={nome}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{nome}</span>
+                      <span style={{ fontSize: 12, color: '#64748b' }}>{total}x</span>
+                    </div>
+                    <div style={{ background: '#f1f5f9', borderRadius: 999, height: 6 }}>
+                      <div style={{ background: '#16a34a', height: 6, borderRadius: 999, width: `${(total / maxPresenca) * 100}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Menos presentes */}
+          <div style={cardStyle}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: '0 0 16px' }}>⚠️ Membros menos frequentes</h3>
+            {menosPresentes.length === 0 ? (
+              <p style={{ fontSize: 13, color: '#94a3b8' }}>Nenhum atendimento no período</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {menosPresentes.map(([nome, total]) => (
+                  <div key={nome}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{nome}</span>
+                      <span style={{ fontSize: 12, color: '#64748b' }}>{total}x</span>
+                    </div>
+                    <div style={{ background: '#f1f5f9', borderRadius: 999, height: 6 }}>
+                      <div style={{ background: '#d97706', height: 6, borderRadius: 999, width: `${(total / maxPresenca) * 100}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Membros por tipo */}
+          <div style={cardStyle}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: '0 0 16px' }}>👥 Membros por tipo</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {Object.entries(porTipo).map(([tipo, total]) => (
+                <div key={tipo} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{tipo}</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999, background: '#f5f3ff', color: '#7c3aed' }}>{total}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Novos membros */}
+          <div style={cardStyle}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: '0 0 16px' }}>🆕 Novos membros no período</h3>
+            {novosNoPeriodo.length === 0 ? (
+              <p style={{ fontSize: 13, color: '#94a3b8' }}>Nenhum membro adicionado no período</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {novosNoPeriodo.map((m: any) => (
+                  <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{m.nome}</span>
+                    <span style={{ fontSize: 11, color: '#94a3b8' }}>{m.criado_em ? new Date(m.criado_em).toLocaleDateString('pt-BR') : '—'}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
         </div>
       </div>
     </div>
