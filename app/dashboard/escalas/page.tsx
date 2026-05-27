@@ -93,6 +93,21 @@ export default function Escalas() {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
               </svg>
+              {podeCriar && (
+  <a href="/dashboard/escalas/gerar" style={{
+    padding: '9px 18px', borderRadius: 8,
+    border: '1px solid #e2e8f0',
+    background: '#fff', color: '#475569',
+    fontSize: 13, fontWeight: 600, textDecoration: 'none',
+    display: 'flex', alignItems: 'center', gap: 6,
+  }}>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+    </svg>
+    Gerar Escalas
+  </a>
+)}
               Nova Escala
             </a>
           )}
