@@ -8,7 +8,6 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-// IDs dos hospitais
 const HOSPITAIS = {
   CAMPO_LIMPO:    'bf83e35f-050a-4870-be9a-97ac4a67de61',
   ITUPEVA:        'e34f91de-8453-44a7-bcf7-b5d399724672',
@@ -25,17 +24,13 @@ const HOSPITAIS = {
   SANTA_CASA:     'c212314c-5334-48e1-bfb0-eb64508e89a0',
 }
 
-// Grupos fixos
-const GRUPOS_FIXOS = ['Grupo Campo Limpo', 'Grupo Louveira', 'Grupo Cabreuva', 'Grupo Caieiras', 'Grupo Psiquiatrico', 'Grupo Misto']
-
-// Grupos rotativos
+// Grupos rotativos (sem Grupo 7 e 13 que são fixos no PSA)
 const GRUPOS_ROTATIVOS = [
-  'Grupo 1','Grupo 2','Grupo 3','Grupo 4','Grupo 5','Grupo 6','Grupo 7',
-  'Grupo 8','Grupo 9','Grupo 10','Grupo 11','Grupo 12','Grupo 13','Grupo 14',
-  'Grupo 15','Grupo 16','Grupo Morato'
+  'Grupo 1','Grupo 2','Grupo 3','Grupo 4','Grupo 5','Grupo 6',
+  'Grupo 8','Grupo 9','Grupo 10','Grupo 11','Grupo 12',
+  'Grupo 14','Grupo 15','Grupo 16','Grupo Morato'
 ]
 
-// Hospitais rotativos
 const HOSPITAIS_ROTATIVOS = [
   { id: HOSPITAIS.PA_PONTE,      nome: 'PA Ponte Sao Joao',            hora: '08:30' },
   { id: HOSPITAIS.SAO_VICENTE_1, nome: 'Hospital Sao Vicente Setor 1', hora: '09:30' },
@@ -43,7 +38,6 @@ const HOSPITAIS_ROTATIVOS = [
   { id: HOSPITAIS.PA_CENTRAL,    nome: 'PA Central',                   hora: '09:00' },
 ]
 
-// Hospitais que entram no rodízio no 2º e 3º sábado
 const HORTOLANDIA_RETIRO = [
   { id: HOSPITAIS.PA_HORTOLANDIA, nome: 'PA Hortolandia', hora: '09:00' },
   { id: HOSPITAIS.PA_RETIRO,      nome: 'PA Retiro',      hora: '10:00' },
@@ -72,16 +66,11 @@ function getSemanaDoMes(data: Date): number {
 
 export async function POST(req: Request) {
   const { mes, ano } = await req.json()
-
   if (!mes || !ano) return NextResponse.json({ error: 'Mês e ano são obrigatórios' }, { status: 400 })
 
-  // Buscar histórico de escalas para calcular frequência
   const { data: historicoEscalas } = await supabaseAdmin
-    .from('escalas')
-    .select('grupo, hospital_id')
-    .not('hospital_id', 'is', null)
+    .from('escalas').select('grupo, hospital_id').not('hospital_id', 'is', null)
 
-  // Calcular frequência grupo x hospital
   const frequencia: Record<string, Record<string, number>> = {}
   GRUPOS_ROTATIVOS.forEach(g => { frequencia[g] = {} })
 
@@ -93,42 +82,22 @@ export async function POST(req: Request) {
 
   const sabados = getSabadosDoMes(ano, mes)
   const escalasParaCriar: any[] = []
-
-  // Controle de quem já foi escalado neste mês por hospital rotativo
   const gruposUsadosMes: Record<string, Set<string>> = {}
   HOSPITAIS_ROTATIVOS.forEach(h => { gruposUsadosMes[h.id] = new Set() })
   gruposUsadosMes[HOSPITAIS.PA_HORTOLANDIA] = new Set()
   gruposUsadosMes[HOSPITAIS.PA_RETIRO] = new Set()
 
-  // Para cada sábado, controle de quem já foi escalado naquele dia
-  const gruposUsadosDia: Record<string, Set<string>> = {}
-
   const escolherGrupo = (hospitalId: string, gruposDisponiveis: string[], jaUsadosDia: Set<string>): string | null => {
-    // Filtra grupos não usados hoje e não usados neste mês neste hospital
     const candidatos = gruposDisponiveis.filter(g =>
-      !jaUsadosDia.has(g) &&
-      !gruposUsadosMes[hospitalId]?.has(g)
+      !jaUsadosDia.has(g) && !gruposUsadosMes[hospitalId]?.has(g)
     )
 
-    if (candidatos.length === 0) {
-      // Se todos já foram, usa só quem não foi hoje
-      const fallback = gruposDisponiveis.filter(g => !jaUsadosDia.has(g))
-      if (fallback.length === 0) return null
-      return fallback[Math.floor(Math.random() * fallback.length)]
-    }
+    const pool = candidatos.length > 0 ? candidatos : gruposDisponiveis.filter(g => !jaUsadosDia.has(g))
+    if (pool.length === 0) return null
 
-    // Ordena por menor frequência neste hospital
-    candidatos.sort((a, b) => {
-      const fa = frequencia[a]?.[hospitalId] || 0
-      const fb = frequencia[b]?.[hospitalId] || 0
-      return fa - fb
-    })
-
-    // Pega os que têm menor frequência (pode ter empate)
-    const menorFreq = frequencia[candidatos[0]]?.[hospitalId] || 0
-    const empatados = candidatos.filter(g => (frequencia[g]?.[hospitalId] || 0) === menorFreq)
-
-    // Sorteia entre empatados
+    pool.sort((a, b) => (frequencia[a]?.[hospitalId] || 0) - (frequencia[b]?.[hospitalId] || 0))
+    const menorFreq = frequencia[pool[0]]?.[hospitalId] || 0
+    const empatados = pool.filter(g => (frequencia[g]?.[hospitalId] || 0) === menorFreq)
     return empatados[Math.floor(Math.random() * empatados.length)]
   }
 
@@ -136,122 +105,77 @@ export async function POST(req: Request) {
     const semana = getSemanaDoMes(sabado)
     const dataStr = sabado.toISOString().split('T')[0]
     const jaUsadosDia: Set<string> = new Set()
-    gruposUsadosDia[dataStr] = jaUsadosDia
 
     // === FIXOS TODO SÁBADO ===
 
     // Campo Limpo
-    escalasParaCriar.push({
-      data: dataStr, grupo: 'Grupo Campo Limpo',
-      hospital_id: HOSPITAIS.CAMPO_LIMPO,
-      local_texto: 'Hospital Campo Limpo Paulista',
-      hora_inicio: '09:00', confirmacao_aberta: false, atendentes: '',
-    })
+    escalasParaCriar.push({ data: dataStr, grupo: 'Grupo Campo Limpo', hospital_id: HOSPITAIS.CAMPO_LIMPO, local_texto: 'Hospital Campo Limpo Paulista', hora_inicio: '09:00', confirmacao_aberta: false, atendentes: '' })
     jaUsadosDia.add('Grupo Campo Limpo')
 
-    // Louveira - 2 escalas no mesmo dia
-    escalasParaCriar.push({
-      data: dataStr, grupo: 'Grupo Louveira',
-      hospital_id: HOSPITAIS.SANTA_CASA,
-      local_texto: 'Santa Casa de Louveira',
-      hora_inicio: '09:00', confirmacao_aberta: false, atendentes: '',
-    })
-    escalasParaCriar.push({
-      data: dataStr, grupo: 'Grupo Louveira',
-      hospital_id: HOSPITAIS.SANTO_ANTONIO,
-      local_texto: 'Hospital Santo Antonio',
-      hora_inicio: '10:30', confirmacao_aberta: false, atendentes: '',
-    })
+    // Louveira
+    escalasParaCriar.push({ data: dataStr, grupo: 'Grupo Louveira', hospital_id: HOSPITAIS.SANTA_CASA, local_texto: 'Santa Casa de Louveira', hora_inicio: '09:00', confirmacao_aberta: false, atendentes: '' })
+    escalasParaCriar.push({ data: dataStr, grupo: 'Grupo Louveira', hospital_id: HOSPITAIS.SANTO_ANTONIO, local_texto: 'Hospital Santo Antonio', hora_inicio: '10:30', confirmacao_aberta: false, atendentes: '' })
     jaUsadosDia.add('Grupo Louveira')
 
     // Cabreuva - Itupeva todo sábado
-    escalasParaCriar.push({
-      data: dataStr, grupo: 'Grupo Cabreuva',
-      hospital_id: HOSPITAIS.ITUPEVA,
-      local_texto: 'Hospital Itupeva',
-      hora_inicio: '13:00', confirmacao_aberta: false, atendentes: '',
-    })
+    escalasParaCriar.push({ data: dataStr, grupo: 'Grupo Cabreuva', hospital_id: HOSPITAIS.ITUPEVA, local_texto: 'Hospital Itupeva', hora_inicio: '13:00', confirmacao_aberta: false, atendentes: '' })
 
-    // Cabreuva - Hortolandia + Retiro só no 1º e 4º sábado
+    // Cabreuva - Hortolandia + Retiro no 1º e 4º sábado
     if (semana === 1 || semana === 4) {
-      escalasParaCriar.push({
-        data: dataStr, grupo: 'Grupo Cabreuva',
-        hospital_id: HOSPITAIS.PA_HORTOLANDIA,
-        local_texto: 'PA Hortolandia',
-        hora_inicio: '09:00', confirmacao_aberta: false, atendentes: '',
-      })
-      escalasParaCriar.push({
-        data: dataStr, grupo: 'Grupo Cabreuva',
-        hospital_id: HOSPITAIS.PA_RETIRO,
-        local_texto: 'PA Retiro',
-        hora_inicio: '10:00', confirmacao_aberta: false, atendentes: '',
-      })
+      escalasParaCriar.push({ data: dataStr, grupo: 'Grupo Cabreuva', hospital_id: HOSPITAIS.PA_HORTOLANDIA, local_texto: 'PA Hortolandia', hora_inicio: '09:00', confirmacao_aberta: false, atendentes: '' })
+      escalasParaCriar.push({ data: dataStr, grupo: 'Grupo Cabreuva', hospital_id: HOSPITAIS.PA_RETIRO, local_texto: 'PA Retiro', hora_inicio: '10:00', confirmacao_aberta: false, atendentes: '' })
     }
     jaUsadosDia.add('Grupo Cabreuva')
 
     // Psiquiatrico
-    escalasParaCriar.push({
-      data: dataStr, grupo: 'Grupo Psiquiatrico',
-      hospital_id: HOSPITAIS.PSIQUIATRICO,
-      local_texto: 'Hospital Psiquiatrico',
-      hora_inicio: '10:00', confirmacao_aberta: false, atendentes: '',
-    })
+    escalasParaCriar.push({ data: dataStr, grupo: 'Grupo Psiquiatrico', hospital_id: HOSPITAIS.PSIQUIATRICO, local_texto: 'Hospital Psiquiatrico', hora_inicio: '10:00', confirmacao_aberta: false, atendentes: '' })
     jaUsadosDia.add('Grupo Psiquiatrico')
 
-    // Caieiras
-    escalasParaCriar.push({
-      data: dataStr, grupo: 'Grupo Caieiras',
-      hospital_id: HOSPITAIS.PSA_CAIEIRAS,
-      local_texto: 'PSA Dr Ideir Hamamoto',
-      hora_inicio: '14:00', confirmacao_aberta: false, atendentes: '',
-    })
-    jaUsadosDia.add('Grupo Caieiras')
+    // PSA Caieiras - Grupo 13 no 1º sábado, Grupo 7 no 4º sábado
+    if (semana === 1) {
+      escalasParaCriar.push({ data: dataStr, grupo: 'Grupo 13', hospital_id: HOSPITAIS.PSA_CAIEIRAS, local_texto: 'PSA Dr Ideir Hamamoto', hora_inicio: '14:00', confirmacao_aberta: false, atendentes: '' })
+      jaUsadosDia.add('Grupo 13')
+    } else if (semana === 4) {
+      escalasParaCriar.push({ data: dataStr, grupo: 'Grupo 7', hospital_id: HOSPITAIS.PSA_CAIEIRAS, local_texto: 'PSA Dr Ideir Hamamoto', hora_inicio: '14:00', confirmacao_aberta: false, atendentes: '' })
+      jaUsadosDia.add('Grupo 7')
+    }
 
     // Grupo Misto - só no 2º sábado
     if (semana === 2) {
-      escalasParaCriar.push({
-        data: dataStr, grupo: 'Grupo Misto',
-        hospital_id: HOSPITAIS.PITANGUEIRAS,
-        local_texto: 'Hospital Pitangueiras',
-        hora_inicio: '13:30', confirmacao_aberta: false, atendentes: '',
-      })
+      escalasParaCriar.push({ data: dataStr, grupo: 'Grupo Misto', hospital_id: HOSPITAIS.PITANGUEIRAS, local_texto: 'Hospital Pitangueiras', hora_inicio: '13:30', confirmacao_aberta: false, atendentes: '' })
       jaUsadosDia.add('Grupo Misto')
     }
 
     // === ROTATIVOS ===
     const hospitaisRotativosDoDia = [...HOSPITAIS_ROTATIVOS]
-
-    // No 2º e 3º sábado, Hortolandia e Retiro entram no rodízio
-    if (semana === 2 || semana === 3) {
-      hospitaisRotativosDoDia.push(...HORTOLANDIA_RETIRO)
-    }
+    if (semana === 2 || semana === 3) hospitaisRotativosDoDia.push(...HORTOLANDIA_RETIRO)
 
     for (const hospital of hospitaisRotativosDoDia) {
       const grupo = escolherGrupo(hospital.id, GRUPOS_ROTATIVOS, jaUsadosDia)
       if (!grupo) continue
 
-      escalasParaCriar.push({
-        data: dataStr, grupo,
-        hospital_id: hospital.id,
-        local_texto: hospital.nome,
-        hora_inicio: hospital.hora,
-        confirmacao_aberta: false, atendentes: '',
-      })
-
+      escalasParaCriar.push({ data: dataStr, grupo, hospital_id: hospital.id, local_texto: hospital.nome, hora_inicio: hospital.hora, confirmacao_aberta: false, atendentes: '' })
       jaUsadosDia.add(grupo)
       if (!gruposUsadosMes[hospital.id]) gruposUsadosMes[hospital.id] = new Set()
       gruposUsadosMes[hospital.id].add(grupo)
-
-      // Atualiza frequência para próximas iterações
       if (!frequencia[grupo]) frequencia[grupo] = {}
       frequencia[grupo][hospital.id] = (frequencia[grupo][hospital.id] || 0) + 1
     }
   }
 
-  // Salvar no banco
   const { error } = await supabaseAdmin.from('escalas').insert(escalasParaCriar)
-
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-
   return NextResponse.json({ success: true, total: escalasParaCriar.length })
+}
+
+export async function DELETE(req: Request) {
+  const { mes, ano } = await req.json()
+  if (!mes || !ano) return NextResponse.json({ error: 'Mês e ano são obrigatórios' }, { status: 400 })
+
+  const inicio = `${ano}-${String(mes).padStart(2, '0')}-01`
+  const fim = new Date(ano, mes, 0).toISOString().split('T')[0]
+
+  const { error } = await supabaseAdmin.from('escalas').delete().gte('data', inicio).lte('data', fim)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ success: true })
 }
