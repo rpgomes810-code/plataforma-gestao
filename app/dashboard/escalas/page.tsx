@@ -90,7 +90,11 @@ export default function Escalas() {
       method: 'PUT', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ confirmacao_aberta: !aberta }),
     })
-    if (!aberta) await fetch('/api/push/notificar', { method: 'POST' })
+    if (!aberta) await fetch('/api/push/notificar', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ escala_id: id }),
+})
     setEscalas(prev => prev.map(e => e.id === id ? { ...e, confirmacao_aberta: !aberta } : e))
     setLiberando(null)
   }

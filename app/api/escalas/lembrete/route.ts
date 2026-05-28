@@ -25,17 +25,29 @@ export async function POST() {
     return NextResponse.json({ error: 'Nenhuma escala liberada para o próximo sábado' }, { status: 400 })
 
   const gruposEscalados = [...new Set(escalas.map((e: any) => e.grupo))]
+  const atendentesNomes = [...new Set(escalas.map((e: any) => e.atendentes).filter(Boolean))]
 
-  const { data: membros } = await supabaseAdmin
+  // Busca membros dos grupos
+  const { data: membrosGrupo } = await supabaseAdmin
     .from('membros')
     .select('id, nome, grupo')
     .in('grupo', gruposEscalados)
     .eq('status', 'Ativo')
 
-  if (!membros || membros.length === 0)
+  // Busca atendentes pelo nome
+  const { data: membrosAtendente } = atendentesNomes.length > 0
+    ? await supabaseAdmin.from('membros').select('id, nome, grupo').in('nome', atendentesNomes).eq('status', 'Ativo')
+    : { data: [] }
+
+  const todosMembros = [
+    ...(membrosGrupo || []),
+    ...(membrosAtendente || []).filter((a: any) => !membrosGrupo?.some((m: any) => m.id === a.id)),
+  ]
+
+  if (todosMembros.length === 0)
     return NextResponse.json({ error: 'Nenhum membro encontrado nos grupos escalados' }, { status: 400 })
 
-  const membrosIds = membros.map((m: any) => m.id)
+  const membrosIds = todosMembros.map((m: any) => m.id)
   const { data: subscriptions } = await supabaseAdmin
     .from('push_subscriptions')
     .select('*')
@@ -55,17 +67,22 @@ export async function POST() {
 
   let enviados = 0
   for (const sub of subscriptions) {
-    const membro = membros.find((m: any) => m.id === sub.membro_id)
+    const membro = todosMembros.find((m: any) => m.id === sub.membro_id)
     if (!membro) continue
 
+    // Verifica se é atendente
+    const escalasComoAtendente = escalas.filter((e: any) => e.atendentes === membro.nome)
     const escalasDoGrupo = escalas.filter((e: any) => e.grupo === membro.grupo)
-    if (escalasDoGrupo.length === 0) continue
+    const escalasRelevantes = [...escalasComoAtendente, ...escalasDoGrupo.filter((e: any) => !escalasComoAtendente.some((ea: any) => ea.id === e.id))]
 
-    const locais = escalasDoGrupo.map((e: any) => `${e.local_texto} às ${e.hora_inicio}`).join(', ')
+    if (escalasRelevantes.length === 0) continue
+
+    const locais = escalasRelevantes.map((e: any) => `${e.local_texto} às ${e.hora_inicio}`).join(', ')
+    const ehAtendente = escalasComoAtendente.length > 0
 
     const payload = JSON.stringify({
       title: '🔔 Lembrete de Escala',
-      body: `Você está escalado para ${locais} no sábado ${dataFormatada}!`,
+      body: `${ehAtendente ? 'Você é o atendente em' : 'Você está escalado para'} ${locais} no sábado ${dataFormatada}!`,
       url: '/dashboard/confirmacoes',
     })
 
