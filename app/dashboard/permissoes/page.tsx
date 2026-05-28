@@ -32,8 +32,8 @@ export default function Permissoes() {
     fetch('/api/permissoes').then(r => r.json()).then(data => {
       if (Array.isArray(data)) {
         setPermissoes(data)
-        // Abre o primeiro por padrão
-        if (data.length > 0) setAbertos({ [data[0].perfil]: true })
+    
+      
       }
     })
   }, [])
