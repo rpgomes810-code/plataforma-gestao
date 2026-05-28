@@ -27,6 +27,7 @@ export default function Escalas() {
   const [permissoes, setPermissoes] = useState<any>(null)
   const [salvandoAtendente, setSalvandoAtendente] = useState<string | null>(null)
   const [liberando, setLiberando] = useState<string | null>(null)
+  const [enviandoLembrete, setEnviandoLembrete] = useState(false)
 
   useEffect(() => {
     fetch('/api/membros/eu').then(res => res.json()).then(data => setPermissoes(data.permissoes || {})).catch(() => setPermissoes({}))
@@ -103,6 +104,16 @@ export default function Escalas() {
     carregarEscalas()
   }
 
+  const enviarLembrete = async () => {
+    if (!confirm('Enviar lembrete para todos os membros escalados no próximo sábado?')) return
+    setEnviandoLembrete(true)
+    const res = await fetch('/api/escalas/lembrete', { method: 'POST' })
+    const data = await res.json()
+    if (res.ok) alert(`✅ Lembrete enviado para ${data.enviados} dispositivo(s)!`)
+    else alert('❌ ' + (data.error || 'Erro ao enviar lembrete'))
+    setEnviandoLembrete(false)
+  }
+
   const datasPorDia = escalas.reduce((acc, escala) => {
     if (!acc[escala.data]) acc[escala.data] = []
     acc[escala.data].push(escala)
@@ -116,6 +127,8 @@ export default function Escalas() {
   const mesAtual = hoje.getMonth() + 1
   const anoAtual = hoje.getFullYear()
   const isMesPassado = ano < anoAtual || (ano === anoAtual && mes < mesAtual)
+  const diasParaSabado = (6 - hoje.getDay() + 7) % 7 || 7
+  const estaНаSemanaDeSabado = diasParaSabado <= 6
 
   const selectStyle: React.CSSProperties = {
     padding: '5px 28px 5px 10px', borderRadius: 7,
@@ -164,6 +177,22 @@ export default function Escalas() {
                   <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
                 </svg>
                 Excluir mês
+              </button>
+            )}
+
+            {podeCriar && estaНаSemanaDeSabado && (
+              <button onClick={enviarLembrete} disabled={enviandoLembrete} style={{
+                padding: '8px 16px', borderRadius: 8, border: '1px solid #7c3aed',
+                background: '#fff', color: '#7c3aed', fontSize: 13, fontWeight: 600,
+                cursor: enviandoLembrete ? 'not-allowed' : 'pointer',
+                display: 'flex', alignItems: 'center', gap: 6,
+                opacity: enviandoLembrete ? 0.5 : 1,
+              }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                {enviandoLembrete ? 'Enviando...' : 'Enviar lembrete'}
               </button>
             )}
 
