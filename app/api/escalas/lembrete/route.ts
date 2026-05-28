@@ -87,7 +87,7 @@ const dataStr = proximoSabado.toISOString().split('T')[0]
     })
 
     try {
-      await webpush.default.sendNotification(JSON.parse(sub.subscription), payload)
+      await webpush.default.sendNotification(sub.subscription, payload)
       enviados++
     } catch (err) {
       console.error('Erro ao enviar notificação:', err)
