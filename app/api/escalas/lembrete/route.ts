@@ -9,11 +9,11 @@ const supabaseAdmin = createClient(
 )
 
 export async function POST() {
-  const hoje = new Date()
-  const diasParaSabado = (6 - hoje.getDay() + 7) % 7 || 7
-  const proximoSabado = new Date(hoje)
-  proximoSabado.setDate(hoje.getDate() + diasParaSabado)
-  const dataStr = proximoSabado.toISOString().split('T')[0]
+ const hoje = new Date()
+const diasParaSabado = (6 - hoje.getDay() + 7) % 7
+const proximoSabado = new Date(hoje)
+proximoSabado.setDate(hoje.getDate() + diasParaSabado)
+const dataStr = proximoSabado.toISOString().split('T')[0]
 
   const { data: escalas } = await supabaseAdmin
     .from('escalas')
