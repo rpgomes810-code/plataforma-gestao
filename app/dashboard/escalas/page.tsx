@@ -30,7 +30,6 @@ export default function Escalas() {
 
   useEffect(() => {
     fetch('/api/membros/eu').then(res => res.json()).then(data => setPermissoes(data.permissoes || {})).catch(() => setPermissoes({}))
-
     fetch('/api/membros').then(r => r.json()).then(data => {
       if (Array.isArray(data)) setAtendentes(data.filter((m: any) => m.perfil === 'Atendente' && m.status === 'Ativo'))
     })
@@ -78,6 +77,13 @@ export default function Escalas() {
   }
 
   const liberarEscala = async (id: string, aberta: boolean) => {
+    if (!aberta) {
+      const escala = escalas.find(e => e.id === id)
+      if (!escala?.atendentes) {
+        alert('Defina o atendente antes de liberar a escala!')
+        return
+      }
+    }
     setLiberando(id)
     await fetch(`/api/escalas/${id}`, {
       method: 'PUT', headers: { 'Content-Type': 'application/json' },
