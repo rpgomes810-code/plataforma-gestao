@@ -11,12 +11,6 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT!,
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-)
-
 async function getUsuarioLogado() {
   try {
     const cookieStore = await cookies()
@@ -86,6 +80,12 @@ export async function POST(req: NextRequest) {
           .from('push_subscriptions')
           .select('subscription')
           .in('membro_id', ids)
+
+        webpush.setVapidDetails(
+          process.env.VAPID_SUBJECT!,
+          process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+          process.env.VAPID_PRIVATE_KEY!
+        )
 
         const payload = JSON.stringify({
           title: `📢 Novo comunicado: ${titulo}`,

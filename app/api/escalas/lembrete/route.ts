@@ -9,11 +9,11 @@ const supabaseAdmin = createClient(
 )
 
 export async function POST() {
- const hoje = new Date()
-const diasParaSabado = (6 - hoje.getDay() + 7) % 7
-const proximoSabado = new Date(hoje)
-proximoSabado.setDate(hoje.getDate() + diasParaSabado)
-const dataStr = proximoSabado.toISOString().split('T')[0]
+  const hoje = new Date()
+  const diasParaSabado = (6 - hoje.getDay() + 7) % 7
+  const proximoSabado = new Date(hoje)
+  proximoSabado.setDate(hoje.getDate() + diasParaSabado)
+  const dataStr = proximoSabado.toISOString().split('T')[0]
 
   const { data: escalas } = await supabaseAdmin
     .from('escalas')
@@ -27,14 +27,12 @@ const dataStr = proximoSabado.toISOString().split('T')[0]
   const gruposEscalados = [...new Set(escalas.map((e: any) => e.grupo))]
   const atendentesNomes = [...new Set(escalas.map((e: any) => e.atendentes).filter(Boolean))]
 
-  // Busca membros dos grupos
   const { data: membrosGrupo } = await supabaseAdmin
     .from('membros')
     .select('id, nome, grupo')
     .in('grupo', gruposEscalados)
     .eq('status', 'Ativo')
 
-  // Busca atendentes pelo nome
   const { data: membrosAtendente } = atendentesNomes.length > 0
     ? await supabaseAdmin.from('membros').select('id, nome, grupo').in('nome', atendentesNomes).eq('status', 'Ativo')
     : { data: [] }
@@ -60,7 +58,7 @@ const dataStr = proximoSabado.toISOString().split('T')[0]
 
   const webpush = await import('web-push')
   webpush.default.setVapidDetails(
-    'mailto:darpe@darpe.com',
+    process.env.VAPID_SUBJECT!,
     process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
     process.env.VAPID_PRIVATE_KEY!
   )
@@ -70,7 +68,6 @@ const dataStr = proximoSabado.toISOString().split('T')[0]
     const membro = todosMembros.find((m: any) => m.id === sub.membro_id)
     if (!membro) continue
 
-    // Verifica se é atendente
     const escalasComoAtendente = escalas.filter((e: any) => e.atendentes === membro.nome)
     const escalasDoGrupo = escalas.filter((e: any) => e.grupo === membro.grupo)
     const escalasRelevantes = [...escalasComoAtendente, ...escalasDoGrupo.filter((e: any) => !escalasComoAtendente.some((ea: any) => ea.id === e.id))]

@@ -7,20 +7,19 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT!,
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-)
-
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}))
   const { escala_id } = body
 
+  webpush.setVapidDetails(
+    process.env.VAPID_SUBJECT!,
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+    process.env.VAPID_PRIVATE_KEY!
+  )
+
   let assinaturas: any[] = []
 
   if (escala_id) {
-    // Busca a escala para saber o grupo e atendente
     const { data: escala } = await supabase
       .from('escalas')
       .select('*')
@@ -29,14 +28,12 @@ export async function POST(req: Request) {
 
     if (!escala) return NextResponse.json({ ok: false, erro: 'Escala não encontrada' })
 
-    // Busca membros do grupo
     const { data: membrosGrupo } = await supabase
       .from('membros')
       .select('id, nome')
       .eq('grupo', escala.grupo)
       .eq('status', 'Ativo')
 
-    // Busca o atendente pelo nome
     const { data: membrosAtendente } = await supabase
       .from('membros')
       .select('id, nome')
@@ -47,7 +44,6 @@ export async function POST(req: Request) {
       ...(membrosGrupo || []).map((m: any) => m.id),
       ...(membrosAtendente || []).map((m: any) => m.id),
     ]
-
     const idsUnicos = [...new Set(todosIds)]
 
     if (idsUnicos.length === 0) return NextResponse.json({ ok: true, enviados: 0 })
@@ -79,7 +75,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, enviados })
   }
 
-  // Sem escala_id: envia para todos (comportamento legado)
   const { data: todasAssinaturas } = await supabase.from('push_subscriptions').select('*')
   assinaturas = todasAssinaturas || []
 
