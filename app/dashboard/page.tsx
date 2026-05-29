@@ -247,9 +247,9 @@ export default function Dashboard() {
                   </span>
                 ))}
               </p>
-              <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 12, margin: 0, fontStyle: 'italic' }}>
-                "Que o Senhor te abençoe e te guarde; que o Senhor faça resplandecer o Seu rosto sobre ti." — Números 6:24
-              </p>
+              <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, margin: 0, fontStyle: 'italic' }}>
+  "Que este dia seja tão especial quanto você é para nós! Em nome de toda a equipe DARPE, desejamos a você um feliz aniversário cheio das bênçãos de Deus. Que o Senhor te guarde e te prospere em mais um ano de vida!"
+</p>
             </div>
           </div>
         )}
