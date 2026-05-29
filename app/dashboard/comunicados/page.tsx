@@ -181,7 +181,7 @@ export default function Comunicados() {
         {mostrarForm && (podeCriar || podeEditar) && (
           <div style={{ background: '#fff', borderRadius: 12, border: `1px solid ${tipoForm === 'aviso' ? '#fde68a' : '#e2e8f0'}`, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', padding: '24px 28px', marginBottom: 20 }}>
             <h3 style={{ fontSize: 15, fontWeight: 700, color: '#1e293b', margin: '0 0 20px', display: 'flex', alignItems: 'center', gap: 8 }}>
-              {tipoForm === 'aviso' ? '⚠️ Novo Aviso para o Dashboard' : editando ? 'Editar Comunicado' : 'Novo Comunicado'}
+              {tipoForm === 'aviso' ? '⚠️ ATENÇÃO : ESSE AVISO SERA VISUALIZADO POR TODOS' : editando ? 'Editar Comunicado' : 'Novo Comunicado'}
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
