@@ -1,3 +1,55 @@
+import { createClient } from '@supabase/supabase-js'
+import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
+import { createServerClient } from '@supabase/ssr'
+import webpush from 'web-push'
+
+export const dynamic = 'force-dynamic'
+
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
+
+webpush.setVapidDetails(
+  process.env.VAPID_SUBJECT!,
+  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+  process.env.VAPID_PRIVATE_KEY!
+)
+
+async function getUsuarioLogado() {
+  try {
+    const cookieStore = await cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { cookies: { getAll() { return cookieStore.getAll() }, setAll() {} } }
+    )
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return 'Desconhecido'
+    const { data } = await supabaseAdmin.from('membros').select('nome').eq('user_id', user.id).single()
+    return data?.nome || 'Desconhecido'
+  } catch { return 'Desconhecido' }
+}
+
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url)
+  const busca = searchParams.get('busca') || ''
+
+  let query = supabaseAdmin
+    .from('comunicados')
+    .select('*, comunicados_leituras(membro_id)')
+    .order('criado_em', { ascending: false })
+
+  if (busca) {
+    query = query.or(`titulo.ilike.%${busca}%,conteudo.ilike.%${busca}%`)
+  }
+
+  const { data, error } = await query
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data)
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
@@ -51,4 +103,21 @@ export async function POST(req: NextRequest) {
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
+}
+
+export async function PUT(req: NextRequest) {
+  const { id, titulo, conteudo, perfis_destino, fixar_dashboard, dashboard_expira_em } = await req.json()
+  const { error } = await supabaseAdmin
+    .from('comunicados')
+    .update({ titulo, conteudo, perfis_destino, fixar_dashboard: fixar_dashboard || false, dashboard_expira_em: dashboard_expira_em || null })
+    .eq('id', id)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ ok: true })
+}
+
+export async function DELETE(req: NextRequest) {
+  const { id } = await req.json()
+  const { error } = await supabaseAdmin.from('comunicados').delete().eq('id', id)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ ok: true })
 }
