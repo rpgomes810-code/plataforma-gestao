@@ -15,10 +15,12 @@ export default function Comunicados() {
   const [membros, setMembros] = useState<any[]>([])
   const [busca, setBusca] = useState('')
   const [mostrarForm, setMostrarForm] = useState(false)
+  const [tipoForm, setTipoForm] = useState<'comunicado' | 'aviso'>('comunicado')
   const [editando, setEditando] = useState<any>(null)
   const [titulo, setTitulo] = useState('')
   const [conteudo, setConteudo] = useState('')
   const [perfisSelecionados, setPerfisSelecionados] = useState<string[]>([])
+  const [diasAviso, setDiasAviso] = useState(7)
   const [salvando, setSalvando] = useState(false)
   const [loading, setLoading] = useState(true)
   const [expandido, setExpandido] = useState<string | null>(null)
@@ -42,9 +44,20 @@ export default function Comunicados() {
   const podeExcluir = permissoes?.comunicados?.excluir === true
   const isGestor = podeCriar || podeEditar || podeExcluir
 
+  const abrirNovoAviso = () => {
+    setEditando(null); setTitulo(''); setConteudo(''); setPerfisSelecionados([]); setDiasAviso(7)
+    setTipoForm('aviso'); setMostrarForm(true)
+  }
+
+  const abrirNovoComunicado = () => {
+    setEditando(null); setTitulo(''); setConteudo(''); setPerfisSelecionados([]); setDiasAviso(7)
+    setTipoForm('comunicado'); setMostrarForm(true)
+  }
+
   const abrirEdicao = (comunicado: any) => {
     setEditando(comunicado); setTitulo(comunicado.titulo)
     setConteudo(comunicado.conteudo); setPerfisSelecionados(comunicado.perfis_destino || [])
+    setTipoForm(comunicado.fixar_dashboard ? 'aviso' : 'comunicado')
     setMostrarForm(true)
   }
 
@@ -62,15 +75,28 @@ export default function Comunicados() {
   }
 
   const salvar = async () => {
-    if (!titulo.trim() || !conteudo.trim() || perfisSelecionados.length === 0) {
-      alert('Preencha título, conteúdo e selecione pelo menos um perfil.')
+    if (!titulo.trim() || !conteudo.trim()) {
+      alert('Preencha título e conteúdo.')
+      return
+    }
+    if (tipoForm === 'comunicado' && perfisSelecionados.length === 0) {
+      alert('Selecione pelo menos um perfil.')
       return
     }
     setSalvando(true)
+
+    const expira = new Date()
+    expira.setDate(expira.getDate() + diasAviso)
+    const dashboard_expira_em = expira.toISOString().split('T')[0]
+
+    const body = tipoForm === 'aviso'
+      ? { titulo, conteudo, perfis_destino: PERFIS, fixar_dashboard: true, dashboard_expira_em }
+      : { titulo, conteudo, perfis_destino: perfisSelecionados, fixar_dashboard: false }
+
     if (editando) {
-      await fetch('/api/comunicados', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editando.id, titulo, conteudo, perfis_destino: perfisSelecionados }) })
+      await fetch('/api/comunicados', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editando.id, ...body }) })
     } else {
-      await fetch('/api/comunicados', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ titulo, conteudo, perfis_destino: perfisSelecionados }) })
+      await fetch('/api/comunicados', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
     }
     fecharForm(); carregarComunicados(''); setSalvando(false)
   }
@@ -113,74 +139,105 @@ export default function Comunicados() {
       <div style={{ maxWidth: 1280, margin: '0 auto' }}>
 
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>Comunicados</h1>
             <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>{comunicadosVisiveis.length} comunicado{comunicadosVisiveis.length !== 1 ? 's' : ''}</p>
           </div>
           {podeCriar && (
-            <button onClick={() => mostrarForm ? fecharForm() : setMostrarForm(true)} style={{
-              padding: '9px 18px', borderRadius: 8, border: mostrarForm ? '1px solid #e2e8f0' : '1px solid #2563eb',
-              background: '#fff', color: mostrarForm ? '#475569' : '#2563eb',
-              fontSize: 13, fontWeight: 600, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: 6,
-            }}>
-              {mostrarForm ? '✕ Cancelar' : (
-                <>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                  </svg>
-                  Novo Comunicado
-                </>
-              )}
-            </button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={abrirNovoAviso} style={{
+                padding: '9px 16px', borderRadius: 8, border: '1px solid #d97706',
+                background: '#fff', color: '#d97706', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 6,
+              }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                Novo Aviso
+              </button>
+              <button onClick={mostrarForm && tipoForm === 'comunicado' ? fecharForm : abrirNovoComunicado} style={{
+                padding: '9px 16px', borderRadius: 8,
+                border: mostrarForm && tipoForm === 'comunicado' ? '1px solid #e2e8f0' : '1px solid #2563eb',
+                background: '#fff',
+                color: mostrarForm && tipoForm === 'comunicado' ? '#475569' : '#2563eb',
+                fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 6,
+              }}>
+                {mostrarForm && tipoForm === 'comunicado' ? '✕ Cancelar' : (
+                  <>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Novo Comunicado
+                  </>
+                )}
+              </button>
+            </div>
           )}
         </div>
 
         {/* Formulário */}
         {mostrarForm && (podeCriar || podeEditar) && (
-          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', padding: '24px 28px', marginBottom: 20 }}>
-            <h3 style={{ fontSize: 15, fontWeight: 700, color: '#1e293b', margin: '0 0 20px' }}>
-              {editando ? 'Editar Comunicado' : 'Novo Comunicado'}
+          <div style={{ background: '#fff', borderRadius: 12, border: `1px solid ${tipoForm === 'aviso' ? '#fde68a' : '#e2e8f0'}`, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', padding: '24px 28px', marginBottom: 20 }}>
+            <h3 style={{ fontSize: 15, fontWeight: 700, color: '#1e293b', margin: '0 0 20px', display: 'flex', alignItems: 'center', gap: 8 }}>
+              {tipoForm === 'aviso' ? '⚠️ Novo Aviso para o Dashboard' : editando ? 'Editar Comunicado' : 'Novo Comunicado'}
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>Título *</label>
-                <input value={titulo} onChange={e => setTitulo(e.target.value)} placeholder="Título do comunicado" style={inputStyle} />
+                <input value={titulo} onChange={e => setTitulo(e.target.value)} placeholder="Título" style={inputStyle} />
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>Conteúdo *</label>
-                <textarea value={conteudo} onChange={e => setConteudo(e.target.value)} placeholder="Digite o comunicado..." rows={4}
+                <textarea value={conteudo} onChange={e => setConteudo(e.target.value)} placeholder="Digite o conteúdo..." rows={4}
                   style={{ ...inputStyle, resize: 'vertical' }} />
               </div>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: '#64748b' }}>Enviar para *</label>
-                  <button onClick={selecionarTodos} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#2563eb', fontSize: 12, fontWeight: 600 }}>
-                    {perfisSelecionados.length === PERFIS.length ? 'Desmarcar todos' : 'Selecionar todos'}
-                  </button>
+
+              {tipoForm === 'aviso' && (
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>Exibir no dashboard por quantos dias? *</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <input type="number" min={1} max={90} value={diasAviso} onChange={e => setDiasAviso(Number(e.target.value))}
+                      style={{ ...inputStyle, width: 100 }} />
+                    <span style={{ fontSize: 13, color: '#64748b' }}>
+                      dias (até {(() => { const d = new Date(); d.setDate(d.getDate() + diasAviso); return d.toLocaleDateString('pt-BR') })()})
+                    </span>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  {PERFIS.map(perfil => (
-                    <button key={perfil} onClick={() => togglePerfil(perfil)} style={{
-                      padding: '6px 12px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                      fontSize: 12, fontWeight: 600,
-                      background: perfisSelecionados.includes(perfil) ? '#2563eb' : '#f1f5f9',
-                      color: perfisSelecionados.includes(perfil) ? '#fff' : '#64748b',
-                    }}>
-                      {perfil}
+              )}
+
+              {tipoForm === 'comunicado' && (
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                    <label style={{ fontSize: 12, fontWeight: 600, color: '#64748b' }}>Enviar para *</label>
+                    <button onClick={selecionarTodos} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#2563eb', fontSize: 12, fontWeight: 600 }}>
+                      {perfisSelecionados.length === PERFIS.length ? 'Desmarcar todos' : 'Selecionar todos'}
                     </button>
-                  ))}
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {PERFIS.map(perfil => (
+                      <button key={perfil} onClick={() => togglePerfil(perfil)} style={{
+                        padding: '6px 12px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                        fontSize: 12, fontWeight: 600,
+                        background: perfisSelecionados.includes(perfil) ? '#2563eb' : '#f1f5f9',
+                        color: perfisSelecionados.includes(perfil) ? '#fff' : '#64748b',
+                      }}>
+                        {perfil}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
+
               <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
                 <button onClick={salvar} disabled={salvando} style={{
                   padding: '10px 24px', borderRadius: 8, border: 'none',
-                  background: salvando ? '#93c5fd' : '#2563eb',
+                  background: salvando ? '#93c5fd' : tipoForm === 'aviso' ? '#d97706' : '#2563eb',
                   color: '#fff', fontSize: 14, fontWeight: 600,
                   cursor: salvando ? 'not-allowed' : 'pointer',
                 }}>
-                  {salvando ? 'Salvando...' : editando ? 'Salvar Alterações' : 'Enviar Comunicado'}
+                  {salvando ? 'Salvando...' : tipoForm === 'aviso' ? 'Publicar Aviso' : editando ? 'Salvar Alterações' : 'Enviar Comunicado'}
                 </button>
                 <button onClick={fecharForm} style={{
                   padding: '10px 24px', borderRadius: 8, border: 'none',
@@ -227,20 +284,33 @@ export default function Comunicados() {
               const totalCientes = cientes.length
               const percentual = totalDestinatarios > 0 ? Math.round((totalCientes / totalDestinatarios) * 100) : 0
               const expandidoAgora = expandido === comunicado.id
+              const isAviso = comunicado.fixar_dashboard
 
               return (
                 <div key={comunicado.id} style={{
                   background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0',
                   boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-                  borderLeft: `4px solid ${ciente ? '#16a34a' : '#d97706'}`,
+                  borderLeft: `4px solid ${isAviso ? '#d97706' : ciente ? '#16a34a' : '#d97706'}`,
                   padding: '20px 24px',
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                     <div style={{ flex: 1 }}>
-                      <h3 style={{ fontSize: 15, fontWeight: 700, color: '#1e293b', margin: '0 0 6px' }}>{comunicado.titulo}</h3>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                        {isAviso && (
+                          <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: '#fff7ed', color: '#d97706' }}>
+                            ⚠️ AVISO DASHBOARD
+                          </span>
+                        )}
+                        <h3 style={{ fontSize: 15, fontWeight: 700, color: '#1e293b', margin: 0 }}>{comunicado.titulo}</h3>
+                      </div>
                       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                         <span style={{ fontSize: 12, color: '#94a3b8' }}>📅 {formatarData(comunicado.criado_em)}</span>
                         <span style={{ fontSize: 12, color: '#94a3b8' }}>👤 {comunicado.criado_por}</span>
+                        {isAviso && comunicado.dashboard_expira_em && (
+                          <span style={{ fontSize: 12, color: '#d97706' }}>
+                            ⏱️ Expira em {new Date(comunicado.dashboard_expira_em + 'T12:00:00').toLocaleDateString('pt-BR')}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 6 }}>
@@ -273,13 +343,15 @@ export default function Comunicados() {
 
                   <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.6, margin: '0 0 14px', wordBreak: 'break-word' }}>{comunicado.conteudo}</p>
 
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
-                    {comunicado.perfis_destino?.map((p: string) => (
-                      <span key={p} style={{ padding: '3px 10px', borderRadius: 999, background: '#eff6ff', color: '#2563eb', fontSize: 11, fontWeight: 600 }}>{p}</span>
-                    ))}
-                  </div>
+                  {!isAviso && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+                      {comunicado.perfis_destino?.map((p: string) => (
+                        <span key={p} style={{ padding: '3px 10px', borderRadius: 999, background: '#eff6ff', color: '#2563eb', fontSize: 11, fontWeight: 600 }}>{p}</span>
+                      ))}
+                    </div>
+                  )}
 
-                  {isGestor && totalDestinatarios > 0 && (
+                  {isGestor && totalDestinatarios > 0 && !isAviso && (
                     <div style={{ background: '#f8fafc', borderRadius: 10, padding: '12px 16px', marginBottom: 12 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                         <span style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Ciência dos destinatários</span>
@@ -294,7 +366,6 @@ export default function Comunicados() {
                       <div style={{ height: 6, borderRadius: 999, background: '#e2e8f0' }}>
                         <div style={{ height: 6, borderRadius: 999, background: percentual === 100 ? '#16a34a' : '#2563eb', width: `${percentual}%`, transition: 'width 0.3s' }} />
                       </div>
-
                       {expandidoAgora && (
                         <div style={{ marginTop: 14, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                           <div>
@@ -316,7 +387,7 @@ export default function Comunicados() {
                     </div>
                   )}
 
-                  {souDestinatario(comunicado) && (
+                  {souDestinatario(comunicado) && !isAviso && (
                     <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                       {!ciente ? (
                         <button onClick={() => marcarCiente(comunicado.id)} style={{

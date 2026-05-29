@@ -18,6 +18,8 @@ export default function Dashboard() {
   const [isMobile, setIsMobile] = useState(false)
   const [cadastroCompleto, setCadastroCompleto] = useState(true)
   const [diasRestantes, setDiasRestantes] = useState<number | null>(null)
+  const [avisos, setAvisos] = useState<any[]>([])
+  const [aniversariantes, setAniversariantes] = useState<any[]>([])
   const toggle = (key: string) => setAberto(prev => ({ ...prev, [key]: !prev[key] }))
 
   useEffect(() => {
@@ -52,6 +54,8 @@ export default function Dashboard() {
     fetch('/api/hospitais').then(r => r.json()).then(data => { if (Array.isArray(data)) setHospitais(data) })
     fetch('/api/grafico').then(r => r.json()).then(data => { if (Array.isArray(data)) setRegistrosGrafico(data) })
     fetch('/api/grafico-hospitais').then(r => r.json()).then(data => { if (Array.isArray(data)) setRegistrosHospitais(data) })
+    fetch('/api/avisos').then(r => r.json()).then(data => { if (Array.isArray(data)) setAvisos(data) })
+    fetch('/api/aniversariantes').then(r => r.json()).then(data => { if (Array.isArray(data)) setAniversariantes(data) })
     if ('Notification' in window) setNotificacaoAtiva(Notification.permission === 'granted')
   }, [])
 
@@ -187,9 +191,7 @@ export default function Dashboard() {
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               padding: '14px 20px', borderRadius: 12, marginBottom: 24,
-              background: bannerBg,
-              boxShadow: bannerShadow,
-              cursor: 'pointer',
+              background: bannerBg, boxShadow: bannerShadow, cursor: 'pointer',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -198,22 +200,58 @@ export default function Dashboard() {
                   <line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-  <p style={{ color: 'white', fontWeight: 800, fontSize: 14, margin: 0 }}>COMPLETE SEU CADASTRO</p>
-  <span style={{
-    background: 'rgba(255,255,255,0.2)',
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 700,
-    padding: '3px 10px',
-    borderRadius: 999,
-  }}>{bannerMsg}</span>
-</div>
+                  <p style={{ color: 'white', fontWeight: 800, fontSize: 14, margin: 0 }}>COMPLETE SEU CADASTRO</p>
+                  <span style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', fontSize: 12, fontWeight: 700, padding: '3px 10px', borderRadius: 999 }}>{bannerMsg}</span>
+                </div>
               </div>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="9 18 15 12 9 6"/>
               </svg>
             </div>
           </a>
+        )}
+
+        {/* Banner de Avisos */}
+        {avisos.map(aviso => (
+          <div key={aviso.id} style={{
+            background: 'linear-gradient(135deg, #d97706, #f59e0b)',
+            borderRadius: 12, padding: '16px 20px', marginBottom: 12,
+            boxShadow: '0 4px 12px rgba(217,119,6,0.25)',
+            display: 'flex', alignItems: 'flex-start', gap: 12,
+          }}>
+            <span style={{ fontSize: 22, flexShrink: 0 }}>⚠️</span>
+            <div style={{ flex: 1 }}>
+              <p style={{ color: '#fff', fontWeight: 800, fontSize: 14, margin: '0 0 4px' }}>{aviso.titulo}</p>
+              <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: 13, margin: 0, lineHeight: 1.5 }}>{aviso.conteudo}</p>
+            </div>
+          </div>
+        ))}
+
+        {/* Banner de Aniversariantes */}
+        {aniversariantes.length > 0 && (
+          <div style={{
+            background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
+            borderRadius: 12, padding: '16px 20px', marginBottom: 24,
+            boxShadow: '0 4px 12px rgba(124,58,237,0.25)',
+            display: 'flex', alignItems: 'center', gap: 12,
+          }}>
+            <span style={{ fontSize: 28, flexShrink: 0 }}>🎂</span>
+            <div style={{ flex: 1 }}>
+              <p style={{ color: '#fff', fontWeight: 800, fontSize: 14, margin: '0 0 4px' }}>
+                🎉 Parabéns, {aniversariantes.map(a => a.nome.split(' ')[0]).join(' e ')}!
+              </p>
+              <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, margin: '0 0 6px' }}>
+                {aniversariantes.map((a, i) => (
+                  <span key={a.id}>
+                    <strong>{a.nome}</strong> ({a.grupo}){i < aniversariantes.length - 1 ? ' • ' : ''}
+                  </span>
+                ))}
+              </p>
+              <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 12, margin: 0, fontStyle: 'italic' }}>
+                "Que o Senhor te abençoe e te guarde; que o Senhor faça resplandecer o Seu rosto sobre ti." — Números 6:24
+              </p>
+            </div>
+          </div>
         )}
 
         {/* Vagas */}
