@@ -56,7 +56,8 @@ export default function Comunicados() {
 
   const abrirEdicao = (comunicado: any) => {
     setEditando(comunicado); setTitulo(comunicado.titulo)
-    setConteudo(comunicado.conteudo); setPerfisSelecionados(comunicado.perfis_destino || [])
+    setConteudo(comunicado.conteudo)
+    setPerfisSelecionados(Array.isArray(comunicado.perfis_destino) ? comunicado.perfis_destino : [])
     setTipoForm(comunicado.fixar_dashboard ? 'aviso' : 'comunicado')
     setMostrarForm(true)
   }
@@ -113,13 +114,13 @@ export default function Comunicados() {
   }
 
   const jaSouCiente = (comunicado: any) => comunicado.comunicados_leituras?.some((l: any) => l.membro_id === membro?.id)
-  const souDestinatario = (comunicado: any) => comunicado.perfis_destino?.includes(membro?.perfil)
-  const getDestinatarios = (comunicado: any) => membros.filter(m => comunicado.perfis_destino?.includes(m.perfil) && m.status === 'Ativo')
+  const souDestinatario = (comunicado: any) => Array.isArray(comunicado.perfis_destino) && comunicado.perfis_destino.includes(membro?.perfil)
+  const getDestinatarios = (comunicado: any) => membros.filter(m => Array.isArray(comunicado.perfis_destino) && comunicado.perfis_destino.includes(m.perfil) && m.status === 'Ativo')
   const getCientes = (comunicado: any) => comunicado.comunicados_leituras?.map((l: any) => l.membro_id) || []
 
   const comunicadosVisiveis = comunicados.filter((c: any) => {
     if (isGestor) return true
-    return c.perfis_destino?.includes(membro?.perfil)
+    return Array.isArray(c.perfis_destino) && c.perfis_destino.includes(membro?.perfil)
   })
 
   const formatarData = (data: string) => new Date(data).toLocaleDateString('pt-BR', {
@@ -138,7 +139,6 @@ export default function Comunicados() {
 
       <div style={{ maxWidth: 1280, margin: '0 auto' }}>
 
-        {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>Comunicados</h1>
@@ -177,11 +177,10 @@ export default function Comunicados() {
           )}
         </div>
 
-        {/* Formulário */}
         {mostrarForm && (podeCriar || podeEditar) && (
           <div style={{ background: '#fff', borderRadius: 12, border: `1px solid ${tipoForm === 'aviso' ? '#fde68a' : '#e2e8f0'}`, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', padding: '24px 28px', marginBottom: 20 }}>
-            <h3 style={{ fontSize: 15, fontWeight: 700, color: '#1e293b', margin: '0 0 20px', display: 'flex', alignItems: 'center', gap: 8 }}>
-              {tipoForm === 'aviso' ? '⚠️ ATENÇÃO : ESSE AVISO SERA VISUALIZADO POR TODOS' : editando ? 'Editar Comunicado' : 'Novo Comunicado'}
+            <h3 style={{ fontSize: 15, fontWeight: 700, color: '#1e293b', margin: '0 0 20px' }}>
+              {tipoForm === 'aviso' ? '⚠️ ATENÇÃO: ESSE AVISO SERÁ VISUALIZADO POR TODOS' : editando ? 'Editar Comunicado' : 'Novo Comunicado'}
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
@@ -250,7 +249,6 @@ export default function Comunicados() {
           </div>
         )}
 
-        {/* Busca */}
         <div style={{
           background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12,
           padding: '11px 16px', marginBottom: 16,
@@ -266,7 +264,6 @@ export default function Comunicados() {
           />
         </div>
 
-        {/* Lista */}
         {loading ? (
           <div style={{ textAlign: 'center', padding: 48, color: '#64748b' }}>Carregando...</div>
         ) : comunicadosVisiveis.length === 0 ? (
@@ -343,9 +340,9 @@ export default function Comunicados() {
 
                   <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.6, margin: '0 0 14px', wordBreak: 'break-word' }}>{comunicado.conteudo}</p>
 
-                  {!isAviso && (
+                  {!isAviso && Array.isArray(comunicado.perfis_destino) && (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
-                      {comunicado.perfis_destino?.map((p: string) => (
+                      {comunicado.perfis_destino.map((p: string) => (
                         <span key={p} style={{ padding: '3px 10px', borderRadius: 999, background: '#eff6ff', color: '#2563eb', fontSize: 11, fontWeight: 600 }}>{p}</span>
                       ))}
                     </div>
