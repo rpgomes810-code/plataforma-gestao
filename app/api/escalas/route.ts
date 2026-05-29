@@ -9,12 +9,6 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT!,
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-)
-
 async function getUsuarioLogado() {
   try {
     const cookieStore = await cookies()
@@ -35,20 +29,20 @@ async function getUsuarioLogado() {
 async function notificarAtendente(nomeAtendente: string, grupo: string, data: string, hospital: string) {
   try {
     const { data: membro } = await supabaseAdmin
-      .from('membros')
-      .select('id')
-      .eq('nome', nomeAtendente)
-      .single()
+      .from('membros').select('id').eq('nome', nomeAtendente).single()
 
     if (!membro) return
 
     const { data: assinatura } = await supabaseAdmin
-      .from('push_subscriptions')
-      .select('subscription')
-      .eq('membro_id', membro.id)
-      .single()
+      .from('push_subscriptions').select('subscription').eq('membro_id', membro.id).single()
 
     if (!assinatura) return
+
+    webpush.setVapidDetails(
+      process.env.VAPID_SUBJECT!,
+      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+      process.env.VAPID_PRIVATE_KEY!
+    )
 
     await webpush.sendNotification(
       assinatura.subscription,
@@ -71,10 +65,8 @@ export async function GET(request: NextRequest) {
   const fim = `${ano}-${mes?.padStart(2, '0')}-31`
 
   const { data, error } = await supabaseAdmin
-    .from('escalas')
-    .select('*')
-    .gte('data', inicio)
-    .lte('data', fim)
+    .from('escalas').select('*')
+    .gte('data', inicio).lte('data', fim)
     .order('data', { ascending: true })
     .order('hora_inicio', { ascending: true })
 
@@ -98,14 +90,9 @@ export async function POST(request: NextRequest) {
     dados_depois: body,
   }])
 
-  // Notifica atendente
   if (body.atendentes && body.hospital_id) {
     const { data: hospital } = await supabaseAdmin
-      .from('hospitais')
-      .select('nome')
-      .eq('id', body.hospital_id)
-      .single()
-
+      .from('hospitais').select('nome').eq('id', body.hospital_id).single()
     await notificarAtendente(body.atendentes, body.grupo, body.data, hospital?.nome || '')
   }
 
