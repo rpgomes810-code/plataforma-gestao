@@ -8,7 +8,7 @@ const supabase = createClient(
 
 export async function POST(request: NextRequest) {
   try {
-    const { id, aprovadoPor } = await request.json()
+    const { id, aprovadoPor, perfil } = await request.json()
 
     const { data: solicitacao, error: erroBusca } = await supabase
       .from('solicitacoes')
@@ -45,6 +45,7 @@ export async function POST(request: NextRequest) {
         status:               'Ativo',
         user_id:              usuario.user?.id,
         data_inscricao_darpe: hoje,
+        perfil:               perfil || null,
       }])
 
     if (erroMembro) {
@@ -56,7 +57,6 @@ export async function POST(request: NextRequest) {
       .update({ status: 'aprovado' })
       .eq('id', id)
 
-    // Registra o log
     await supabase
       .from('logs')
       .insert([{
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
         tabela: 'solicitacoes',
         registro_id: id,
         dados_antes: { status: 'pendente' },
-        dados_depois: { status: 'aprovado', nome: solicitacao.nome, email: solicitacao.email },
+        dados_depois: { status: 'aprovado', nome: solicitacao.nome, email: solicitacao.email, perfil: perfil || null },
       }])
 
     return NextResponse.json({ success: true })
