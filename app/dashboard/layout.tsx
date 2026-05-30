@@ -50,7 +50,7 @@ function urlBase64ToUint8Array(base64String: string) {
 function NavItem({ href, label, active, onClick }: { href: string; label: string; active: boolean; onClick?: () => void }) {
   const [hovered, setHovered] = useState(false)
   return (
-    
+    <a
       href={href}
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
