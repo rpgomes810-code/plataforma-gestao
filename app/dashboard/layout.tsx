@@ -304,12 +304,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.7, margin: '0 0 20px', maxHeight: 200, overflowY: 'auto' }}>
                     {comunicadoAtual.conteudo}
                   </p>
-                  <div style={{ display: 'flex', gap: 8, fontSize: 12, color: '#94a3b8', marginBottom: 20 }}>
-                    <span>📅 {new Date(comunicadoAtual.criado_em).toLocaleDateString('pt-BR')}</span>
-                    <span>·</span>
-                    <span>👤 {comunicadoAtual.criado_por}</span>
-                  </div>
-
+                 
                   <button
                     onClick={confirmarCiencia}
                     disabled={marcandoCiente}
