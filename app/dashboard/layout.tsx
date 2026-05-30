@@ -8,8 +8,8 @@ const todosNavItems = [
   { href: '/dashboard',              label: 'Início',        key: null },
   { href: '/dashboard/confirmacoes', label: 'Confirmações',  key: 'confirmacoes' },
   { href: '/dashboard/escalas',      label: 'Escalas',       key: 'escalas' },
- { href: '/dashboard/registros',    label: 'Registros',     key: 'registros' },
-{ href: '/dashboard/historico',    label: 'Histórico',     key: null },
+  { href: '/dashboard/registros',    label: 'Registros',     key: 'registros' },
+  { href: '/dashboard/historico',    label: 'Histórico',     key: null },
   { href: '/dashboard/relatorios',   label: 'Relatórios',    key: 'relatorios' },
   { href: '/dashboard/membros',      label: 'Membros',       key: 'membros' },
   { href: '/dashboard/hospitais',    label: 'Hospitais',     key: 'hospitais' },
@@ -50,19 +50,15 @@ function urlBase64ToUint8Array(base64String: string) {
 function NavItem({ href, label, active, onClick }: { href: string; label: string; active: boolean; onClick?: () => void }) {
   const [hovered, setHovered] = useState(false)
   return (
-    <a
+    
       href={href}
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-        padding: '9px 12px',
-        borderRadius: 8,
-        fontSize: 14,
-        fontWeight: active ? 600 : 400,
+        display: 'flex', alignItems: 'center', gap: 10,
+        padding: '9px 12px', borderRadius: 8,
+        fontSize: 14, fontWeight: active ? 600 : 400,
         textDecoration: 'none',
         background: active ? '#eff6ff' : hovered ? '#f8fafc' : 'transparent',
         color: active ? '#1e40af' : hovered ? '#334155' : '#64748b',
@@ -77,15 +73,7 @@ function NavItem({ href, label, active, onClick }: { href: string; label: string
 
 function Sidebar({ navItems, pathname, onClose }: { navItems: typeof todosNavItems; pathname: string; onClose?: () => void }) {
   return (
-    <div style={{
-      width: 220,
-      height: '100%',
-      minHeight: '100vh',
-      background: '#ffffff',
-      borderRight: '1px solid #e2e8f0',
-      display: 'flex',
-      flexDirection: 'column',
-    }}>
+    <div style={{ width: 220, height: '100%', minHeight: '100vh', background: '#ffffff', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <p style={{ color: '#1e40af', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, margin: 0 }}>DARPE</p>
@@ -101,11 +89,7 @@ function Sidebar({ navItems, pathname, onClose }: { navItems: typeof todosNavIte
         ))}
       </nav>
       <div style={{ padding: '8px', borderTop: '1px solid #e2e8f0' }}>
-        <a href="/" style={{
-          display: 'flex', alignItems: 'center', gap: 10,
-          padding: '9px 12px', borderRadius: 8,
-          fontSize: 14, fontWeight: 500, textDecoration: 'none', color: '#ef4444',
-        }}>
+        <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 8, fontSize: 14, fontWeight: 500, textDecoration: 'none', color: '#ef4444' }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
             <polyline points="16 17 21 12 16 7"/>
@@ -128,6 +112,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [carregando, setCarregando] = useState(true)
   const [menuAberto, setMenuAberto] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+
+  // Ciência
+  const [comunicadosPendentes, setComunicadosPendentes] = useState<any[]>([])
+  const [comunicadoAtual, setComunicadoAtual] = useState<any>(null)
+  const [marcandoCiente, setMarcandoCiente] = useState(false)
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
@@ -159,6 +148,33 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       setCarregando(false)
     })
   }, [])
+
+  // Busca comunicados pendentes de ciência ao carregar
+  useEffect(() => {
+    fetch('/api/comunicados/pendentes')
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setComunicadosPendentes(data)
+          setComunicadoAtual(data[0])
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  const confirmarCiencia = async () => {
+    if (!comunicadoAtual) return
+    setMarcandoCiente(true)
+    await fetch('/api/comunicados/ciente', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ comunicado_id: comunicadoAtual.id }),
+    })
+    const restantes = comunicadosPendentes.filter(c => c.id !== comunicadoAtual.id)
+    setComunicadosPendentes(restantes)
+    setComunicadoAtual(restantes.length > 0 ? restantes[0] : null)
+    setMarcandoCiente(false)
+  }
 
   const paginaAtual = todosNavItems.find(item => item.href === pathname)
   const semPermissao = !carregando && paginaAtual?.key && permissoes && !permissoes[paginaAtual.key]?.ver
@@ -224,11 +240,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Header mobile */}
         {isMobile && (
-          <header style={{
-            position: 'sticky', top: 0, zIndex: 20,
-            padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12,
-            background: '#ffffff', borderBottom: '1px solid #e2e8f0',
-          }}>
+          <header style={{ position: 'sticky', top: 0, zIndex: 20, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, background: '#ffffff', borderBottom: '1px solid #e2e8f0' }}>
             <button onClick={() => setMenuAberto(true)} style={{ color: '#64748b', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
@@ -250,7 +262,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         )}
 
         <main style={{ flex: 1, overflow: 'auto' }}>
-          {mostrarPopup && (
+
+          {/* MODAL NOTIFICAÇÕES */}
+          {mostrarPopup && !comunicadoAtual && (
             <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
               <div style={{ background: '#ffffff', borderRadius: 16, padding: 32, width: '100%', maxWidth: 360, textAlign: 'center', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
                 <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
@@ -262,6 +276,57 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   style={{ width: '100%', padding: 12, borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14, color: 'white', background: '#1e40af', opacity: ativando ? 0.5 : 1 }}>
                   {ativando ? 'Ativando...' : '🔔 Ativar notificações'}
                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* MODAL CIÊNCIA COMUNICADO */}
+          {comunicadoAtual && (
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+              <div style={{ background: '#ffffff', borderRadius: 16, width: '100%', maxWidth: 480, boxShadow: '0 20px 60px rgba(0,0,0,0.2)', overflow: 'hidden' }}>
+
+                {/* Cabeçalho */}
+                <div style={{ background: '#1e3a5f', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontSize: 18 }}>📢</span>
+                    <span style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>Comunicado</span>
+                  </div>
+                  {comunicadosPendentes.length > 1 && (
+                    <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>
+                      {comunicadosPendentes.indexOf(comunicadoAtual) + 1} de {comunicadosPendentes.length}
+                    </span>
+                  )}
+                </div>
+
+                {/* Conteúdo */}
+                <div style={{ padding: '24px 24px 20px' }}>
+                  <h3 style={{ fontSize: 17, fontWeight: 800, color: '#1e293b', margin: '0 0 12px' }}>{comunicadoAtual.titulo}</h3>
+                  <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.7, margin: '0 0 20px', maxHeight: 200, overflowY: 'auto' }}>
+                    {comunicadoAtual.conteudo}
+                  </p>
+                  <div style={{ display: 'flex', gap: 8, fontSize: 12, color: '#94a3b8', marginBottom: 20 }}>
+                    <span>📅 {new Date(comunicadoAtual.criado_em).toLocaleDateString('pt-BR')}</span>
+                    <span>·</span>
+                    <span>👤 {comunicadoAtual.criado_por}</span>
+                  </div>
+
+                  <button
+                    onClick={confirmarCiencia}
+                    disabled={marcandoCiente}
+                    style={{
+                      width: '100%', padding: '12px 0', borderRadius: 10, border: 'none',
+                      background: marcandoCiente ? '#86efac' : '#16a34a',
+                      color: '#fff', fontSize: 14, fontWeight: 700,
+                      cursor: marcandoCiente ? 'not-allowed' : 'pointer',
+                      transition: 'background 0.15s',
+                    }}
+                  >
+                    {marcandoCiente ? 'Registrando...' : '✅ Estou ciente'}
+                  </button>
+                  <p style={{ fontSize: 11, color: '#94a3b8', textAlign: 'center', marginTop: 10 }}>
+                    Você precisa dar ciência para continuar usando o app.
+                  </p>
+                </div>
               </div>
             </div>
           )}
