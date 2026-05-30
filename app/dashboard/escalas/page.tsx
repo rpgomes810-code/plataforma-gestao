@@ -27,6 +27,7 @@ export default function Escalas() {
   const [permissoes, setPermissoes] = useState<any>(null)
   const [salvandoAtendente, setSalvandoAtendente] = useState<string | null>(null)
   const [liberando, setLiberando] = useState<string | null>(null)
+  const [liberandoLote, setLiberandoLote] = useState<string | null>(null)
   const [enviandoLembrete, setEnviandoLembrete] = useState(false)
 
   useEffect(() => {
@@ -91,12 +92,46 @@ export default function Escalas() {
       body: JSON.stringify({ confirmacao_aberta: !aberta }),
     })
     if (!aberta) await fetch('/api/push/notificar', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ escala_id: id }),
-})
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ escala_id: id }),
+    })
     setEscalas(prev => prev.map(e => e.id === id ? { ...e, confirmacao_aberta: !aberta } : e))
     setLiberando(null)
+  }
+
+  const liberarTodasDoDia = async (data: string, itens: Escala[]) => {
+    const comAtendente = itens.filter(e => !e.confirmacao_aberta && e.atendentes)
+    const semAtendente = itens.filter(e => !e.confirmacao_aberta && !e.atendentes)
+
+    if (comAtendente.length === 0) {
+      alert('Nenhuma escala pendente com atendente definido neste dia.')
+      return
+    }
+
+    const dataFormatada = new Date(data + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' })
+    const avisoSemAtendente = semAtendente.length > 0
+      ? `\n⚠️ ${semAtendente.length} escala(s) sem atendente serão ignoradas.`
+      : ''
+
+    if (!confirm(`Liberar ${comAtendente.length} escala(s) de ${dataFormatada}?${avisoSemAtendente}\n\nUma notificação será enviada para cada grupo.`)) return
+
+    setLiberandoLote(data)
+
+    for (const escala of comAtendente) {
+      await fetch(`/api/escalas/${escala.id}`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirmacao_aberta: true }),
+      })
+      await fetch('/api/push/notificar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ escala_id: escala.id }),
+      })
+      setEscalas(prev => prev.map(e => e.id === escala.id ? { ...e, confirmacao_aberta: true } : e))
+    }
+
+    setLiberandoLote(null)
   }
 
   const excluirMes = async () => {
@@ -244,106 +279,136 @@ export default function Escalas() {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {Object.entries(datasPorDia).sort(([a], [b]) => a.localeCompare(b)).map(([data, itens]) => (
-              <div key={data} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
-                <div style={{ background: '#1e3a5f', padding: '12px 20px' }}>
-                  <h3 style={{ color: '#fff', fontWeight: 700, fontSize: 14, margin: 0, textTransform: 'capitalize' }}>{formatarData(data)}</h3>
-                </div>
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                    <thead>
-                      <tr style={{ background: '#f8fafc', borderBottom: '1px solid #f1f5f9' }}>
-                        <th style={{ textAlign: 'left', padding: '10px 20px', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>GRUPO</th>
-                        <th style={{ textAlign: 'left', padding: '10px 16px', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>LOCAL</th>
-                        <th className="col-hora" style={{ textAlign: 'left', padding: '10px 16px', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>HORA</th>
-                        <th className="col-atendente" style={{ textAlign: 'left', padding: '10px 16px', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>ATENDENTE</th>
-                        <th className="col-liberar" style={{ textAlign: 'center', padding: '10px 16px', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>STATUS</th>
-                        <th style={{ textAlign: 'right', padding: '10px 20px', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>AÇÕES</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {itens.map((escala, idx) => (
-                        <tr key={escala.id} className="escala-row" style={{ borderBottom: idx < itens.length - 1 ? '1px solid #f1f5f9' : 'none', transition: 'background 0.15s' }}>
-                          <td style={{ padding: '12px 20px', fontWeight: 600, color: '#1e293b' }}>{escala.grupo}</td>
-                          <td style={{ padding: '12px 16px', color: '#475569' }}>{escala.local_texto}</td>
-                          <td className="col-hora" style={{ padding: '12px 16px', color: '#475569' }}>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-                              </svg>
-                              {escala.hora_inicio}
-                            </span>
-                          </td>
-                          <td className="col-atendente" style={{ padding: '12px 16px' }}>
-                            {podeEditar ? (
-                              <div style={{ position: 'relative', display: 'inline-block' }}>
-                                <select
-                                  value={escala.atendentes || ''}
-                                  onChange={e => salvarAtendente(escala.id, e.target.value)}
-                                  disabled={salvandoAtendente === escala.id}
-                                  style={selectStyle}
-                                >
-                                  <option value="">A definir</option>
-                                  {atendentes.map(a => <option key={a.id} value={a.nome}>{a.nome}</option>)}
-                                </select>
-                                <svg style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
-                                  width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                  <polyline points="6 9 12 15 18 9"/>
+            {Object.entries(datasPorDia).sort(([a], [b]) => a.localeCompare(b)).map(([data, itens]) => {
+              const pendentesComAtendente = itens.filter(e => !e.confirmacao_aberta && e.atendentes)
+              const todasLiberadas = itens.every(e => e.confirmacao_aberta)
+              const isLiberandoEsseDia = liberandoLote === data
+
+              return (
+                <div key={data} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
+                  <div style={{ background: '#1e3a5f', padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h3 style={{ color: '#fff', fontWeight: 700, fontSize: 14, margin: 0, textTransform: 'capitalize' }}>{formatarData(data)}</h3>
+                    {podeEditar && !todasLiberadas && pendentesComAtendente.length > 0 && (
+                      <button
+                        onClick={() => liberarTodasDoDia(data, itens)}
+                        disabled={isLiberandoEsseDia}
+                        style={{
+                          padding: '5px 14px', borderRadius: 999,
+                          border: '1px solid rgba(255,255,255,0.4)',
+                          background: isLiberandoEsseDia ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.15)',
+                          color: '#fff', fontSize: 12, fontWeight: 600,
+                          cursor: isLiberandoEsseDia ? 'not-allowed' : 'pointer',
+                          display: 'flex', alignItems: 'center', gap: 6,
+                          opacity: isLiberandoEsseDia ? 0.7 : 1,
+                          transition: 'background 0.15s',
+                        }}
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M5 12l5 5L20 7"/>
+                        </svg>
+                        {isLiberandoEsseDia ? 'Liberando...' : `Liberar todas (${pendentesComAtendente.length})`}
+                      </button>
+                    )}
+                    {podeEditar && todasLiberadas && (
+                      <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>✅ Todas liberadas</span>
+                    )}
+                  </div>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                      <thead>
+                        <tr style={{ background: '#f8fafc', borderBottom: '1px solid #f1f5f9' }}>
+                          <th style={{ textAlign: 'left', padding: '10px 20px', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>GRUPO</th>
+                          <th style={{ textAlign: 'left', padding: '10px 16px', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>LOCAL</th>
+                          <th className="col-hora" style={{ textAlign: 'left', padding: '10px 16px', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>HORA</th>
+                          <th className="col-atendente" style={{ textAlign: 'left', padding: '10px 16px', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>ATENDENTE</th>
+                          <th className="col-liberar" style={{ textAlign: 'center', padding: '10px 16px', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>STATUS</th>
+                          <th style={{ textAlign: 'right', padding: '10px 20px', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>AÇÕES</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {itens.map((escala, idx) => (
+                          <tr key={escala.id} className="escala-row" style={{ borderBottom: idx < itens.length - 1 ? '1px solid #f1f5f9' : 'none', transition: 'background 0.15s' }}>
+                            <td style={{ padding: '12px 20px', fontWeight: 600, color: '#1e293b' }}>{escala.grupo}</td>
+                            <td style={{ padding: '12px 16px', color: '#475569' }}>{escala.local_texto}</td>
+                            <td className="col-hora" style={{ padding: '12px 16px', color: '#475569' }}>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                                 </svg>
-                              </div>
-                            ) : (
-                              <span style={{ color: escala.atendentes ? '#475569' : '#cbd5e1' }}>
-                                {escala.atendentes || 'A definir'}
+                                {escala.hora_inicio}
                               </span>
-                            )}
-                          </td>
-                          <td className="col-liberar" style={{ padding: '12px 16px', textAlign: 'center' }}>
-                            {podeEditar ? (
-                              <button
-                                onClick={() => liberarEscala(escala.id, escala.confirmacao_aberta)}
-                                disabled={liberando === escala.id}
-                                style={{
-                                  padding: '4px 12px', borderRadius: 999, border: 'none',
-                                  fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                            </td>
+                            <td className="col-atendente" style={{ padding: '12px 16px' }}>
+                              {podeEditar ? (
+                                <div style={{ position: 'relative', display: 'inline-block' }}>
+                                  <select
+                                    value={escala.atendentes || ''}
+                                    onChange={e => salvarAtendente(escala.id, e.target.value)}
+                                    disabled={salvandoAtendente === escala.id}
+                                    style={selectStyle}
+                                  >
+                                    <option value="">A definir</option>
+                                    {atendentes.map(a => <option key={a.id} value={a.nome}>{a.nome}</option>)}
+                                  </select>
+                                  <svg style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
+                                    width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="6 9 12 15 18 9"/>
+                                  </svg>
+                                </div>
+                              ) : (
+                                <span style={{ color: escala.atendentes ? '#475569' : '#cbd5e1' }}>
+                                  {escala.atendentes || 'A definir'}
+                                </span>
+                              )}
+                            </td>
+                            <td className="col-liberar" style={{ padding: '12px 16px', textAlign: 'center' }}>
+                              {podeEditar ? (
+                                <button
+                                  onClick={() => liberarEscala(escala.id, escala.confirmacao_aberta)}
+                                  disabled={liberando === escala.id}
+                                  style={{
+                                    padding: '4px 12px', borderRadius: 999, border: 'none',
+                                    fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                                    background: escala.confirmacao_aberta ? '#dcfce7' : '#f1f5f9',
+                                    color: escala.confirmacao_aberta ? '#16a34a' : '#64748b',
+                                  }}
+                                >
+                                  {liberando === escala.id ? '...' : escala.confirmacao_aberta ? '✅ Liberada' : 'Liberar'}
+                                </button>
+                              ) : (
+                                <span style={{
+                                  fontSize: 11, fontWeight: 600, padding: '4px 12px', borderRadius: 999,
                                   background: escala.confirmacao_aberta ? '#dcfce7' : '#f1f5f9',
                                   color: escala.confirmacao_aberta ? '#16a34a' : '#64748b',
-                                }}
-                              >
-                                {liberando === escala.id ? '...' : escala.confirmacao_aberta ? '✅ Liberada' : 'Liberar'}
-                              </button>
-                            ) : (
-                              <span style={{
-                                fontSize: 11, fontWeight: 600, padding: '4px 12px', borderRadius: 999,
-                                background: escala.confirmacao_aberta ? '#dcfce7' : '#f1f5f9',
-                                color: escala.confirmacao_aberta ? '#16a34a' : '#64748b',
-                              }}>
-                                {escala.confirmacao_aberta ? '✅ Liberada' : 'Pendente'}
-                              </span>
-                            )}
-                          </td>
-                          <td style={{ padding: '12px 20px' }}>
-                            <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-                              {podeEditar && (
-                                <a href={`/dashboard/escalas/${escala.id}/editar`} title="Editar" style={{
-                                  width: 30, height: 30, borderRadius: 7, background: '#eff6ff',
-                                  display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none',
                                 }}>
-                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
-                                    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                  </svg>
-                                </a>
+                                  {escala.confirmacao_aberta ? '✅ Liberada' : 'Pendente'}
+                                </span>
                               )}
-                              {podeExcluir && <BotaoExcluirEscala id={escala.id} />}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                            </td>
+                            <td style={{ padding: '12px 20px' }}>
+                              <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                                {podeEditar && (
+                                  <a href={`/dashboard/escalas/${escala.id}/editar`} title="Editar" style={{
+                                    width: 30, height: 30, borderRadius: 7, background: '#eff6ff',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none',
+                                  }}>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                                      <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                    </svg>
+                                  </a>
+                                )}
+                                {podeExcluir && <BotaoExcluirEscala id={escala.id} />}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
