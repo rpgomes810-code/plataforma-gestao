@@ -16,12 +16,20 @@ type Solicitacao = {
   created_at: string
 }
 
+const PERFIS = [
+  'Músico/Vocal', 'Atendente', 'Organizador', 'Ancião',
+  'Cooperador Jovens', 'Cooperador Oficial', 'Diácono',
+  'Encarregado Local', 'Encarregado Regional', 'Administrador', 'Secretário',
+]
+
 export default function Solicitacoes() {
   const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>([])
   const [loading, setLoading] = useState(true)
   const [filtro, setFiltro] = useState('pendente')
   const [processando, setProcessando] = useState<string | null>(null)
   const [usuarioNome, setUsuarioNome] = useState('Administrador')
+  const [modalAberto, setModalAberto] = useState<Solicitacao | null>(null)
+  const [perfilSelecionado, setPerfilSelecionado] = useState('')
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -41,12 +49,24 @@ export default function Solicitacoes() {
     fetch('/api/membros/eu').then(res => res.json()).then(data => { if (data?.nome) setUsuarioNome(data.nome) })
   }, [])
 
-  const aprovar = async (id: string) => {
-    setProcessando(id)
+  const abrirModalAprovar = (s: Solicitacao) => {
+    setPerfilSelecionado('')
+    setModalAberto(s)
+  }
+
+  const confirmarAprovacao = async () => {
+    if (!modalAberto) return
+    if (!perfilSelecionado) {
+      alert('Selecione um perfil antes de aprovar!')
+      return
+    }
+    setProcessando(modalAberto.id)
+    setModalAberto(null)
+
     const res = await fetch('/api/aprovar-solicitacao', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, aprovadoPor: usuarioNome }),
+      body: JSON.stringify({ id: modalAberto.id, aprovadoPor: usuarioNome, perfil: perfilSelecionado }),
     })
     if (res.ok) carregar()
     else { const data = await res.json(); alert('Erro ao aprovar: ' + data.error) }
@@ -87,6 +107,76 @@ export default function Solicitacoes() {
   return (
     <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: '28px 40px' }} className="solic-wrap">
       <style>{`@media (max-width: 768px) { .solic-wrap { padding: 16px !important; } .solic-grid { grid-template-columns: 1fr 1fr !important; } }`}</style>
+
+      {/* MODAL PERFIL */}
+      {modalAberto && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 1000, padding: 16,
+        }}>
+          <div style={{
+            background: '#fff', borderRadius: 14, padding: 28,
+            width: '100%', maxWidth: 420,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+          }}>
+            <h2 style={{ fontSize: 17, fontWeight: 800, color: '#1e293b', margin: '0 0 4px' }}>Aprovar Solicitação</h2>
+            <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 20px' }}>
+              Defina o perfil de <strong>{modalAberto.nome}</strong> antes de liberar o acesso.
+            </p>
+
+            <label style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, display: 'block', marginBottom: 6 }}>
+              PERFIL DO MEMBRO
+            </label>
+            <div style={{ position: 'relative' }}>
+              <select
+                value={perfilSelecionado}
+                onChange={e => setPerfilSelecionado(e.target.value)}
+                style={{
+                  width: '100%', padding: '9px 32px 9px 12px', borderRadius: 8,
+                  border: '1px solid #e2e8f0', background: '#f8fafc',
+                  fontSize: 13, color: '#334155', outline: 'none',
+                  appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer',
+                }}
+              >
+                <option value="">Selecione um perfil...</option>
+                {PERFIS.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+              <svg style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
+                width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </div>
+
+            <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
+              <button
+                onClick={() => setModalAberto(null)}
+                style={{
+                  flex: 1, padding: '9px 0', borderRadius: 8,
+                  border: '1px solid #e2e8f0', background: '#fff',
+                  color: '#475569', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmarAprovacao}
+                disabled={!perfilSelecionado}
+                style={{
+                  flex: 1, padding: '9px 0', borderRadius: 8, border: 'none',
+                  background: perfilSelecionado ? '#16a34a' : '#e2e8f0',
+                  color: perfilSelecionado ? '#fff' : '#94a3b8',
+                  fontSize: 13, fontWeight: 600,
+                  cursor: perfilSelecionado ? 'pointer' : 'not-allowed',
+                  transition: 'background 0.15s',
+                }}
+              >
+                ✅ Confirmar Aprovação
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div style={{ maxWidth: 1280, margin: '0 auto' }}>
 
@@ -163,7 +253,7 @@ export default function Solicitacoes() {
 
                   {filtro === 'pendente' && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, justifyContent: 'center' }}>
-                      <button onClick={() => aprovar(s.id)} disabled={processando === s.id} style={{
+                      <button onClick={() => abrirModalAprovar(s)} disabled={processando === s.id} style={{
                         padding: '9px 20px', borderRadius: 8, border: 'none',
                         background: '#16a34a', color: '#fff', fontSize: 13, fontWeight: 600,
                         cursor: processando === s.id ? 'not-allowed' : 'pointer',
