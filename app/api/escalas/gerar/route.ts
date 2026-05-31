@@ -2,11 +2,28 @@ export const dynamic = 'force-dynamic'
 
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
+import { createServerClient } from '@supabase/ssr'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
+
+async function getUsuarioLogado() {
+  try {
+    const cookieStore = await cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { cookies: { getAll() { return cookieStore.getAll() }, setAll() {} } }
+    )
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return 'Desconhecido'
+    const { data } = await supabaseAdmin.from('membros').select('nome').eq('user_id', user.id).single()
+    return data?.nome || 'Desconhecido'
+  } catch { return 'Desconhecido' }
+}
 
 const HOSPITAIS = {
   CAMPO_LIMPO:    'bf83e35f-050a-4870-be9a-97ac4a67de61',
@@ -24,7 +41,6 @@ const HOSPITAIS = {
   SANTA_CASA:     'c212314c-5334-48e1-bfb0-eb64508e89a0',
 }
 
-// Grupos rotativos (sem Grupo 7 e 13 que são fixos no PSA)
 const GRUPOS_ROTATIVOS = [
   'Grupo 1','Grupo 2','Grupo 3','Grupo 4','Grupo 5','Grupo 6',
   'Grupo 8','Grupo 9','Grupo 10','Grupo 11','Grupo 12',
@@ -68,6 +84,8 @@ export async function POST(req: Request) {
   const { mes, ano } = await req.json()
   if (!mes || !ano) return NextResponse.json({ error: 'Mês e ano são obrigatórios' }, { status: 400 })
 
+  const usuarioNome = await getUsuarioLogado()
+
   const { data: historicoEscalas } = await supabaseAdmin
     .from('escalas').select('grupo, hospital_id').not('hospital_id', 'is', null)
 
@@ -91,10 +109,8 @@ export async function POST(req: Request) {
     const candidatos = gruposDisponiveis.filter(g =>
       !jaUsadosDia.has(g) && !gruposUsadosMes[hospitalId]?.has(g)
     )
-
     const pool = candidatos.length > 0 ? candidatos : gruposDisponiveis.filter(g => !jaUsadosDia.has(g))
     if (pool.length === 0) return null
-
     pool.sort((a, b) => (frequencia[a]?.[hospitalId] || 0) - (frequencia[b]?.[hospitalId] || 0))
     const menorFreq = frequencia[pool[0]]?.[hospitalId] || 0
     const empatados = pool.filter(g => (frequencia[g]?.[hospitalId] || 0) === menorFreq)
@@ -106,32 +122,24 @@ export async function POST(req: Request) {
     const dataStr = sabado.toISOString().split('T')[0]
     const jaUsadosDia: Set<string> = new Set()
 
-    // === FIXOS TODO SÁBADO ===
-
-    // Campo Limpo
     escalasParaCriar.push({ data: dataStr, grupo: 'Grupo Campo Limpo', hospital_id: HOSPITAIS.CAMPO_LIMPO, local_texto: 'Hospital Campo Limpo Paulista', hora_inicio: '09:00', confirmacao_aberta: false, atendentes: '' })
     jaUsadosDia.add('Grupo Campo Limpo')
 
-    // Louveira
     escalasParaCriar.push({ data: dataStr, grupo: 'Grupo Louveira', hospital_id: HOSPITAIS.SANTA_CASA, local_texto: 'Santa Casa de Louveira', hora_inicio: '09:00', confirmacao_aberta: false, atendentes: '' })
     escalasParaCriar.push({ data: dataStr, grupo: 'Grupo Louveira', hospital_id: HOSPITAIS.SANTO_ANTONIO, local_texto: 'Hospital Santo Antonio', hora_inicio: '10:30', confirmacao_aberta: false, atendentes: '' })
     jaUsadosDia.add('Grupo Louveira')
 
-    // Cabreuva - Itupeva todo sábado
     escalasParaCriar.push({ data: dataStr, grupo: 'Grupo Cabreuva', hospital_id: HOSPITAIS.ITUPEVA, local_texto: 'Hospital Itupeva', hora_inicio: '13:00', confirmacao_aberta: false, atendentes: '' })
 
-    // Cabreuva - Hortolandia + Retiro no 1º e 4º sábado
     if (semana === 1 || semana === 4) {
       escalasParaCriar.push({ data: dataStr, grupo: 'Grupo Cabreuva', hospital_id: HOSPITAIS.PA_HORTOLANDIA, local_texto: 'PA Hortolandia', hora_inicio: '09:00', confirmacao_aberta: false, atendentes: '' })
       escalasParaCriar.push({ data: dataStr, grupo: 'Grupo Cabreuva', hospital_id: HOSPITAIS.PA_RETIRO, local_texto: 'PA Retiro', hora_inicio: '10:00', confirmacao_aberta: false, atendentes: '' })
     }
     jaUsadosDia.add('Grupo Cabreuva')
 
-    // Psiquiatrico
     escalasParaCriar.push({ data: dataStr, grupo: 'Grupo Psiquiatrico', hospital_id: HOSPITAIS.PSIQUIATRICO, local_texto: 'Hospital Psiquiatrico', hora_inicio: '10:00', confirmacao_aberta: false, atendentes: '' })
     jaUsadosDia.add('Grupo Psiquiatrico')
 
-    // PSA Caieiras - Grupo 13 no 1º sábado, Grupo 7 no 4º sábado
     if (semana === 1) {
       escalasParaCriar.push({ data: dataStr, grupo: 'Grupo 13', hospital_id: HOSPITAIS.PSA_CAIEIRAS, local_texto: 'PSA Dr Ideir Hamamoto', hora_inicio: '14:00', confirmacao_aberta: false, atendentes: '' })
       jaUsadosDia.add('Grupo 13')
@@ -140,20 +148,17 @@ export async function POST(req: Request) {
       jaUsadosDia.add('Grupo 7')
     }
 
-    // Grupo Misto - só no 2º sábado
     if (semana === 2) {
       escalasParaCriar.push({ data: dataStr, grupo: 'Grupo Misto', hospital_id: HOSPITAIS.PITANGUEIRAS, local_texto: 'Hospital Pitangueiras', hora_inicio: '13:30', confirmacao_aberta: false, atendentes: '' })
       jaUsadosDia.add('Grupo Misto')
     }
 
-    // === ROTATIVOS ===
     const hospitaisRotativosDoDia = [...HOSPITAIS_ROTATIVOS]
     if (semana === 2 || semana === 3) hospitaisRotativosDoDia.push(...HORTOLANDIA_RETIRO)
 
     for (const hospital of hospitaisRotativosDoDia) {
       const grupo = escolherGrupo(hospital.id, GRUPOS_ROTATIVOS, jaUsadosDia)
       if (!grupo) continue
-
       escalasParaCriar.push({ data: dataStr, grupo, hospital_id: hospital.id, local_texto: hospital.nome, hora_inicio: hospital.hora, confirmacao_aberta: false, atendentes: '' })
       jaUsadosDia.add(grupo)
       if (!gruposUsadosMes[hospital.id]) gruposUsadosMes[hospital.id] = new Set()
@@ -165,6 +170,16 @@ export async function POST(req: Request) {
 
   const { error } = await supabaseAdmin.from('escalas').insert(escalasParaCriar)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  await supabaseAdmin.from('logs').insert([{
+    usuario_nome: usuarioNome,
+    acao: `Gerou escalas: ${escalasParaCriar.length} escalas para ${mes}/${ano}`,
+    tabela: 'escalas',
+    registro_id: `${ano}-${mes}`,
+    dados_antes: null,
+    dados_depois: { mes, ano, total: escalasParaCriar.length },
+  }])
+
   return NextResponse.json({ success: true, total: escalasParaCriar.length })
 }
 
@@ -172,10 +187,22 @@ export async function DELETE(req: Request) {
   const { mes, ano } = await req.json()
   if (!mes || !ano) return NextResponse.json({ error: 'Mês e ano são obrigatórios' }, { status: 400 })
 
+  const usuarioNome = await getUsuarioLogado()
+
   const inicio = `${ano}-${String(mes).padStart(2, '0')}-01`
   const fim = new Date(ano, mes, 0).toISOString().split('T')[0]
 
   const { error } = await supabaseAdmin.from('escalas').delete().gte('data', inicio).lte('data', fim)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  await supabaseAdmin.from('logs').insert([{
+    usuario_nome: usuarioNome,
+    acao: `Excluiu escalas do mês: ${mes}/${ano}`,
+    tabela: 'escalas',
+    registro_id: `${ano}-${mes}`,
+    dados_antes: { mes, ano },
+    dados_depois: { excluido: true },
+  }])
+
   return NextResponse.json({ success: true })
 }
