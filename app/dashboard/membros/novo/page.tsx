@@ -139,7 +139,7 @@ export default function NovoMembro() {
                     <option value="Violino">Violino</option>
                     <option value="Viola">Viola</option>
                     <option value="Violoncelo">Violoncelo</option>
-                    <option value="Voz">Voz</option>
+                    <option value="Vocal">Vocal</option>
                   </select>
                 </div>
               </div>
