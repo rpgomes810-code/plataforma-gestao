@@ -4,6 +4,36 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 
+const VERSICULOS = [
+  { texto: 'Porque tive fome e me destes de comer; tive sede e me destes de beber; era forasteiro e me hospedastes; estava nu e me vestistes; enfermo e me visitastes.', ref: 'Mateus 25:35-36' },
+  { texto: 'Cada um contribua segundo propôs no seu coração, não com tristeza ou por necessidade; porque Deus ama ao que dá com alegria.', ref: '2 Coríntios 9:7' },
+  { texto: 'E tudo quanto fizerdes, fazei-o de todo o coração, como ao Senhor e não aos homens.', ref: 'Colossenses 3:23' },
+  { texto: 'Porque eu estava enfermo e me visitastes... Em verdade vos digo que quando o fizestes a um destes meus pequeninos irmãos, a mim o fizestes.', ref: 'Mateus 25:36,40' },
+  { texto: 'O generoso prosperará; o que refrigera os outros também será refrigerado.', ref: 'Provérbios 11:25' },
+  { texto: 'Portanto, enquanto temos oportunidade, façamos o bem a todos.', ref: 'Gálatas 6:10' },
+]
+
+function VersiaculoRotativo() {
+  const [idx, setIdx] = useState(0)
+
+  useEffect(() => {
+    setIdx(Math.floor(Math.random() * VERSICULOS.length))
+  }, [])
+
+  const v = VERSICULOS[idx]
+
+  return (
+    <div style={{ marginTop: 8 }}>
+      <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', lineHeight: 1.7, margin: '0 0 8px', fontStyle: 'italic' }}>
+        "{v.texto}"
+      </p>
+      <p style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.5)', margin: 0, letterSpacing: 1 }}>
+        — {v.ref}
+      </p>
+    </div>
+  )
+}
+
 export default function Login() {
   const router = useRouter()
   const [email, setEmail] = useState('')
@@ -15,9 +45,7 @@ export default function Login() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
   const [mostrarSenha, setMostrarSenha] = useState(false)
   const [isIOS, setIsIOS] = useState(false)
-  const [mostrarPassoIOS, setMostrarPassoIOS] = useState(false)
   const [mostrarBanner, setMostrarBanner] = useState(false)
-  const [bannerResolvido, setBannerResolvido] = useState(false)
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -27,10 +55,8 @@ export default function Login() {
   useEffect(() => {
     const ios = /iphone|ipad|ipod/i.test(navigator.userAgent)
     setIsIOS(ios)
-
     const jaInstalou = localStorage.getItem('app_instalado') === 'true'
     if (!jaInstalou) setMostrarBanner(true)
-
     const handler = (e: any) => { e.preventDefault(); setDeferredPrompt(e) }
     window.addEventListener('beforeinstallprompt', handler)
     return () => window.removeEventListener('beforeinstallprompt', handler)
@@ -44,18 +70,15 @@ export default function Login() {
     if (outcome === 'accepted') {
       localStorage.setItem('app_instalado', 'true')
       setMostrarBanner(false)
-      setBannerResolvido(true)
     }
   }
 
   const jaInstalei = () => {
     localStorage.setItem('app_instalado', 'true')
     setMostrarBanner(false)
-    setBannerResolvido(true)
   }
 
   const agoraNao = () => {
-    // Só esconde na sessão, não salva no localStorage
     setMostrarBanner(false)
   }
 
@@ -81,7 +104,6 @@ export default function Login() {
     setLoading(false)
   }
 
-  // Se banner ainda não foi resolvido e deve mostrar, exibe o banner
   if (mostrarBanner) {
     return (
       <div style={{
@@ -96,55 +118,39 @@ export default function Login() {
         `}</style>
 
         <div className="banner-card" style={{ width: '100%', maxWidth: 420 }}>
-          <div style={{
-            background: '#fff', borderRadius: 24,
-            boxShadow: '0 24px 64px rgba(0,0,0,0.3)',
-            overflow: 'hidden',
-          }}>
-            {/* Topo colorido */}
-            <div style={{
-              background: 'linear-gradient(135deg, #1e3a5f, #2d5a8e)',
-              padding: '36px 32px 28px',
-              textAlign: 'center',
-            }}>
+          <div style={{ background: '#fff', borderRadius: 24, boxShadow: '0 24px 64px rgba(0,0,0,0.3)', overflow: 'hidden' }}>
+
+            <div style={{ background: '#1e3a5f', padding: '36px 32px 28px', textAlign: 'center' }}>
               <div style={{
-                width: 72, height: 72, borderRadius: 20,
-                background: 'rgba(255,255,255,0.15)',
-                backdropFilter: 'blur(10px)',
+                width: 64, height: 64, borderRadius: 18,
+                background: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.2)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 margin: '0 auto 16px',
-                border: '1px solid rgba(255,255,255,0.2)',
               }}>
-                <span style={{ fontSize: 36 }}>📲</span>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>
+                </svg>
               </div>
-              <h2 style={{ fontSize: 22, fontWeight: 800, color: '#fff', margin: '0 0 8px' }}>
-                Instale o App!
-              </h2>
+              <h2 style={{ fontSize: 22, fontWeight: 800, color: '#fff', margin: '0 0 8px' }}>Instale o App!</h2>
               <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', margin: 0, lineHeight: 1.6 }}>
                 Tenha o DARPE sempre à mão na sua tela inicial, sem precisar abrir o navegador.
               </p>
             </div>
 
-            {/* Benefícios */}
             <div style={{ padding: '24px 32px 0' }}>
               {[
                 { icon: '⚡', text: 'Acesso rápido com um toque' },
                 { icon: '🔔', text: 'Receba notificações de escalas' },
-                { icon: '📴', text: 'Funciona mesmo com internet lenta' },
+                { icon: '📶', text: 'Funciona mesmo com internet lenta' },
               ].map(item => (
                 <div key={item.text} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-                  <span style={{
-                    width: 36, height: 36, borderRadius: 10,
-                    background: '#f1f5f9',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 18, flexShrink: 0,
-                  }}>{item.icon}</span>
+                  <span style={{ width: 36, height: 36, borderRadius: 10, background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{item.icon}</span>
                   <span style={{ fontSize: 13, color: '#475569', fontWeight: 500 }}>{item.text}</span>
                 </div>
               ))}
             </div>
 
-            {/* Instruções iPhone */}
             {isIOS && (
               <div style={{ margin: '16px 32px 0', borderRadius: 12, background: '#f8fafc', border: '1px solid #e2e8f0', padding: 16 }}>
                 <p style={{ fontSize: 12, fontWeight: 700, color: '#1e293b', margin: '0 0 10px' }}>Como instalar no iPhone:</p>
@@ -157,28 +163,21 @@ export default function Login() {
               </div>
             )}
 
-            {/* Botões */}
             <div style={{ padding: '20px 32px 32px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {/* Android: botão instalar */}
               {deferredPrompt && !isIOS && (
                 <button onClick={instalarApp} style={{
                   width: '100%', padding: '13px', borderRadius: 12, border: 'none',
-                  background: '#1e3a5f', color: '#fff',
-                  fontSize: 14, fontWeight: 700, cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  background: '#2563eb', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer',
                 }}>
                   📲 Instalar agora
                 </button>
               )}
-
               <button onClick={jaInstalei} style={{
-                width: '100%', padding: '13px', borderRadius: 12, border: 'none',
-                background: '#dcfce7', color: '#16a34a',
-                fontSize: 14, fontWeight: 700, cursor: 'pointer',
+                width: '100%', padding: '13px', borderRadius: 12, border: '1px solid #2563eb',
+                background: '#fff', color: '#2563eb', fontSize: 14, fontWeight: 700, cursor: 'pointer',
               }}>
                 ✅ Já instalei!
               </button>
-
               <button onClick={agoraNao} style={{
                 width: '100%', padding: '11px', borderRadius: 12,
                 border: '1px solid #e2e8f0', background: '#fff',
@@ -228,23 +227,18 @@ export default function Login() {
             <div>
               <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)', letterSpacing: 3, textTransform: 'uppercase', margin: '0 0 6px' }}>DARPE CCB</p>
               <h2 style={{ fontSize: 20, fontWeight: 800, color: '#fff', margin: '0 0 32px', lineHeight: 1.3 }}>Setor 4 — Hospitais</h2>
-              <div style={{ position: 'relative', marginBottom: 32 }}>
-                <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1" style={{ position: 'absolute', right: 0, top: -20 }}>
-                  <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
-                </svg>
-                <h3 style={{ fontSize: 26, fontWeight: 800, color: '#fff', margin: '0 0 12px', lineHeight: 1.3, maxWidth: 280 }}>
-                  Sistema de gestão da orquestra musical
+              <div style={{ marginBottom: 32 }}>
+                <h3 style={{ fontSize: 26, fontWeight: 800, color: '#fff', margin: '0 0 16px', lineHeight: 1.3 }}>
+                  Sistema de Gestão
                 </h3>
-                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6, margin: 0 }}>
-                  Acesse sua conta para registrar escalas, confirmar presença e acompanhar os dados do ministério.
-                </p>
+                <VersiaculoRotativo />
               </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {[
-                { icon: '🏥', label: 'Gestão de escalas hospitalares' },
-                { icon: '✅', label: 'Confirmação de presença' },
-                { icon: '📊', label: 'Relatórios e estatísticas' },
+                { icon: '🏥', label: 'Visitas a hospitais e enfermos' },
+                { icon: '✅', label: 'Confirmação de presença nas escalas' },
+                { icon: '📊', label: 'Relatórios do ministério' },
               ].map(item => (
                 <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ fontSize: 16 }}>{item.icon}</span>
@@ -262,7 +256,7 @@ export default function Login() {
           }}>
             <div style={{ marginBottom: 32 }}>
               <h2 style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', margin: '0 0 6px' }}>
-                {modo === 'login' ? 'Bem-vindo de volta' : 'Recuperar senha'}
+                {modo === 'login' ? 'A Paz de Deus!' : 'Recuperar senha'}
               </h2>
               <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>
                 {modo === 'login' ? 'Insira suas credenciais para acessar o sistema.' : 'Enviaremos um link para seu e-mail.'}
@@ -341,7 +335,7 @@ export default function Login() {
                   <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 }}>E-MAIL</label>
                   <div style={{ position: 'relative' }}>
                     <svg style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-02 2-2z"/><polyline points="22,6 12,13 2,6"/>
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
                     </svg>
                     <input className="input-login" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="seu@email.com"
                       style={{ width: '100%', padding: '12px 14px 12px 42px', borderRadius: 10, border: '1.5px solid #e2e8f0', background: '#f8fafc', fontSize: 14, color: '#1e293b', outline: 'none', boxSizing: 'border-box', transition: 'all 0.2s' }} />
