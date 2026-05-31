@@ -298,9 +298,7 @@ export default async function EstatisticasMembro({ params, searchParams }: {
                   padding: '14px 24px',
                   borderBottom: index < (escalas || []).length - 1 ? '1px solid #f1f5f9' : 'none',
                 }}
-                  onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                >
+                                 >
                   <div>
                     <p style={{ fontSize: 14, fontWeight: 600, color: '#1e293b', margin: 0 }}>{escala.local_texto}</p>
                     <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>{formatarData(escala.data)}</p>
