@@ -342,19 +342,7 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
             )}
           </div>
 
-          <div style={card}>
-            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 16px' }}>🎻 Membros por grupo</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {Object.entries(porGrupo).map(([grupo, total]) => (
-                <div key={grupo} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{grupo}</span>
-                  <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: '#eff6ff', color: '#2563eb' }}>
-                    {total} membro{total > 1 ? 's' : ''}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+          
 
           <div style={card}>
             <h3 style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 16px' }}>⭐ Mais presentes</h3>
@@ -398,40 +386,50 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
             )}
           </div>
 
-          <div style={card}>
-            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 16px' }}>🎼 Membros por instrumento</h3>
-            {instrumentosOrdenados.length === 0 ? (
-              <p style={{ fontSize: 13, color: '#94a3b8' }}>Nenhum instrumento cadastrado</p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {instrumentosOrdenados.map(([inst, qtd]) => (
-                  <div key={inst}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{inst}</span>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: '#7c3aed' }}>
-                        {qtd} ({Math.round((qtd / totalInstrumentos) * 100)}%)
-                      </span>
-                    </div>
-                    <div style={{ background: '#f1f5f9', borderRadius: 999, height: 6 }}>
-                      <div style={{ background: '#7c3aed', height: 6, borderRadius: 999, width: `${(qtd / totalInstrumentos) * 100}%`, transition: 'width 0.3s' }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <div style={{ ...card, gridColumn: '1 / -1' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }} className="tres-cols">
+              <style>{`@media (max-width: 768px) { .tres-cols { grid-template-columns: 1fr !important; } }`}</style>
 
-          <div style={card}>
-            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 16px' }}>👥 Membros por perfil</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {Object.entries(porPerfil).map(([perfil, total]) => (
-                <div key={perfil} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{perfil}</span>
-                  <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: '#f5f3ff', color: '#7c3aed' }}>{total}</span>
+              {[
+                {
+                  titulo: '🎻 Membros por grupo',
+                  itens: Object.entries(porGrupo),
+                  cor: '#2563eb', bg: '#eff6ff',
+                  renderValor: (total: number) => `${total} membro${total > 1 ? 's' : ''}`,
+                },
+                {
+                  titulo: '👥 Membros por perfil',
+                  itens: Object.entries(porPerfil),
+                  cor: '#7c3aed', bg: '#f5f3ff',
+                  renderValor: (total: number) => `${total}`,
+                },
+                {
+                  titulo: '🎼 Por instrumento',
+                  itens: instrumentosOrdenados,
+                  cor: '#d97706', bg: '#fff7ed',
+                  renderValor: (total: number) => `${total} (${Math.round((total / totalInstrumentos) * 100)}%)`,
+                },
+              ].map((secao, idx) => (
+                <div key={secao.titulo} style={{
+                  borderLeft: idx > 0 ? '1px solid #f1f5f9' : 'none',
+                  padding: idx > 0 ? '0 0 0 24px' : '0 24px 0 0',
+                }}>
+                  <h3 style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 12px' }}>{secao.titulo}</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    {secao.itens.map(([label, total]) => (
+                      <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{label}</span>
+                        <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: secao.bg, color: secao.cor }}>
+                          {secao.renderValor(total as number)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>
           </div>
+          
 
           <div style={card}>
             <h3 style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 16px' }}>🆕 Novos membros no período</h3>
