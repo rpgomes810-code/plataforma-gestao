@@ -3,11 +3,24 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-const inputClass = "w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
-const labelClass = "block text-sm font-medium text-gray-700 mb-1"
-
 type Hospital = { id: string; nome: string }
 type Membro = { id: string; nome: string; grupo: string }
+
+const inputStyle: React.CSSProperties = {
+  width: '100%', padding: '10px 14px', borderRadius: 8,
+  border: '1px solid #e2e8f0', background: '#f8fafc',
+  fontSize: 14, color: '#1e293b', outline: 'none', boxSizing: 'border-box',
+}
+
+const labelStyle: React.CSSProperties = {
+  display: 'block', fontSize: 12, fontWeight: 600,
+  color: '#64748b', marginBottom: 6,
+}
+
+const secaoStyle: React.CSSProperties = {
+  fontSize: 11, fontWeight: 700, color: '#94a3b8',
+  letterSpacing: 1, textTransform: 'uppercase', marginBottom: 16,
+}
 
 function NovoRegistroForm() {
   const router = useRouter()
@@ -103,18 +116,6 @@ function NovoRegistroForm() {
     })
 
     if (res.ok) {
-      const hospitalNome = hospitais.find(h => h.id === form.hospital_id)?.nome || form.hospital_id
-      await fetch('/api/logs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          usuario_nome: usuarioNome,
-          acao: `Registrou atendimento: ${hospitalNome}`,
-          tabela: 'registros',
-          dados_antes: null,
-          dados_depois: dadosRegistro,
-        }),
-      })
       router.push('/dashboard/registros')
     } else {
       alert('Erro ao salvar registro')
@@ -125,134 +126,192 @@ function NovoRegistroForm() {
   const hospitalPreenchido = hospitais.find(h => h.id === hospital_id_param)
 
   return (
-    <div className="p-4 md:p-6 max-w-4xl">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-xl font-bold text-gray-800">Novo Registro de Atendimento</h2>
-          <p className="text-sm text-gray-500">Preencha os dados do atendimento</p>
+    <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: '28px 40px' }} className="reg-wrap">
+      <style>{`
+        @media (max-width: 768px) { .reg-wrap { padding: 16px !important; } .grid-2 { grid-template-columns: 1fr !important; } .grid-3 { grid-template-columns: 1fr !important; } .grid-4 { grid-template-columns: 1fr 1fr !important; } }
+        input:focus, select:focus, textarea:focus { border-color: #2563eb !important; background: #fff !important; }
+      `}</style>
+
+      <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+          <div>
+            <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>Novo Registro de Atendimento</h1>
+            <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>Preencha os dados do atendimento</p>
+          </div>
+          <a href="/dashboard/registros" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: '#64748b', textDecoration: 'none' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+            </svg>
+            Voltar
+          </a>
         </div>
-        <a href="/dashboard/registros" className="text-gray-500 hover:text-gray-700 text-sm">← Voltar</a>
-      </div>
 
-      <div className="bg-white rounded-2xl shadow p-4 md:p-6 w-full">
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit}>
+          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
-              <label className={labelClass}>Hospital *</label>
-              {hospitalPreenchido ? (
-                <div className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-700">🏥 {hospitalPreenchido.nome}</div>
-              ) : (
-                <select name="hospital_id" required value={form.hospital_id} onChange={handleChange} className={inputClass}>
-                  <option value="">Selecione...</option>
-                  {hospitais.map(h => <option key={h.id} value={h.id}>{h.nome}</option>)}
-                </select>
-              )}
-            </div>
-            <div>
-              <label className={labelClass}>Data do atendimento *</label>
-              {data_param ? (
-                <div className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-700">
-                  📅 {new Date(data_param + 'T12:00:00').toLocaleDateString('pt-BR')}
+            {/* Dados do Atendimento */}
+            <div style={{ padding: '24px 28px', borderBottom: '1px solid #f1f5f9' }}>
+              <p style={secaoStyle}>Dados do Atendimento</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+                <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div>
+                    <label style={labelStyle}>Hospital *</label>
+                    {hospitalPreenchido ? (
+                      <div style={{ ...inputStyle, color: '#475569', background: '#f1f5f9' }}>🏥 {hospitalPreenchido.nome}</div>
+                    ) : (
+                      <select name="hospital_id" required value={form.hospital_id} onChange={handleChange} style={inputStyle}>
+                        <option value="">Selecione...</option>
+                        {hospitais.map(h => <option key={h.id} value={h.id}>{h.nome}</option>)}
+                      </select>
+                    )}
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Data do atendimento *</label>
+                    {data_param ? (
+                      <div style={{ ...inputStyle, color: '#475569', background: '#f1f5f9' }}>
+                        📅 {new Date(data_param + 'T12:00:00').toLocaleDateString('pt-BR')}
+                      </div>
+                    ) : (
+                      <input name="data" type="date" required value={form.data} onChange={handleChange} style={inputStyle} />
+                    )}
+                  </div>
                 </div>
-              ) : (
-                <input name="data" type="date" required value={form.data} onChange={handleChange} className={inputClass} />
-              )}
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div>
-              <label className={labelClass}>Data do registro</label>
-              <div className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-700">
-                📋 {new Date().toLocaleDateString('pt-BR')}
+                <div className="grid-3" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+                  <div>
+                    <label style={labelStyle}>Data do registro</label>
+                    <div style={{ ...inputStyle, color: '#475569', background: '#f1f5f9' }}>
+                      📋 {new Date().toLocaleDateString('pt-BR')}
+                    </div>
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Hora início *</label>
+                    <input name="hora_inicio" type="time" required value={form.hora_inicio} onChange={handleChange} style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Hora término *</label>
+                    <input name="hora_termino" type="time" required value={form.hora_termino} onChange={handleChange} style={inputStyle} />
+                  </div>
+                </div>
+
+                <div className="grid-4" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 16 }}>
+                  <div>
+                    <label style={labelStyle}>Quem autorizou a entrada *</label>
+                    <input name="quem_autorizou" type="text" required value={form.quem_autorizou} onChange={handleChange} style={inputStyle} placeholder="Nome do responsável" />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Hinos executados *</label>
+                    <input name="hinos_executados" type="number" required min="1" value={form.hinos_executados} onChange={handleChange} style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Houve oração?</label>
+                    <select name="teve_oracao" value={form.teve_oracao} onChange={handleChange} style={inputStyle}>
+                      <option value="true">✅ Sim</option>
+                      <option value="false">❌ Não</option>
+                    </select>
+                  </div>
+                </div>
+
               </div>
             </div>
-            <div>
-              <label className={labelClass}>Hora início *</label>
-              <input name="hora_inicio" type="time" required value={form.hora_inicio} onChange={handleChange} className={inputClass} />
-            </div>
-            <div>
-              <label className={labelClass}>Hora término *</label>
-              <input name="hora_termino" type="time" required value={form.hora_termino} onChange={handleChange} className={inputClass} />
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-            <div className="md:col-span-2">
-              <label className={labelClass}>Quem autorizou a entrada *</label>
-              <input name="quem_autorizou" type="text" required value={form.quem_autorizou} onChange={handleChange} className={inputClass} placeholder="Nome do responsável" />
-            </div>
-            <div>
-              <label className={labelClass}>Hinos executados *</label>
-              <input name="hinos_executados" type="number" required min="1" value={form.hinos_executados} onChange={handleChange} className={inputClass} />
-            </div>
-            <div>
-              <label className={labelClass}>Houve oração?</label>
-              <select name="teve_oracao" value={form.teve_oracao} onChange={handleChange} className={inputClass}>
-                <option value="true">✅ Sim</option>
-                <option value="false">❌ Não</option>
-              </select>
-            </div>
-          </div>
+            {/* Membros Presentes */}
+            <div style={{ padding: '24px 28px', borderBottom: '1px solid #f1f5f9' }}>
+              <p style={secaoStyle}>Membros Presentes</p>
 
-          <hr className="border-gray-100" />
+              <div style={{ position: 'relative', marginBottom: 12 }}>
+                <input
+                  type="text"
+                  value={busca}
+                  onChange={e => setBusca(e.target.value)}
+                  style={inputStyle}
+                  placeholder="Digite o nome do membro ou o grupo (ex: Grupo 1)..."
+                />
+                {(gruposFiltrados.length > 0 || membrosFiltrados.length > 0) && (
+                  <div style={{
+                    position: 'absolute', zIndex: 10, width: '100%',
+                    background: '#fff', border: '1px solid #e2e8f0',
+                    borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                    marginTop: 4, maxHeight: 220, overflowY: 'auto',
+                  }}>
+                    {gruposFiltrados.map(g => (
+                      <button key={g} type="button" onClick={() => adicionarGrupo(g)} style={{
+                        width: '100%', textAlign: 'left', padding: '10px 14px',
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        fontSize: 13, fontWeight: 600, color: '#2563eb',
+                        borderBottom: '1px solid #f1f5f9',
+                      }}>
+                        🎻 Adicionar todos do {g}
+                      </button>
+                    ))}
+                    {membrosFiltrados.map(m => (
+                      <button key={m.id} type="button" onClick={() => adicionarMembro(m.nome)} style={{
+                        width: '100%', textAlign: 'left', padding: '10px 14px',
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        fontSize: 13, color: '#334155',
+                        borderBottom: '1px solid #f1f5f9',
+                      }}>
+                        {m.nome} <span style={{ fontSize: 11, color: '#94a3b8' }}>({m.grupo})</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-          <div>
-            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-2">Membros presentes</h3>
-            <div className="relative mb-2">
-              <input
-                type="text"
-                value={busca}
-                onChange={e => setBusca(e.target.value)}
-                className={inputClass}
-                placeholder="Digite o nome do membro ou o grupo (ex: Grupo 1)..."
-              />
-              {(gruposFiltrados.length > 0 || membrosFiltrados.length > 0) && (
-                <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto">
-                  {gruposFiltrados.map(g => (
-                    <button key={g} type="button" onClick={() => adicionarGrupo(g)} className="w-full text-left px-4 py-2.5 text-sm text-blue-700 hover:bg-blue-50 transition font-semibold">
-                      🎻 Adicionar todos do {g}
-                    </button>
-                  ))}
-                  {membrosFiltrados.map(m => (
-                    <button key={m.id} type="button" onClick={() => adicionarMembro(m.nome)} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition">
-                      {m.nome} <span className="text-xs text-gray-400">({m.grupo})</span>
-                    </button>
+              {membrosSelecionados.length > 0 ? (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {membrosSelecionados.map(nome => (
+                    <span key={nome} style={{
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      background: '#eff6ff', color: '#2563eb',
+                      fontSize: 12, fontWeight: 600,
+                      padding: '4px 12px', borderRadius: 999,
+                    }}>
+                      {nome}
+                      <button type="button" onClick={() => removerMembro(nome)} style={{
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        color: '#93c5fd', fontWeight: 700, fontSize: 14, padding: 0, lineHeight: 1,
+                      }}>×</button>
+                    </span>
                   ))}
                 </div>
+              ) : (
+                <p style={{ fontSize: 13, color: '#94a3b8', margin: 0 }}>Nenhum membro adicionado ainda</p>
               )}
             </div>
-            {membrosSelecionados.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {membrosSelecionados.map(nome => (
-                  <span key={nome} className="flex items-center gap-1 bg-blue-50 text-blue-700 text-sm font-medium px-3 py-1 rounded-full">
-                    {nome}
-                    <button type="button" onClick={() => removerMembro(nome)} className="text-blue-400 hover:text-blue-700 ml-1 font-bold">×</button>
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-gray-400">Nenhum membro adicionado ainda</p>
-            )}
+
+            {/* Observações */}
+            <div style={{ padding: '24px 28px', borderBottom: '1px solid #f1f5f9' }}>
+              <p style={secaoStyle}>Observações</p>
+              <textarea name="observacoes" rows={3} value={form.observacoes} onChange={handleChange}
+                style={{ ...inputStyle, resize: 'vertical' }}
+                placeholder="Alguma observação sobre o atendimento..." />
+            </div>
+
+            {/* Botões */}
+            <div style={{ padding: '20px 28px', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              <button type="submit" disabled={loading} style={{
+                padding: '10px 24px', borderRadius: 8, border: 'none',
+                background: loading ? '#93c5fd' : '#2563eb',
+                color: '#fff', fontSize: 14, fontWeight: 600,
+                cursor: loading ? 'not-allowed' : 'pointer',
+              }}>
+                {loading ? 'Salvando...' : 'Salvar Registro'}
+              </button>
+              <a href="/dashboard/registros" style={{
+                padding: '10px 24px', borderRadius: 8,
+                background: '#f1f5f9', color: '#475569',
+                fontSize: 14, fontWeight: 600,
+                textDecoration: 'none', display: 'inline-flex', alignItems: 'center',
+              }}>
+                Cancelar
+              </a>
+            </div>
+
           </div>
-
-          <hr className="border-gray-100" />
-
-          <div>
-            <label className={labelClass}>Observações</label>
-            <textarea name="observacoes" rows={2} value={form.observacoes} onChange={handleChange} className={inputClass} placeholder="Alguma observação sobre o atendimento..." />
-          </div>
-
-          <div className="flex flex-col md:flex-row gap-3 pt-1">
-            <button type="submit" disabled={loading} className="w-full md:w-auto bg-blue-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 text-sm">
-              {loading ? 'Salvando...' : 'Salvar Registro'}
-            </button>
-            <a href="/dashboard/registros" className="w-full md:w-auto text-center bg-gray-100 text-gray-700 px-6 py-2.5 rounded-lg font-semibold hover:bg-gray-200 transition text-sm">
-              Cancelar
-            </a>
-          </div>
-
         </form>
       </div>
     </div>
@@ -261,7 +320,7 @@ function NovoRegistroForm() {
 
 export default function NovoRegistro() {
   return (
-    <Suspense fallback={<div className="p-6 text-gray-500">Carregando...</div>}>
+    <Suspense fallback={<div style={{ background: '#f1f5f9', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p style={{ color: '#64748b', fontSize: 14 }}>Carregando...</p></div>}>
       <NovoRegistroForm />
     </Suspense>
   )
