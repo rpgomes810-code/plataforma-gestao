@@ -10,6 +10,12 @@ const supabase = createClient(
 
 const CAMPOS_IGNORAR = ['id', 'user_id', 'aprovado', 'criado_em', 'escala_id', 'criado_por', 'data_registro', 'ativo', 'logo_url', 'created_at', 'registrada', 'confirmacao_aberta', 'hospital_id']
 
+function formatarValor(valor: any): string {
+  if (valor === null || valor === undefined) return '—'
+  if (typeof valor === 'object') return JSON.stringify(valor, null, 2)
+  return String(valor)
+}
+
 function DiffView({ antes, depois }: { antes: any, depois: any }) {
   if (!antes || !depois) return null
   const campos = new Set([...Object.keys(antes), ...Object.keys(depois)])
@@ -23,8 +29,8 @@ function DiffView({ antes, depois }: { antes: any, depois: any }) {
       {alterados.map(campo => (
         <div key={campo} style={{ borderRadius: 6, overflow: 'hidden', border: '1px solid #f1f5f9', fontSize: 11 }}>
           <div style={{ background: '#f8fafc', padding: '3px 8px', fontWeight: 700, color: '#475569' }}>{campo}</div>
-          <div style={{ background: '#fee2e2', padding: '3px 8px', color: '#dc2626' }}>— {String(antes[campo] ?? '—')}</div>
-          <div style={{ background: '#dcfce7', padding: '3px 8px', color: '#16a34a' }}>+ {String(depois[campo] ?? '—')}</div>
+          <div style={{ background: '#fee2e2', padding: '3px 8px', color: '#dc2626', whiteSpace: 'pre-wrap' }}>— {formatarValor(antes[campo])}</div>
+          <div style={{ background: '#dcfce7', padding: '3px 8px', color: '#16a34a', whiteSpace: 'pre-wrap' }}>+ {formatarValor(depois[campo])}</div>
         </div>
       ))}
     </div>
@@ -47,8 +53,8 @@ export default async function Logs() {
     let bg = '#f1f5f9', color = '#475569'
     if (acao.includes('[REVERTIDO]')) { bg = '#fff7ed'; color = '#d97706' }
     else if (acao.includes('Excluiu')) { bg = '#fee2e2'; color = '#dc2626' }
-    else if (acao.includes('Criou') || acao.includes('Aprovou') || acao.includes('Registrou')) { bg = '#dcfce7'; color = '#16a34a' }
-    else if (acao.includes('Editou') || acao.includes('Atualizou')) { bg = '#fef9c3'; color = '#854d0e' }
+    else if (acao.includes('Criou') || acao.includes('Aprovou') || acao.includes('Registrou') || acao.includes('Gerou') || acao.includes('Liberou')) { bg = '#dcfce7'; color = '#16a34a' }
+    else if (acao.includes('Editou') || acao.includes('Atualizou') || acao.includes('Alterou')) { bg = '#fef9c3'; color = '#854d0e' }
     return { bg, color }
   }
 
