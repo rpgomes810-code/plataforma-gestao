@@ -95,7 +95,8 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ id: str
   const usuarioNome = await getUsuarioLogado()
 
   const { data: dadosAntes } = await supabaseAdmin.from('escalas').select('*').eq('id', id).single()
-  const { error } = await supabaseAdmin.from('escalas').delete().eq('id', id)
+await supabaseAdmin.from('confirmacoes').delete().eq('escala_id', id)
+const { error } = await supabaseAdmin.from('escalas').delete().eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   await supabaseAdmin.from('logs').insert([{
