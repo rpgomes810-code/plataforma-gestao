@@ -9,7 +9,7 @@ const supabase = createClient(
 export async function GET() {
   const { data: ausentes, error } = await supabase
     .from('confirmacoes')
-    .select('*, escalas!confirmacoes_escala_id_fkey(id, data, grupo, local_texto, hora_inicio, confirmacao_aberta), membros!confirmacoes_membro_id_fkey(nome, instrumento, tipo)')
+.select('*, escalas!confirmacoes_escala_id_fkey(id, data, grupo, local_texto, hora_inicio, confirmacao_aberta), membros!confirmacoes_membro_id_fkey(nome, instrumento, perfil)') 
     .eq('status', 'ausente')
     .is('substituto_id', null)
 

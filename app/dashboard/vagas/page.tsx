@@ -30,13 +30,13 @@ export default function Vagas() {
     weekday: 'long', day: '2-digit', month: '2-digit'
   })
 
-  const tipoVaga = (vaga: any) => {
-    const tipo = (vaga.membros?.tipo ?? '').toString().trim().toLowerCase()
-    const instrumento = (vaga.membros?.instrumento ?? '').toString().trim()
-    if (tipo === 'atendente') return 'Atendente'
-    if (instrumento && instrumento !== 'Nenhum') return instrumento
-    return '—'
-  }
+const tipoVaga = (vaga: any) => {
+  const instrumento = (vaga.membros?.instrumento ?? '').toString().trim()
+  const perfil = (vaga.membros?.perfil ?? '').toString().trim()
+  if (instrumento && instrumento !== 'Nenhum') return instrumento
+  if (perfil) return perfil
+  return '—'
+}
 
   return (
     <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: '28px 40px' }} className="vagas-wrap">
