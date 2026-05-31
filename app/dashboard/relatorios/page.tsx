@@ -163,7 +163,8 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
   })
 
   // Status dos grupos
-  const gruposUnicos = [...new Set((membros || []).map(m => m.grupo).filter(Boolean))].sort()
+ const GRUPOS_ADMIN = ['Administradores', 'Atendentes']
+ const gruposUnicos = [...new Set((membros || []).map(m => m.grupo).filter(Boolean))].filter(g => !GRUPOS_ADMIN.includes(g)).sort()
   const statusGrupos = gruposUnicos.map(grupo => {
     const membrosDoGrupo = (membros || []).filter(m => m.grupo === grupo)
     return { grupo, ...avaliarGrupo(membrosDoGrupo) }
