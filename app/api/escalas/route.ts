@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
   const ano = searchParams.get('ano')
 
   const inicio = `${ano}-${mes?.padStart(2, '0')}-01`
-  const fim = `${ano}-${mes?.padStart(2, '0')}-31`
+  const fim = new Date(Number(ano), Number(mes), 0).toISOString().split('T')[0]
 
   const { data, error } = await supabaseAdmin
     .from('escalas').select('*')
