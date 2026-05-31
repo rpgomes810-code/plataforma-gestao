@@ -15,13 +15,8 @@ const VERSICULOS = [
 
 function VersiaculoRotativo() {
   const [idx, setIdx] = useState(0)
-
-  useEffect(() => {
-    setIdx(Math.floor(Math.random() * VERSICULOS.length))
-  }, [])
-
+  useEffect(() => { setIdx(Math.floor(Math.random() * VERSICULOS.length)) }, [])
   const v = VERSICULOS[idx]
-
   return (
     <div style={{ marginTop: 8 }}>
       <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', lineHeight: 1.7, margin: '0 0 8px', fontStyle: 'italic' }}>
@@ -78,9 +73,7 @@ export default function Login() {
     setMostrarBanner(false)
   }
 
-  const agoraNao = () => {
-    setMostrarBanner(false)
-  }
+  const agoraNao = () => setMostrarBanner(false)
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -106,19 +99,14 @@ export default function Login() {
 
   if (mostrarBanner) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #1e3a5f 0%, #2d5a8e 50%, #1e4976 100%)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '24px 16px',
-      }}>
+      <div style={{ minHeight: '100vh', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px 16px' }}>
         <style>{`
           @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
           .banner-card { animation: fadeIn 0.4s ease; }
         `}</style>
 
         <div className="banner-card" style={{ width: '100%', maxWidth: 420 }}>
-          <div style={{ background: '#fff', borderRadius: 24, boxShadow: '0 24px 64px rgba(0,0,0,0.3)', overflow: 'hidden' }}>
+          <div style={{ background: '#fff', borderRadius: 24, boxShadow: '0 8px 32px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
 
             <div style={{ background: '#1e3a5f', padding: '36px 32px 28px', textAlign: 'center' }}>
               <div style={{
@@ -193,19 +181,14 @@ export default function Login() {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #1e3a5f 0%, #2d5a8e 50%, #1e4976 100%)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: '24px 16px',
-    }}>
+    <div style={{ minHeight: '100vh', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px 16px' }}>
       <style>{`
         @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
         .login-card { animation: fadeIn 0.4s ease; }
         .input-login:focus { border-color: #2563eb !important; background: #fff !important; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
         .btn-primary:hover:not(:disabled) { background: #1d4ed8 !important; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,0.4); }
         .btn-primary { transition: all 0.2s; }
-        .btn-secondary:hover { background: #f1f5f9 !important; }
+        .btn-secondary:hover { background: #e2e8f0 !important; }
         .btn-secondary { transition: background 0.2s; }
         @media (max-width: 768px) { .login-inner { flex-direction: column !important; } .login-left { display: none !important; } }
       `}</style>
@@ -213,39 +196,21 @@ export default function Login() {
       <div className="login-card" style={{ width: '100%', maxWidth: 860 }}>
         <div className="login-inner" style={{
           display: 'flex', borderRadius: 24, overflow: 'hidden',
-          boxShadow: '0 24px 64px rgba(0,0,0,0.3)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0',
         }}>
 
           {/* Lado esquerdo */}
           <div className="login-left" style={{
-            flex: 1, background: 'rgba(255,255,255,0.08)',
-            backdropFilter: 'blur(10px)',
+            flex: 1, background: '#1e3a5f',
             padding: '48px 40px',
-            display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-            borderRight: '1px solid rgba(255,255,255,0.1)',
+            display: 'flex', flexDirection: 'column', justifyContent: 'center',
           }}>
-            <div>
-              <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)', letterSpacing: 3, textTransform: 'uppercase', margin: '0 0 6px' }}>DARPE CCB</p>
-              <h2 style={{ fontSize: 20, fontWeight: 800, color: '#fff', margin: '0 0 32px', lineHeight: 1.3 }}>Setor 4 — Hospitais</h2>
-              <div style={{ marginBottom: 32 }}>
-                <h3 style={{ fontSize: 26, fontWeight: 800, color: '#fff', margin: '0 0 16px', lineHeight: 1.3 }}>
-                  Sistema de Gestão
-                </h3>
-                <VersiaculoRotativo />
-              </div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {[
-                { icon: '🏥', label: 'Visitas a hospitais e enfermos' },
-                { icon: '✅', label: 'Confirmação de presença nas escalas' },
-                { icon: '📊', label: 'Relatórios do ministério' },
-              ].map(item => (
-                <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontSize: 16 }}>{item.icon}</span>
-                  <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>{item.label}</span>
-                </div>
-              ))}
-            </div>
+            <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)', letterSpacing: 3, textTransform: 'uppercase', margin: '0 0 6px' }}>DARPE CCB</p>
+            <h2 style={{ fontSize: 20, fontWeight: 800, color: '#fff', margin: '0 0 32px', lineHeight: 1.3 }}>Setor 4 — Hospitais</h2>
+            <h3 style={{ fontSize: 26, fontWeight: 800, color: '#fff', margin: '0 0 16px', lineHeight: 1.3 }}>
+              Sistema de Gestão
+            </h3>
+            <VersiaculoRotativo />
           </div>
 
           {/* Lado direito */}
@@ -309,7 +274,7 @@ export default function Login() {
 
                 <button className="btn-primary" onClick={handleLogin} disabled={loading} style={{
                   width: '100%', padding: '13px', borderRadius: 10, border: 'none',
-                  background: '#1e3a5f', color: '#fff',
+                  background: '#2563eb', color: '#fff',
                   fontSize: 13, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase',
                   cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1,
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -347,7 +312,7 @@ export default function Login() {
 
                 <button className="btn-primary" onClick={handleRecuperar} disabled={loading} style={{
                   width: '100%', padding: '13px', borderRadius: 10, border: 'none',
-                  background: '#1e3a5f', color: '#fff',
+                  background: '#2563eb', color: '#fff',
                   fontSize: 13, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase',
                   cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1,
                 }}>
