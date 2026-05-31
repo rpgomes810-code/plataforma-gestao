@@ -86,6 +86,9 @@ export default function Dashboard() {
   const dadosHospital = Object.entries(porHospital).sort((a, b) => b[1] - a[1])
   const maxHospital = Math.max(...dadosHospital.map(([, v]) => v), 1)
 
+  const totalAtendimentosMes = registrosHospitais.length
+  const totalParticipantesMes = registrosHospitais.reduce((acc: number, r: any) => acc + (r.quantidade_participantes || 0), 0)
+
   const primeiroDia = new Date(calAno, calMes, 1).getDay()
   const diasNoMes = new Date(calAno, calMes + 1, 0).getDate()
   const diasMesAnterior = new Date(calAno, calMes, 0).getDate()
@@ -140,6 +143,24 @@ export default function Dashboard() {
       detalhes: escalasPendentes.map((e: any) => `${e.local_texto || e.hospitais?.nome || '—'} · ${formatarData(e.data)}`),
     },
     {
+      key: 'atendimentos',
+      valor: totalAtendimentosMes,
+      label: 'Atendimentos no mês',
+      cor: '#dc2626',
+      bgIcon: '#fee2e2',
+      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+      detalhes: [],
+    },
+    {
+      key: 'participantes',
+      valor: totalParticipantesMes,
+      label: 'Participantes no mês',
+      cor: '#0891b2',
+      bgIcon: '#e0f2fe',
+      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0891b2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="23" y1="11" x2="17" y2="11"/><line x1="20" y1="8" x2="20" y2="14"/></svg>,
+      detalhes: [],
+    },
+    {
       key: 'hospitais',
       valor: hospitais.length || '—',
       label: 'Hospitais',
@@ -179,13 +200,11 @@ export default function Dashboard() {
     }}>
       <div style={{ maxWidth: 960, margin: '0 auto' }}>
 
-        {/* Header */}
         <div style={{ marginBottom: 28 }}>
           <p style={{ color: '#64748b', fontSize: 13, fontWeight: 600, margin: 0 }}>Bem-vindo de volta</p>
           <h2 style={{ color: '#0f172a', fontSize: 28, fontWeight: 800, margin: '4px 0 0' }}>{membro?.nome || '...'}</h2>
         </div>
 
-        {/* Banner cadastro incompleto */}
         {!cadastroCompleto && (
           <a href="/dashboard/completar-cadastro" style={{ textDecoration: 'none' }}>
             <div style={{
@@ -195,9 +214,7 @@ export default function Dashboard() {
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="12" y1="8" x2="12" y2="12"/>
-                  <line x1="12" y1="16" x2="12.01" y2="16"/>
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                   <p style={{ color: 'white', fontWeight: 800, fontSize: 14, margin: 0 }}>COMPLETE SEU CADASTRO</p>
@@ -211,7 +228,6 @@ export default function Dashboard() {
           </a>
         )}
 
-        {/* Banner de Avisos */}
         {avisos.map(aviso => (
           <div key={aviso.id} style={{
             background: 'linear-gradient(135deg, #d97706, #f59e0b)',
@@ -227,7 +243,6 @@ export default function Dashboard() {
           </div>
         ))}
 
-        {/* Banner de Aniversariantes */}
         {aniversariantes.length > 0 && (
           <div style={{
             background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
@@ -248,13 +263,12 @@ export default function Dashboard() {
                 ))}
               </p>
               <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, margin: 0, fontStyle: 'italic' }}>
-  "Que este dia seja tão especial quanto você é para nós! Em nome de toda a equipe DARPE, desejamos a você um feliz aniversário cheio das bênçãos de Deus. Que o Senhor te guarde e te prospere em mais um ano de vida!"
-</p>
+                "Que este dia seja tão especial quanto você é para nós! Em nome de toda a equipe DARPE, desejamos a você um feliz aniversário cheio das bênçãos de Deus. Que o Senhor te guarde e te prospere em mais um ano de vida!"
+              </p>
             </div>
           </div>
         )}
 
-        {/* Vagas */}
         {vagas.length > 0 && (
           <a href="/dashboard/vagas" style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -277,27 +291,27 @@ export default function Dashboard() {
         )}
 
         {/* Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }} className="cards-dash">
+          <style>{`@media (max-width: 768px) { .cards-dash { grid-template-columns: 1fr 1fr !important; } }`}</style>
           {cards.map(card => (
             <div key={card.key} style={cardStyle}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                 <div style={{ width: 36, height: 36, borderRadius: 10, background: card.bgIcon, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {card.icon}
                 </div>
-                <button onClick={() => toggle(card.key)} style={{ color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    {aberto[card.key] ? <polyline points="18 15 12 9 6 15"/> : <polyline points="6 9 12 15 18 9"/>}
-                  </svg>
-                </button>
+                {card.detalhes.length > 0 && (
+                  <button onClick={() => toggle(card.key)} style={{ color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      {aberto[card.key] ? <polyline points="18 15 12 9 6 15"/> : <polyline points="6 9 12 15 18 9"/>}
+                    </svg>
+                  </button>
+                )}
               </div>
-              <p style={{ color: card.cor, fontSize: 32, fontWeight: 800, margin: '0 0 2px' }}>{card.valor}</p>
-              <p style={{ color: '#64748b', fontSize: 12, fontWeight: 600, margin: 0 }}>{card.label}</p>
-              {aberto[card.key] && (
+              <p style={{ color: card.cor, fontSize: 32, fontWeight: 800, margin: '0 0 2px', textAlign: 'center' }}>{card.valor}</p>
+              <p style={{ color: '#64748b', fontSize: 12, fontWeight: 600, margin: 0, textAlign: 'center' }}>{card.label}</p>
+              {aberto[card.key] && card.detalhes.length > 0 && (
                 <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #f1f5f9' }}>
-                  {card.detalhes.length > 0
-                    ? card.detalhes.map((d, i) => <p key={i} style={{ color: '#475569', fontSize: 12, margin: '0 0 4px', fontWeight: 500 }}>• {d}</p>)
-                    : <p style={{ color: '#94a3b8', fontSize: 12, margin: 0 }}>Nenhum pendente ✅</p>
-                  }
+                  {card.detalhes.map((d, i) => <p key={i} style={{ color: '#475569', fontSize: 12, margin: '0 0 4px', fontWeight: 500 }}>• {d}</p>)}
                 </div>
               )}
             </div>
@@ -440,7 +454,6 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Notificações */}
         {notificacaoAtiva !== null && (
           <div style={{
             display: 'flex', alignItems: 'center', gap: 8,

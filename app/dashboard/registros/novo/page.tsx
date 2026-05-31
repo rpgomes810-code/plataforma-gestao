@@ -46,6 +46,7 @@ function NovoRegistroForm() {
     hinos_executados: '0',
     teve_oracao: 'false',
     observacoes: '',
+    quantidade_participantes: '0',
   })
 
   useEffect(() => {
@@ -93,6 +94,12 @@ function NovoRegistroForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (membrosSelecionados.length === 0) {
+      alert('Adicione pelo menos um membro presente antes de salvar!')
+      return
+    }
+
     setLoading(true)
 
     const dadosRegistro = {
@@ -106,6 +113,7 @@ function NovoRegistroForm() {
       teve_oracao: form.teve_oracao === 'true',
       observacoes: form.observacoes,
       membros_presentes: membrosSelecionados.join(', '),
+      quantidade_participantes: parseInt(form.quantidade_participantes) || 0,
       escala_id: escala_id || null,
     }
 
@@ -134,7 +142,6 @@ function NovoRegistroForm() {
 
       <div style={{ maxWidth: 1280, margin: '0 auto' }}>
 
-        {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
           <div>
             <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>Novo Registro de Atendimento</h1>
@@ -151,7 +158,6 @@ function NovoRegistroForm() {
         <form onSubmit={handleSubmit}>
           <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
 
-            {/* Dados do Atendimento */}
             <div style={{ padding: '24px 28px', borderBottom: '1px solid #f1f5f9' }}>
               <p style={secaoStyle}>Dados do Atendimento</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -197,7 +203,7 @@ function NovoRegistroForm() {
                   </div>
                 </div>
 
-                <div className="grid-4" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 16 }}>
+                <div className="grid-4" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 16 }}>
                   <div>
                     <label style={labelStyle}>Quem autorizou a entrada *</label>
                     <input name="quem_autorizou" type="text" required value={form.quem_autorizou} onChange={handleChange} style={inputStyle} placeholder="Nome do responsável" />
@@ -205,6 +211,10 @@ function NovoRegistroForm() {
                   <div>
                     <label style={labelStyle}>Hinos executados *</label>
                     <input name="hinos_executados" type="number" required min="1" value={form.hinos_executados} onChange={handleChange} style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Participantes</label>
+                    <input name="quantidade_participantes" type="number" min="0" value={form.quantidade_participantes} onChange={handleChange} style={inputStyle} placeholder="0" />
                   </div>
                   <div>
                     <label style={labelStyle}>Houve oração?</label>
@@ -218,9 +228,8 @@ function NovoRegistroForm() {
               </div>
             </div>
 
-            {/* Membros Presentes */}
             <div style={{ padding: '24px 28px', borderBottom: '1px solid #f1f5f9' }}>
-              <p style={secaoStyle}>Membros Presentes</p>
+              <p style={secaoStyle}>Membros Presentes *</p>
 
               <div style={{ position: 'relative', marginBottom: 12 }}>
                 <input
@@ -279,11 +288,10 @@ function NovoRegistroForm() {
                   ))}
                 </div>
               ) : (
-                <p style={{ fontSize: 13, color: '#94a3b8', margin: 0 }}>Nenhum membro adicionado ainda</p>
+                <p style={{ fontSize: 13, color: '#dc2626', margin: 0, fontWeight: 600 }}>⚠️ Adicione pelo menos um membro presente</p>
               )}
             </div>
 
-            {/* Observações */}
             <div style={{ padding: '24px 28px', borderBottom: '1px solid #f1f5f9' }}>
               <p style={secaoStyle}>Observações</p>
               <textarea name="observacoes" rows={3} value={form.observacoes} onChange={handleChange}
@@ -291,7 +299,6 @@ function NovoRegistroForm() {
                 placeholder="Alguma observação sobre o atendimento..." />
             </div>
 
-            {/* Botões */}
             <div style={{ padding: '20px 28px', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
               <button type="submit" disabled={loading} style={{
                 padding: '10px 24px', borderRadius: 8, border: 'none',
