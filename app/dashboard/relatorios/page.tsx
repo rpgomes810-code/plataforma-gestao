@@ -319,77 +319,97 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
         </div>
 
         {/* Gráficos */}
-        <div className="rel-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 12 }}>
 
-          <div style={card}>
-            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 16px' }}>🏥 Atendimentos por hospital</h3>
-            {hospitalOrdenado.length === 0 ? (
-              <p style={{ fontSize: 13, color: '#94a3b8' }}>Nenhum atendimento no período</p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {hospitalOrdenado.map(([nome, total]) => (
-                  <div key={nome}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{nome}</span>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: '#2563eb' }}>{total}</span>
+          {/* Linha 1: Atendimentos por hospital + Novos membros */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }} className="rel-grid">
+            <div style={card}>
+              <h3 style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 16px' }}>🏥 Atendimentos por hospital</h3>
+              {hospitalOrdenado.length === 0 ? (
+                <p style={{ fontSize: 13, color: '#94a3b8' }}>Nenhum atendimento no período</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {hospitalOrdenado.map(([nome, total]) => (
+                    <div key={nome}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{nome}</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: '#2563eb' }}>{total}</span>
+                      </div>
+                      <div style={{ background: '#f1f5f9', borderRadius: 999, height: 6 }}>
+                        <div style={{ background: '#2563eb', height: 6, borderRadius: 999, width: `${(total / (hospitalOrdenado[0][1] || 1)) * 100}%`, transition: 'width 0.3s' }} />
+                      </div>
                     </div>
-                    <div style={{ background: '#f1f5f9', borderRadius: 999, height: 6 }}>
-                      <div style={{ background: '#2563eb', height: 6, borderRadius: 999, width: `${(total / (hospitalOrdenado[0][1] || 1)) * 100}%`, transition: 'width 0.3s' }} />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div style={card}>
+              <h3 style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 16px' }}>🆕 Novos membros no período</h3>
+              {novosNoPeriodo.length === 0 ? (
+                <p style={{ fontSize: 13, color: '#94a3b8' }}>Nenhum membro adicionado no período</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {novosNoPeriodo.map((m: any) => (
+                    <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{m.nome}</span>
+                      <span style={{ fontSize: 11, color: '#94a3b8' }}>{m.criado_em ? new Date(m.criado_em).toLocaleDateString('pt-BR') : '—'}</span>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
-          
+          {/* Linha 2: Mais presentes + Menos frequentes */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }} className="rel-grid">
+            <div style={card}>
+              <h3 style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 16px' }}>⭐ Mais presentes</h3>
+              {maisPresentes.length === 0 ? (
+                <p style={{ fontSize: 13, color: '#94a3b8' }}>Nenhum atendimento no período</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {maisPresentes.map(([nome, total]) => (
+                    <div key={nome}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{nome}</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: '#16a34a' }}>{total}x</span>
+                      </div>
+                      <div style={{ background: '#f1f5f9', borderRadius: 999, height: 6 }}>
+                        <div style={{ background: '#16a34a', height: 6, borderRadius: 999, width: `${(total / maxPresenca) * 100}%`, transition: 'width 0.3s' }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
-          <div style={card}>
-            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 16px' }}>⭐ Mais presentes</h3>
-            {maisPresentes.length === 0 ? (
-              <p style={{ fontSize: 13, color: '#94a3b8' }}>Nenhum atendimento no período</p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {maisPresentes.map(([nome, total]) => (
-                  <div key={nome}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{nome}</span>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: '#16a34a' }}>{total}x</span>
+            <div style={card}>
+              <h3 style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 16px' }}>⚠️ Menos frequentes</h3>
+              {menosPresentes.length === 0 ? (
+                <p style={{ fontSize: 13, color: '#94a3b8' }}>Nenhum atendimento no período</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {menosPresentes.map(([nome, total]) => (
+                    <div key={nome}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{nome}</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: '#d97706' }}>{total}x</span>
+                      </div>
+                      <div style={{ background: '#f1f5f9', borderRadius: 999, height: 6 }}>
+                        <div style={{ background: '#d97706', height: 6, borderRadius: 999, width: `${(total / maxPresenca) * 100}%`, transition: 'width 0.3s' }} />
+                      </div>
                     </div>
-                    <div style={{ background: '#f1f5f9', borderRadius: 999, height: 6 }}>
-                      <div style={{ background: '#16a34a', height: 6, borderRadius: 999, width: `${(total / maxPresenca) * 100}%`, transition: 'width 0.3s' }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
-          <div style={card}>
-            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 16px' }}>⚠️ Menos frequentes</h3>
-            {menosPresentes.length === 0 ? (
-              <p style={{ fontSize: 13, color: '#94a3b8' }}>Nenhum atendimento no período</p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {menosPresentes.map(([nome, total]) => (
-                  <div key={nome}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{nome}</span>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: '#d97706' }}>{total}x</span>
-                    </div>
-                    <div style={{ background: '#f1f5f9', borderRadius: 999, height: 6 }}>
-                      <div style={{ background: '#d97706', height: 6, borderRadius: 999, width: `${(total / maxPresenca) * 100}%`, transition: 'width 0.3s' }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
+          {/* Linha 3: Grupos / Perfil / Instrumento */}
           <div style={{ ...card, gridColumn: '1 / -1' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }} className="tres-cols">
-              <style>{`@media (max-width: 768px) { .tres-cols { grid-template-columns: 1fr !important; } }`}</style>
-
+              <style>{`@media (max-width: 768px) { .tres-cols { grid-template-columns: 1fr !important; } .rel-grid { grid-template-columns: 1fr !important; } }`}</style>
               {[
                 {
                   titulo: '🎻 Membros por grupo',
@@ -429,26 +449,7 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
               ))}
             </div>
           </div>
-          
-
-          <div style={card}>
-            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 16px' }}>🆕 Novos membros no período</h3>
-            {novosNoPeriodo.length === 0 ? (
-              <p style={{ fontSize: 13, color: '#94a3b8' }}>Nenhum membro adicionado no período</p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {novosNoPeriodo.map((m: any) => (
-                  <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{m.nome}</span>
-                    <span style={{ fontSize: 11, color: '#94a3b8' }}>{m.criado_em ? new Date(m.criado_em).toLocaleDateString('pt-BR') : '—'}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
 
         </div>
-      </div>
-    </div>
   )
 }
