@@ -23,8 +23,9 @@ export default function FiltroRelatorio({ periodoAtual, inicioAtual, fimAtual }:
 
   const inputStyle: React.CSSProperties = {
     padding: '9px 14px', borderRadius: 8,
-    border: '1px solid #e2e8f0', background: '#f8fafc',
+    border: '1px solid #e2e8f0', background: '#fff',
     fontSize: 13, color: '#334155', outline: 'none',
+    boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
   }
 
   return (
@@ -33,11 +34,7 @@ export default function FiltroRelatorio({ periodoAtual, inicioAtual, fimAtual }:
         <select
           value={periodo}
           onChange={e => setPeriodo(e.target.value)}
-          style={{
-            ...inputStyle,
-            appearance: 'none', WebkitAppearance: 'none',
-            paddingRight: 32, cursor: 'pointer',
-          }}
+          style={{ ...inputStyle, appearance: 'none', WebkitAppearance: 'none', paddingRight: 32, cursor: 'pointer' }}
         >
           <option value="mes_atual">Mês atual</option>
           <option value="mes_anterior">Mês anterior</option>
@@ -61,9 +58,10 @@ export default function FiltroRelatorio({ periodoAtual, inicioAtual, fimAtual }:
       )}
 
       <button onClick={aplicar} style={{
-        padding: '9px 18px', borderRadius: 8,
-        border: '1px solid #2563eb', background: '#fff', color: '#2563eb',
+        padding: '9px 20px', borderRadius: 8, border: 'none',
+        background: '#2563eb', color: '#fff',
         fontSize: 13, fontWeight: 600, cursor: 'pointer',
+        boxShadow: '0 1px 2px rgba(37,99,235,0.2)',
       }}>
         Aplicar
       </button>

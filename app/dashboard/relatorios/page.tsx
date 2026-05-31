@@ -44,26 +44,24 @@ function avaliarGrupo(membros: any[]) {
   const ideal = violinos >= 3 && violas >= 1 && violoncelos >= 1 && vocais >= 2 && temOrganizador
   const aceitavel1 = violinos >= 2 && violas >= 1 && violoncelos >= 1 && vocais >= 2 && temOrganizador
   const aceitavel2 = violinos >= 3 && violoncelos >= 1 && vocais >= 2 && temOrganizador
-
-  const totalIdeal = 3 + 1 + 1 + 2 // 7
+  const totalIdealNum = 7
   const totalAtual = violinos + violas + violoncelos + vocais
 
-  let status: 'ideal' | 'aceitavel' | 'deficitario' | 'excesso'
   let label: string
   let cor: string
   let bg: string
 
   if (ideal) {
-    status = 'ideal'; label = 'Ideal'; cor = '#16a34a'; bg = '#dcfce7'
+    label = 'Excelente'; cor = '#16a34a'; bg = '#dcfce7'
   } else if (aceitavel1 || aceitavel2) {
-    status = 'aceitavel'; label = 'Aceitável'; cor = '#d97706'; bg = '#fff7ed'
-  } else if (totalAtual > totalIdeal) {
-    status = 'excesso'; label = 'Em excesso'; cor = '#7c3aed'; bg = '#f5f3ff'
+    label = 'Aceitável'; cor = '#d97706'; bg = '#fff7ed'
+  } else if (totalAtual > totalIdealNum) {
+    label = 'Excedente'; cor = '#7c3aed'; bg = '#f5f3ff'
   } else {
-    status = 'deficitario'; label = 'Deficitário'; cor = '#dc2626'; bg = '#fee2e2'
+    label = 'Necessita Reforço'; cor = '#dc2626'; bg = '#fee2e2'
   }
 
-  return { violinos, violas, violoncelos, vocais, temOrganizador, status, label, cor, bg, totalAtual }
+  return { violinos, violas, violoncelos, vocais, temOrganizador, label, cor, bg, totalAtual }
 }
 
 export default async function Relatorios({ searchParams }: { searchParams: Promise<{ periodo?: string, inicio?: string, fim?: string }> }) {
@@ -101,7 +99,6 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
     .in('escala_id', escalasIds) : { data: [] }
 
   type SituacaoMembro = { nome: string; grupo: string; escala: string; data: string }
-
   const confirmouMasNaoFoi: SituacaoMembro[] = []
   const naoConfirmouMasFoi: SituacaoMembro[] = []
   const faltou: SituacaoMembro[] = []
@@ -111,7 +108,6 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
     if (!registro) return
     const membrosDoGrupo = (membros || []).filter(m => m.grupo === escala.grupo)
     const membrosPresentes = (registro.membros_presentes || '').split(',').map((n: string) => n.trim()).filter(Boolean)
-
     membrosDoGrupo.forEach(membro => {
       const confirmacao = (confirmacoes || []).find((c: any) => c.membro_id === membro.id && c.escala_id === escala.id)
       const confirmou = confirmacao?.status === 'confirmado'
@@ -153,8 +149,8 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
   const porGrupo: Record<string, number> = {}
   ;(membros || []).forEach(m => { const g = m.grupo || 'Sem grupo'; porGrupo[g] = (porGrupo[g] || 0) + 1 })
 
-  const porTipo: Record<string, number> = {}
-  ;(membros || []).forEach(m => { const t = m.tipo || 'Sem tipo'; porTipo[t] = (porTipo[t] || 0) + 1 })
+  const porPerfil: Record<string, number> = {}
+  ;(membros || []).forEach(m => { const p = m.perfil || 'Sem perfil'; porPerfil[p] = (porPerfil[p] || 0) + 1 })
 
   const novosNoPeriodo = (membros || []).filter(m => {
     if (!m.criado_em) return false
@@ -162,28 +158,34 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
     return d >= dataInicio && d <= dataFim
   })
 
-  // Status dos grupos
- const GRUPOS_ADMIN = ['Administradores', 'Atendentes']
- const gruposUnicos = [...new Set((membros || []).map(m => m.grupo).filter(Boolean))].filter(g => !GRUPOS_ADMIN.includes(g)).sort()
+  const GRUPOS_ADMIN = ['Administradores', 'Atendentes']
+  const gruposUnicos = [...new Set((membros || []).map(m => m.grupo).filter(Boolean))].filter(g => !GRUPOS_ADMIN.includes(g)).sort()
   const statusGrupos = gruposUnicos.map(grupo => {
     const membrosDoGrupo = (membros || []).filter(m => m.grupo === grupo)
     return { grupo, ...avaliarGrupo(membrosDoGrupo) }
   })
+
+  const totalExcelente = statusGrupos.filter(g => g.label === 'Excelente').length
+  const totalAceitavel = statusGrupos.filter(g => g.label === 'Aceitável').length
+  const totalReforco = statusGrupos.filter(g => g.label === 'Necessita Reforço').length
+  const totalExcedente = statusGrupos.filter(g => g.label === 'Excedente').length
 
   const nomePeriodo: Record<string, string> = {
     mes_atual: 'Mês atual', mes_anterior: 'Mês anterior', bimestre: 'Último bimestre',
     trimestre: 'Último trimestre', semestre: 'Último semestre', ano: 'Último ano', personalizado: 'Período personalizado',
   }
 
-  const cardStyle = {
-    background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0',
+  const card: React.CSSProperties = {
+    background: '#fff', borderRadius: 14, border: '1px solid #e2e8f0',
     boxShadow: '0 1px 3px rgba(0,0,0,0.06)', padding: '20px 24px',
   }
 
-  const totalIdeal = statusGrupos.filter(g => g.status === 'ideal').length
-  const totalAceitavel = statusGrupos.filter(g => g.status === 'aceitavel').length
-  const totalDeficitario = statusGrupos.filter(g => g.status === 'deficitario').length
-  const totalExcesso = statusGrupos.filter(g => g.status === 'excesso').length
+  const resumoCards = [
+    { valor: totalRegistros, label: 'ATENDIMENTOS', cor: '#2563eb', bg: '#eff6ff', icon: '🏥' },
+    { valor: totalMembros, label: 'MEMBROS ATIVOS', cor: '#16a34a', bg: '#dcfce7', icon: '👥' },
+    { valor: totalHinos, label: 'HINOS EXECUTADOS', cor: '#7c3aed', bg: '#f5f3ff', icon: '🎵' },
+    { valor: totalOracoes, label: 'ATEND. C/ ORAÇÃO', cor: '#d97706', bg: '#fff7ed', icon: '🙏' },
+  ]
 
   return (
     <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: '28px 40px' }} className="rel-wrap">
@@ -212,17 +214,15 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
 
         {/* Cards resumo */}
         <div className="rel-cards" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
-          {[
-            { valor: totalRegistros, label: 'Atendimentos', cor: '#1e40af', bg: '#eff6ff' },
-            { valor: totalMembros, label: 'Membros', cor: '#16a34a', bg: '#dcfce7' },
-            { valor: totalHinos, label: 'Hinos executados', cor: '#7c3aed', bg: '#f5f3ff' },
-            { valor: totalOracoes, label: 'Atend. c/ oração', cor: '#d97706', bg: '#fff7ed' },
-          ].map((c, i) => (
-            <div key={i} style={{ ...cardStyle, textAlign: 'center' }}>
-              <div style={{ width: 48, height: 48, borderRadius: '50%', background: c.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
-                <span style={{ fontSize: 22, fontWeight: 800, color: c.cor }}>{c.valor}</span>
+          {resumoCards.map((c, i) => (
+            <div key={i} style={{ ...card, display: 'flex', alignItems: 'center', gap: 16 }}>
+              <div style={{ width: 48, height: 48, borderRadius: 12, background: c.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <span style={{ fontSize: 22 }}>{c.icon}</span>
               </div>
-              <p style={{ fontSize: 12, color: '#64748b', margin: 0, fontWeight: 600 }}>{c.label}</p>
+              <div>
+                <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, textTransform: 'uppercase', margin: '0 0 4px' }}>{c.label}</p>
+                <p style={{ fontSize: 28, fontWeight: 800, color: c.cor, margin: 0, lineHeight: 1 }}>{c.valor}</p>
+              </div>
             </div>
           ))}
         </div>
@@ -234,16 +234,19 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
           faltou={faltou}
         />
 
-        {/* STATUS DOS GRUPOS */}
-        <div style={{ ...cardStyle, marginBottom: 12 }}>
+        {/* Status dos Grupos — Accordion */}
+        <div style={{ ...card, marginBottom: 12 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: 0 }}>🎻 Status dos Grupos</h3>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <div>
+              <h3 style={{ fontSize: 15, fontWeight: 800, color: '#1e293b', margin: '0 0 4px' }}>🎻 Status dos Grupos</h3>
+              <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>{statusGrupos.length} grupos monitorados</p>
+            </div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {[
-                { label: `${totalIdeal} Ideal`, cor: '#16a34a', bg: '#dcfce7' },
+                { label: `${totalExcelente} Excelente`, cor: '#16a34a', bg: '#dcfce7' },
                 { label: `${totalAceitavel} Aceitável`, cor: '#d97706', bg: '#fff7ed' },
-                { label: `${totalDeficitario} Deficitário`, cor: '#dc2626', bg: '#fee2e2' },
-                { label: `${totalExcesso} Em excesso`, cor: '#7c3aed', bg: '#f5f3ff' },
+                { label: `${totalReforco} Necessita Reforço`, cor: '#dc2626', bg: '#fee2e2' },
+                { label: `${totalExcedente} Excedente`, cor: '#7c3aed', bg: '#f5f3ff' },
               ].map(s => (
                 <span key={s.label} style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: s.bg, color: s.cor }}>
                   {s.label}
@@ -252,43 +255,56 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
             </div>
           </div>
 
-          <div className="grupos-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {statusGrupos.map(g => (
-              <div key={g.grupo} style={{
-                borderRadius: 10, border: `1px solid ${g.cor}33`,
-                background: g.bg + '55', padding: '14px 16px',
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: '#1e293b' }}>{g.grupo}</span>
-                  <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: g.bg, color: g.cor }}>
-                    {g.label}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  {[
-                    { label: 'Violino', valor: g.violinos, ideal: 3 },
-                    { label: 'Viola', valor: g.violas, ideal: 1 },
-                    { label: 'Violoncelo', valor: g.violoncelos, ideal: 1 },
-                    { label: 'Vocal', valor: g.vocais, ideal: 2 },
-                  ].map(item => (
-                    <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: 12, color: '#64748b' }}>{item.label}</span>
-                      <span style={{
-                        fontSize: 12, fontWeight: 700,
-                        color: item.valor >= item.ideal ? '#16a34a' : item.valor > 0 ? '#d97706' : '#dc2626',
-                      }}>
-                        {item.valor}/{item.ideal}
-                      </span>
-                    </div>
-                  ))}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4, paddingTop: 6, borderTop: '1px solid #e2e8f0' }}>
-                    <span style={{ fontSize: 12, color: '#64748b' }}>Organizador</span>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: g.temOrganizador ? '#16a34a' : '#dc2626' }}>
-                      {g.temOrganizador ? '✅' : '❌'}
+              <details key={g.grupo} style={{ borderRadius: 10, border: `1px solid #e2e8f0`, overflow: 'hidden' }}>
+                <summary style={{
+                  padding: '12px 16px', cursor: 'pointer', listStyle: 'none',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  background: '#f8fafc',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: '#1e293b' }}>{g.grupo}</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: g.bg, color: g.cor }}>
+                      {g.label}
                     </span>
                   </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <span style={{ fontSize: 12, color: '#94a3b8' }}>
+                      {g.violinos}V · {g.violas}Va · {g.violoncelos}Vc · {g.vocais}Vo
+                    </span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                  </div>
+                </summary>
+                <div style={{ padding: '14px 16px', background: '#fff', borderTop: '1px solid #f1f5f9' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10 }}>
+                    {[
+                      { label: 'Violino', valor: g.violinos, ideal: 3 },
+                      { label: 'Viola', valor: g.violas, ideal: 1 },
+                      { label: 'Violoncelo', valor: g.violoncelos, ideal: 1 },
+                      { label: 'Vocal', valor: g.vocais, ideal: 2 },
+                    ].map(item => (
+                      <div key={item.label} style={{ textAlign: 'center', padding: '12px 8px', borderRadius: 10, background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                        <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5, margin: '0 0 6px' }}>{item.label}</p>
+                        <p style={{
+                          fontSize: 22, fontWeight: 800, margin: '0 0 2px',
+                          color: item.valor >= item.ideal ? '#16a34a' : item.valor > 0 ? '#d97706' : '#dc2626',
+                        }}>{item.valor}</p>
+                        <p style={{ fontSize: 11, color: '#94a3b8', margin: 0 }}>de {item.ideal}</p>
+                      </div>
+                    ))}
+                    <div style={{ textAlign: 'center', padding: '12px 8px', borderRadius: 10, background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                      <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5, margin: '0 0 6px' }}>Organizador</p>
+                      <p style={{ fontSize: 22, margin: '0 0 2px' }}>{g.temOrganizador ? '✅' : '❌'}</p>
+                      <p style={{ fontSize: 11, color: g.temOrganizador ? '#16a34a' : '#dc2626', margin: 0, fontWeight: 600 }}>
+                        {g.temOrganizador ? 'Sim' : 'Não'}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              </details>
             ))}
           </div>
         </div>
@@ -296,21 +312,20 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
         {/* Gráficos */}
         <div className="rel-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
 
-          {/* Atendimentos por hospital */}
-          <div style={cardStyle}>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: '0 0 16px' }}>🏥 Atendimentos por hospital</h3>
+          <div style={card}>
+            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 16px' }}>🏥 Atendimentos por hospital</h3>
             {hospitalOrdenado.length === 0 ? (
               <p style={{ fontSize: 13, color: '#94a3b8' }}>Nenhum atendimento no período</p>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {hospitalOrdenado.map(([nome, total]) => (
                   <div key={nome}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{nome}</span>
-                      <span style={{ fontSize: 12, color: '#64748b' }}>{total} atend.</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: '#2563eb' }}>{total}</span>
                     </div>
                     <div style={{ background: '#f1f5f9', borderRadius: 999, height: 6 }}>
-                      <div style={{ background: '#2563eb', height: 6, borderRadius: 999, width: `${(total / (hospitalOrdenado[0][1] || 1)) * 100}%` }} />
+                      <div style={{ background: '#2563eb', height: 6, borderRadius: 999, width: `${(total / (hospitalOrdenado[0][1] || 1)) * 100}%`, transition: 'width 0.3s' }} />
                     </div>
                   </div>
                 ))}
@@ -318,14 +333,13 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
             )}
           </div>
 
-          {/* Membros por grupo */}
-          <div style={cardStyle}>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: '0 0 16px' }}>🎻 Membros por grupo</h3>
+          <div style={card}>
+            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 16px' }}>🎻 Membros por grupo</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {Object.entries(porGrupo).map(([grupo, total]) => (
-                <div key={grupo} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div key={grupo} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
                   <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{grupo}</span>
-                  <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999, background: '#eff6ff', color: '#1e40af' }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: '#eff6ff', color: '#2563eb' }}>
                     {total} membro{total > 1 ? 's' : ''}
                   </span>
                 </div>
@@ -333,21 +347,20 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
             </div>
           </div>
 
-          {/* Mais presentes */}
-          <div style={cardStyle}>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: '0 0 16px' }}>⭐ Membros mais presentes</h3>
+          <div style={card}>
+            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 16px' }}>⭐ Mais presentes</h3>
             {maisPresentes.length === 0 ? (
               <p style={{ fontSize: 13, color: '#94a3b8' }}>Nenhum atendimento no período</p>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {maisPresentes.map(([nome, total]) => (
                   <div key={nome}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{nome}</span>
-                      <span style={{ fontSize: 12, color: '#64748b' }}>{total}x</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: '#16a34a' }}>{total}x</span>
                     </div>
                     <div style={{ background: '#f1f5f9', borderRadius: 999, height: 6 }}>
-                      <div style={{ background: '#16a34a', height: 6, borderRadius: 999, width: `${(total / maxPresenca) * 100}%` }} />
+                      <div style={{ background: '#16a34a', height: 6, borderRadius: 999, width: `${(total / maxPresenca) * 100}%`, transition: 'width 0.3s' }} />
                     </div>
                   </div>
                 ))}
@@ -355,21 +368,20 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
             )}
           </div>
 
-          {/* Menos presentes */}
-          <div style={cardStyle}>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: '0 0 16px' }}>⚠️ Membros menos frequentes</h3>
+          <div style={card}>
+            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 16px' }}>⚠️ Menos frequentes</h3>
             {menosPresentes.length === 0 ? (
               <p style={{ fontSize: 13, color: '#94a3b8' }}>Nenhum atendimento no período</p>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {menosPresentes.map(([nome, total]) => (
                   <div key={nome}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{nome}</span>
-                      <span style={{ fontSize: 12, color: '#64748b' }}>{total}x</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: '#d97706' }}>{total}x</span>
                     </div>
                     <div style={{ background: '#f1f5f9', borderRadius: 999, height: 6 }}>
-                      <div style={{ background: '#d97706', height: 6, borderRadius: 999, width: `${(total / maxPresenca) * 100}%` }} />
+                      <div style={{ background: '#d97706', height: 6, borderRadius: 999, width: `${(total / maxPresenca) * 100}%`, transition: 'width 0.3s' }} />
                     </div>
                   </div>
                 ))}
@@ -377,28 +389,26 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
             )}
           </div>
 
-          {/* Membros por tipo */}
-          <div style={cardStyle}>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: '0 0 16px' }}>👥 Membros por tipo</h3>
+          <div style={card}>
+            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 16px' }}>👥 Membros por perfil</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {Object.entries(porTipo).map(([tipo, total]) => (
-                <div key={tipo} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{tipo}</span>
-                  <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999, background: '#f5f3ff', color: '#7c3aed' }}>{total}</span>
+              {Object.entries(porPerfil).map(([perfil, total]) => (
+                <div key={perfil} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{perfil}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: '#f5f3ff', color: '#7c3aed' }}>{total}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Novos membros */}
-          <div style={cardStyle}>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: '0 0 16px' }}>🆕 Novos membros no período</h3>
+          <div style={card}>
+            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 16px' }}>🆕 Novos membros no período</h3>
             {novosNoPeriodo.length === 0 ? (
               <p style={{ fontSize: 13, color: '#94a3b8' }}>Nenhum membro adicionado no período</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {novosNoPeriodo.map((m: any) => (
-                  <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
                     <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{m.nome}</span>
                     <span style={{ fontSize: 11, color: '#94a3b8' }}>{m.criado_em ? new Date(m.criado_em).toLocaleDateString('pt-BR') : '—'}</span>
                   </div>
