@@ -6,6 +6,7 @@ const PAGINAS = [
   { key: 'confirmacoes', label: 'Confirmações', acoes: ['ver'] },
   { key: 'escalas', label: 'Escalas', acoes: ['ver', 'criar', 'editar', 'excluir'] },
   { key: 'registros', label: 'Registros', acoes: ['ver', 'criar', 'editar', 'excluir'] },
+  { key: 'historico', label: 'Histórico', acoes: ['ver'] },
   { key: 'relatorios', label: 'Relatórios', acoes: ['ver'] },
   { key: 'membros', label: 'Membros', acoes: ['ver', 'criar', 'editar', 'excluir'] },
   { key: 'ficha_siga', label: 'Ficha de Cadastro SIGA', acoes: ['ver'] },

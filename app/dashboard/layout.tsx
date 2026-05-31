@@ -9,7 +9,7 @@ const todosNavItems = [
   { href: '/dashboard/confirmacoes', label: 'Confirmações',  key: 'confirmacoes' },
   { href: '/dashboard/escalas',      label: 'Escalas',       key: 'escalas' },
   { href: '/dashboard/registros',    label: 'Registros',     key: 'registros' },
-  { href: '/dashboard/historico',    label: 'Histórico',     key: null },
+  { href: '/dashboard/historico',    label: 'Histórico',     key: 'historico' },
   { href: '/dashboard/relatorios',   label: 'Relatórios',    key: 'relatorios' },
   { href: '/dashboard/membros',      label: 'Membros',       key: 'membros' },
   { href: '/dashboard/hospitais',    label: 'Hospitais',     key: 'hospitais' },
