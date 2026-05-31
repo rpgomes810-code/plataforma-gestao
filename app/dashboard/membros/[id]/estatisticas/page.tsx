@@ -54,13 +54,13 @@ export default async function EstatisticasMembro({ params, searchParams }: {
 
   const { data: membro } = await supabase.from('membros').select('*').eq('id', id).single()
 
-  const { data: escalas } = await supabase
-    .from('escalas')
-    .select('id, data, grupo, local_texto, registrada')
-    .eq('grupo', membro?.grupo || '')
-    .gte('data', dataInicio)
-    .lte('data', dataFim)
-    .order('data', { ascending: false })
+  const { data: escalas } = membro?.grupo ? await supabase
+  .from('escalas')
+  .select('id, data, grupo, local_texto, registrada')
+  .eq('grupo', membro.grupo)
+  .gte('data', dataInicio)
+  .lte('data', dataFim)
+  .order('data', { ascending: false }) : { data: [] }
 
   const escalasIds = (escalas || []).map(e => e.id)
 
