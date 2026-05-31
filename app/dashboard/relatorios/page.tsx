@@ -34,6 +34,38 @@ function getPeriodo(periodo: string) {
   }
 }
 
+function avaliarGrupo(membros: any[]) {
+  const violinos = membros.filter(m => m.instrumento === 'Violino').length
+  const violas = membros.filter(m => m.instrumento === 'Viola').length
+  const violoncelos = membros.filter(m => m.instrumento === 'Violoncelo').length
+  const vocais = membros.filter(m => m.instrumento === 'Vocal' || m.instrumento === 'Voz').length
+  const temOrganizador = membros.some(m => m.perfil === 'Organizador')
+
+  const ideal = violinos >= 3 && violas >= 1 && violoncelos >= 1 && vocais >= 2 && temOrganizador
+  const aceitavel1 = violinos >= 2 && violas >= 1 && violoncelos >= 1 && vocais >= 2 && temOrganizador
+  const aceitavel2 = violinos >= 3 && violoncelos >= 1 && vocais >= 2 && temOrganizador
+
+  const totalIdeal = 3 + 1 + 1 + 2 // 7
+  const totalAtual = violinos + violas + violoncelos + vocais
+
+  let status: 'ideal' | 'aceitavel' | 'deficitario' | 'excesso'
+  let label: string
+  let cor: string
+  let bg: string
+
+  if (ideal) {
+    status = 'ideal'; label = 'Ideal'; cor = '#16a34a'; bg = '#dcfce7'
+  } else if (aceitavel1 || aceitavel2) {
+    status = 'aceitavel'; label = 'Aceitável'; cor = '#d97706'; bg = '#fff7ed'
+  } else if (totalAtual > totalIdeal) {
+    status = 'excesso'; label = 'Em excesso'; cor = '#7c3aed'; bg = '#f5f3ff'
+  } else {
+    status = 'deficitario'; label = 'Deficitário'; cor = '#dc2626'; bg = '#fee2e2'
+  }
+
+  return { violinos, violas, violoncelos, vocais, temOrganizador, status, label, cor, bg, totalAtual }
+}
+
 export default async function Relatorios({ searchParams }: { searchParams: Promise<{ periodo?: string, inicio?: string, fim?: string }> }) {
   const params = await searchParams
   const periodo = params.periodo || 'mes_atual'
@@ -56,7 +88,7 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
     .order('data', { ascending: false })
 
   const { data: membros } = await supabase
-    .from('membros').select('*').order('nome', { ascending: true })
+    .from('membros').select('*').eq('status', 'Ativo').order('nome', { ascending: true })
 
   const { data: escalas } = await supabase
     .from('escalas').select('id, data, grupo, local_texto, registrada')
@@ -130,6 +162,13 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
     return d >= dataInicio && d <= dataFim
   })
 
+  // Status dos grupos
+  const gruposUnicos = [...new Set((membros || []).map(m => m.grupo).filter(Boolean))].sort()
+  const statusGrupos = gruposUnicos.map(grupo => {
+    const membrosDoGrupo = (membros || []).filter(m => m.grupo === grupo)
+    return { grupo, ...avaliarGrupo(membrosDoGrupo) }
+  })
+
   const nomePeriodo: Record<string, string> = {
     mes_atual: 'Mês atual', mes_anterior: 'Mês anterior', bimestre: 'Último bimestre',
     trimestre: 'Último trimestre', semestre: 'Último semestre', ano: 'Último ano', personalizado: 'Período personalizado',
@@ -140,6 +179,11 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
     boxShadow: '0 1px 3px rgba(0,0,0,0.06)', padding: '20px 24px',
   }
 
+  const totalIdeal = statusGrupos.filter(g => g.status === 'ideal').length
+  const totalAceitavel = statusGrupos.filter(g => g.status === 'aceitavel').length
+  const totalDeficitario = statusGrupos.filter(g => g.status === 'deficitario').length
+  const totalExcesso = statusGrupos.filter(g => g.status === 'excesso').length
+
   return (
     <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: '28px 40px' }} className="rel-wrap">
       <style>{`
@@ -148,6 +192,7 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
           .rel-header { flex-direction: column !important; align-items: flex-start !important; }
           .rel-cards { grid-template-columns: 1fr 1fr !important; }
           .rel-grid { grid-template-columns: 1fr !important; }
+          .grupos-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
 
@@ -187,6 +232,65 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
           naoConfirmouMasFoi={naoConfirmouMasFoi}
           faltou={faltou}
         />
+
+        {/* STATUS DOS GRUPOS */}
+        <div style={{ ...cardStyle, marginBottom: 12 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: 0 }}>🎻 Status dos Grupos</h3>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {[
+                { label: `${totalIdeal} Ideal`, cor: '#16a34a', bg: '#dcfce7' },
+                { label: `${totalAceitavel} Aceitável`, cor: '#d97706', bg: '#fff7ed' },
+                { label: `${totalDeficitario} Deficitário`, cor: '#dc2626', bg: '#fee2e2' },
+                { label: `${totalExcesso} Em excesso`, cor: '#7c3aed', bg: '#f5f3ff' },
+              ].map(s => (
+                <span key={s.label} style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: s.bg, color: s.cor }}>
+                  {s.label}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="grupos-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+            {statusGrupos.map(g => (
+              <div key={g.grupo} style={{
+                borderRadius: 10, border: `1px solid ${g.cor}33`,
+                background: g.bg + '55', padding: '14px 16px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: '#1e293b' }}>{g.grupo}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: g.bg, color: g.cor }}>
+                    {g.label}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {[
+                    { label: 'Violino', valor: g.violinos, ideal: 3 },
+                    { label: 'Viola', valor: g.violas, ideal: 1 },
+                    { label: 'Violoncelo', valor: g.violoncelos, ideal: 1 },
+                    { label: 'Vocal', valor: g.vocais, ideal: 2 },
+                  ].map(item => (
+                    <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 12, color: '#64748b' }}>{item.label}</span>
+                      <span style={{
+                        fontSize: 12, fontWeight: 700,
+                        color: item.valor >= item.ideal ? '#16a34a' : item.valor > 0 ? '#d97706' : '#dc2626',
+                      }}>
+                        {item.valor}/{item.ideal}
+                      </span>
+                    </div>
+                  ))}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4, paddingTop: 6, borderTop: '1px solid #e2e8f0' }}>
+                    <span style={{ fontSize: 12, color: '#64748b' }}>Organizador</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: g.temOrganizador ? '#16a34a' : '#dc2626' }}>
+                      {g.temOrganizador ? '✅' : '❌'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
         {/* Gráficos */}
         <div className="rel-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
