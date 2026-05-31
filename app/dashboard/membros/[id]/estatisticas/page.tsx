@@ -71,12 +71,10 @@ export default async function EstatisticasMembro({ params, searchParams }: {
     .from('registros').select('*').in('escala_id', escalasIds) : { data: [] }
 
   const { data: confirmacoesAvulso } = await supabase
-    .from('confirmacoes')
-    .select('*, escalas!confirmacoes_escala_id_fkey(grupo, local_texto, data)')
-    .eq('membro_id', id)
-    .eq('tipo', 'avulso')
-    .gte('criado_em', dataInicio)
-    .lte('criado_em', dataFim + 'T23:59:59')
+  .from('confirmacoes')
+  .select('*, escalas!confirmacoes_escala_id_fkey(grupo, local_texto, data)')
+  .eq('membro_id', id)
+  .eq('tipo', 'avulso')
 
   const totalConvocado = (escalas || []).length
   const totalConfirmou = (confirmacoes || []).filter(c => c.status === 'confirmado').length
