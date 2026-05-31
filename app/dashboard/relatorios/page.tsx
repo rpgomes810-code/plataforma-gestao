@@ -224,15 +224,13 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
         {/* Cards resumo */}
         <div className="rel-cards" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
           {resumoCards.map((c, i) => (
-            <div key={i} style={{ ...card, display: 'flex', alignItems: 'center', gap: 16 }}>
-              <div style={{ width: 48, height: 48, borderRadius: 12, background: c.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <span style={{ fontSize: 22 }}>{c.icon}</span>
-              </div>
-              <div>
-                <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, textTransform: 'uppercase', margin: '0 0 4px' }}>{c.label}</p>
-                <p style={{ fontSize: 28, fontWeight: 800, color: c.cor, margin: 0, lineHeight: 1 }}>{c.valor}</p>
-              </div>
-            </div>
+            <div key={i} style={{ ...card, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 10 }}>
+  <div style={{ width: 48, height: 48, borderRadius: 12, background: c.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <span style={{ fontSize: 22 }}>{c.icon}</span>
+  </div>
+  <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, textTransform: 'uppercase', margin: 0 }}>{c.label}</p>
+  <p style={{ fontSize: 32, fontWeight: 800, color: c.cor, margin: 0, lineHeight: 1 }}>{c.valor}</p>
+</div>
           ))}
         </div>
 
