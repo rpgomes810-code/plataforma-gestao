@@ -447,9 +447,10 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
-
-        </div>
+         </div>     
+       </div>
+      </div>
+    </div>
+    </div>
   )
 }
