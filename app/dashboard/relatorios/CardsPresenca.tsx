@@ -4,71 +4,76 @@ import { useState } from 'react'
 
 type Item = { nome: string; grupo: string; escala: string; data: string }
 
-function CardPresenca({ titulo, items, bg, color, borderColor }: {
-  titulo: string
-  items: Item[]
-  bg: string
-  color: string
-  borderColor: string
-}) {
-  const [aberto, setAberto] = useState(false)
-  const formatarData = (data: string) => new Date(data + 'T12:00:00').toLocaleDateString('pt-BR')
-
-  return (
-    <div style={{
-      background: '#fff', borderRadius: 14, border: `1px solid #e2e8f0`,
-      boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden',
-      borderTop: `3px solid ${borderColor}`,
-    }}>
-      <button onClick={() => setAberto(!aberto)} style={{
-        width: '100%', padding: '20px 24px', textAlign: 'center',
-        background: 'none', border: 'none', cursor: 'pointer',
-      }}>
-        <p style={{ fontSize: 38, fontWeight: 800, color, margin: 0, lineHeight: 1 }}>{items.length}</p>
-        <p style={{ fontSize: 12, fontWeight: 700, color: '#64748b', margin: '8px 0 6px', textTransform: 'uppercase', letterSpacing: 0.5 }}>{titulo}</p>
-        <p style={{ fontSize: 11, color: '#94a3b8', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            {aberto ? <polyline points="18 15 12 9 6 15"/> : <polyline points="6 9 12 15 18 9"/>}
-          </svg>
-          {aberto ? 'Ocultar' : 'Ver detalhes'}
-        </p>
-      </button>
-
-      {aberto && (
-        <div style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {items.length === 0 ? (
-            <p style={{ fontSize: 13, color: '#94a3b8', textAlign: 'center', padding: '8px 0' }}>Nenhuma ocorrência ✅</p>
-          ) : (
-            items.map((item, i) => (
-              <div key={i} style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                background: bg, borderRadius: 8, padding: '10px 12px',
-              }}>
-                <div>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: '#1e293b', margin: 0 }}>{item.nome}</p>
-                  <p style={{ fontSize: 11, color: '#64748b', margin: 0 }}>{item.grupo} · {item.escala}</p>
-                </div>
-                <span style={{ fontSize: 11, fontWeight: 700, color, flexShrink: 0 }}>{formatarData(item.data)}</span>
-              </div>
-            ))
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
-
 export default function CardsPresenca({ confirmouMasNaoFoi, naoConfirmouMasFoi, faltou }: {
   confirmouMasNaoFoi: Item[]
   naoConfirmouMasFoi: Item[]
   faltou: Item[]
 }) {
+  const [expandido, setExpandido] = useState<string | null>(null)
+  const formatarData = (data: string) => new Date(data + 'T12:00:00').toLocaleDateString('pt-BR')
+
+  const secoes = [
+    { key: 'confirmou', label: 'Confirmou mas não foi', items: confirmouMasNaoFoi, cor: '#d97706', bg: '#fff7ed', border: '#d97706' },
+    { key: 'naoconfirmou', label: 'Não confirmou mas foi', items: naoConfirmouMasFoi, cor: '#2563eb', bg: '#eff6ff', border: '#2563eb' },
+    { key: 'faltou', label: 'Não confirmou e não foi', items: faltou, cor: '#dc2626', bg: '#fee2e2', border: '#dc2626' },
+  ]
+
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }} className="cards-presenca">
-      <style>{`@media (max-width: 768px) { .cards-presenca { grid-template-columns: 1fr !important; } }`}</style>
-      <CardPresenca titulo="Confirmou mas não foi" items={confirmouMasNaoFoi} bg="#fff7ed" color="#d97706" borderColor="#d97706" />
-      <CardPresenca titulo="Não confirmou mas foi" items={naoConfirmouMasFoi} bg="#eff6ff" color="#2563eb" borderColor="#2563eb" />
-      <CardPresenca titulo="Não confirmou e não foi" items={faltou} bg="#fee2e2" color="#dc2626" borderColor="#dc2626" />
+    <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: 12, overflow: 'hidden' }}>
+      
+      {/* Linha com os 3 números */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}>
+        {secoes.map((s, idx) => (
+          <button
+            key={s.key}
+            onClick={() => setExpandido(expandido === s.key ? null : s.key)}
+            style={{
+              padding: '20px 16px', textAlign: 'center', cursor: 'pointer',
+              background: expandido === s.key ? s.bg : '#fff',
+              border: 'none',
+              borderRight: idx < 2 ? '1px solid #f1f5f9' : 'none',
+              borderBottom: expandido === s.key ? `2px solid ${s.border}` : '2px solid transparent',
+              transition: 'all 0.15s',
+            }}
+          >
+            <p style={{ fontSize: 36, fontWeight: 800, color: s.cor, margin: 0, lineHeight: 1 }}>{s.items.length}</p>
+            <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5, margin: '8px 0 4px' }}>{s.label}</p>
+            <p style={{ fontSize: 11, color: s.cor, margin: 0, fontWeight: 600 }}>
+              {expandido === s.key ? '▲ Ocultar' : '▼ Ver membros'}
+            </p>
+          </button>
+        ))}
+      </div>
+
+      {/* Detalhes expandidos */}
+      {expandido && (() => {
+        const secao = secoes.find(s => s.key === expandido)!
+        return (
+          <div style={{ padding: '16px 20px', background: secao.bg, borderTop: `1px solid ${secao.border}33` }}>
+            {secao.items.length === 0 ? (
+              <p style={{ fontSize: 13, color: '#94a3b8', textAlign: 'center', margin: 0 }}>Nenhuma ocorrência ✅</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {secao.items.map((item, i) => (
+                  <div key={i} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    background: '#fff', borderRadius: 8, padding: '10px 14px',
+                    border: `1px solid ${secao.border}22`,
+                  }}>
+                    <div>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: '#1e293b', margin: 0 }}>{item.nome}</p>
+                      <p style={{ fontSize: 11, color: '#64748b', margin: 0 }}>{item.grupo} · {item.escala}</p>
+                    </div>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: secao.cor, flexShrink: 0 }}>
+                      {formatarData(item.data)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      })()}
     </div>
   )
 }

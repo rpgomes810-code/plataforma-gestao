@@ -152,6 +152,15 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
   const porPerfil: Record<string, number> = {}
   ;(membros || []).forEach(m => { const p = m.perfil || 'Sem perfil'; porPerfil[p] = (porPerfil[p] || 0) + 1 })
 
+  const porInstrumento: Record<string, number> = {}
+  ;(membros || []).forEach(m => {
+    const inst = m.instrumento
+    if (!inst || inst === 'Nenhum') return
+    porInstrumento[inst] = (porInstrumento[inst] || 0) + 1
+  })
+  const totalInstrumentos = Object.values(porInstrumento).reduce((a, b) => a + b, 0)
+  const instrumentosOrdenados = Object.entries(porInstrumento).sort((a, b) => b[1] - a[1])
+
   const novosNoPeriodo = (membros || []).filter(m => {
     if (!m.criado_em) return false
     const d = m.criado_em.split('T')[0]
@@ -227,7 +236,7 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
           ))}
         </div>
 
-        {/* Cards presença */}
+        {/* Cards presença unificado */}
         <CardsPresenca
           confirmouMasNaoFoi={confirmouMasNaoFoi}
           naoConfirmouMasFoi={naoConfirmouMasFoi}
@@ -257,7 +266,7 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {statusGrupos.map(g => (
-              <details key={g.grupo} style={{ borderRadius: 10, border: `1px solid #e2e8f0`, overflow: 'hidden' }}>
+              <details key={g.grupo} style={{ borderRadius: 10, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
                 <summary style={{
                   padding: '12px 16px', cursor: 'pointer', listStyle: 'none',
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -382,6 +391,29 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
                     </div>
                     <div style={{ background: '#f1f5f9', borderRadius: 999, height: 6 }}>
                       <div style={{ background: '#d97706', height: 6, borderRadius: 999, width: `${(total / maxPresenca) * 100}%`, transition: 'width 0.3s' }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div style={card}>
+            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 16px' }}>🎼 Membros por instrumento</h3>
+            {instrumentosOrdenados.length === 0 ? (
+              <p style={{ fontSize: 13, color: '#94a3b8' }}>Nenhum instrumento cadastrado</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {instrumentosOrdenados.map(([inst, qtd]) => (
+                  <div key={inst}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{inst}</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: '#7c3aed' }}>
+                        {qtd} ({Math.round((qtd / totalInstrumentos) * 100)}%)
+                      </span>
+                    </div>
+                    <div style={{ background: '#f1f5f9', borderRadius: 999, height: 6 }}>
+                      <div style={{ background: '#7c3aed', height: 6, borderRadius: 999, width: `${(qtd / totalInstrumentos) * 100}%`, transition: 'width 0.3s' }} />
                     </div>
                   </div>
                 ))}
