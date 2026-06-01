@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { createClient } from '@supabase/supabase-js'
 import FiltroRelatorio from './FiltroRelatorio'
 import CardsPresenca from './CardsPresenca'
+import BotaoImprimir from './BotaoImprimir'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -81,7 +82,7 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
   }
 
   const { data: registros } = await supabase
-    .from('registros').select('*, hospitais(nome)')
+  .from('registros').select('*, hospitais(nome), criado_por')
     .gte('data', dataInicio).lte('data', dataFim)
     .order('data', { ascending: false })
 
@@ -218,7 +219,28 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
               {nomePeriodo[periodo]} · {dataInicio} até {dataFim}
             </p>
           </div>
-          <FiltroRelatorio periodoAtual={periodo} inicioAtual={params.inicio} fimAtual={params.fim} />
+         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+  <FiltroRelatorio periodoAtual={periodo} inicioAtual={params.inicio} fimAtual={params.fim} />
+  <BotaoImprimir
+    dataInicio={dataInicio}
+    dataFim={dataFim}
+    dados={{
+      registros,
+      confirmouMasNaoFoi,
+      naoConfirmouMasFoi,
+      faltou,
+      statusGrupos,
+      hospitalOrdenado,
+      novosNoPeriodo,
+      maisPresentes,
+      menosPresentes,
+      porGrupo,
+      porPerfil,
+      instrumentosOrdenados,
+      totalInstrumentos,
+    }}
+  />
+</div>
         </div>
 
         {/* Cards resumo */}

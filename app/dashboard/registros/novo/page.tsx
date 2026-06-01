@@ -158,6 +158,11 @@ function NovoRegistroForm() {
         <form onSubmit={handleSubmit}>
           <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
 
+<div style={{ padding: '16px 28px', borderBottom: '1px solid #f1f5f9', background: '#f8fafc' }}>
+  <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>
+    📋 Registrado por: <strong style={{ color: '#1e293b' }}>{usuarioNome}</strong>
+  </p>
+</div>
             <div style={{ padding: '24px 28px', borderBottom: '1px solid #f1f5f9' }}>
               <p style={secaoStyle}>Dados do Atendimento</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
