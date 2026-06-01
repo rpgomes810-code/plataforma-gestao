@@ -19,9 +19,7 @@ export default function CardsPresenca({ confirmouMasNaoFoi, naoConfirmouMasFoi, 
   ]
 
   return (
-    <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: 12, overflow: 'hidden' }}>
-      
-      {/* Linha com os 3 números */}
+    <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: 12, overflow: 'hidden' }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}>
         {secoes.map((s, idx) => (
           <button
@@ -36,8 +34,8 @@ export default function CardsPresenca({ confirmouMasNaoFoi, naoConfirmouMasFoi, 
               transition: 'all 0.15s',
             }}
           >
-            <p style={{ fontSize: 36, fontWeight: 800, color: s.cor, margin: 0, lineHeight: 1 }}>{s.items.length}</p>
-            <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5, margin: '8px 0 4px' }}>{s.label}</p>
+            <p style={{ fontSize: 32, fontWeight: 800, color: s.cor, margin: 0, lineHeight: 1 }}>{s.items.length}</p>
+            <p style={{ fontSize: 12, fontWeight: 600, color: '#64748b', margin: '8px 0 4px' }}>{s.label}</p>
             <p style={{ fontSize: 11, color: s.cor, margin: 0, fontWeight: 600 }}>
               {expandido === s.key ? '▲ Ocultar' : '▼ Ver membros'}
             </p>
@@ -45,7 +43,6 @@ export default function CardsPresenca({ confirmouMasNaoFoi, naoConfirmouMasFoi, 
         ))}
       </div>
 
-      {/* Detalhes expandidos */}
       {expandido && (() => {
         const secao = secoes.find(s => s.key === expandido)!
         return (
