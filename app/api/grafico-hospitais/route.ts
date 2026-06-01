@@ -8,10 +8,17 @@ const supabase = createClient(
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url)
+  const mesParam = searchParams.get('mes')
+  const anoParam = searchParams.get('ano')
+
   const hoje = new Date()
-  const inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().split('T')[0]
-  const fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).toISOString().split('T')[0]
+  const mes = mesParam ? parseInt(mesParam) - 1 : hoje.getMonth()
+  const ano = anoParam ? parseInt(anoParam) : hoje.getFullYear()
+
+  const inicio = `${ano}-${String(mes + 1).padStart(2, '0')}-01`
+  const fim = new Date(ano, mes + 1, 0).toISOString().split('T')[0]
 
   const { data, error } = await supabase
     .from('registros')
@@ -19,5 +26,6 @@ export async function GET() {
     .gte('data', inicio)
     .lte('data', fim)
 
-  return NextResponse.json({ debug: { inicio, fim, data, error } })
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data || [])
 }
