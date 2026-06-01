@@ -15,7 +15,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('registros')
-    .select('id, data, hospitais(nome)')
+    .select('id, data, quantidade_participantes, hospitais(nome)')
     .gte('data', inicio)
     .lte('data', fim)
 
