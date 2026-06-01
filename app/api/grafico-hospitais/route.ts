@@ -19,6 +19,5 @@ export async function GET() {
     .gte('data', inicio)
     .lte('data', fim)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data || [])
+  return NextResponse.json({ debug: { inicio, fim, data, error } })
 }
