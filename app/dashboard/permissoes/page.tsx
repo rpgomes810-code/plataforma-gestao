@@ -31,11 +31,7 @@ export default function Permissoes() {
       setTemAcesso(data.acesso)
     })
     fetch('/api/permissoes').then(r => r.json()).then(data => {
-      if (Array.isArray(data)) {
-        setPermissoes(data)
-    
-      
-      }
+      if (Array.isArray(data)) setPermissoes(data)
     })
   }, [])
 
@@ -85,16 +81,12 @@ export default function Permissoes() {
   )
 
   return (
-    <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: '28px 40px' }} className="perm-wrap">
-      <style>{`
-        @media (max-width: 768px) { .perm-wrap { padding: 16px !important; } }
-      `}</style>
-
+    <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: '28px 16px' }}>
       <div style={{ maxWidth: 1280, margin: '0 auto' }}>
 
         <div style={{ marginBottom: 24 }}>
           <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>Permissões por Perfil</h1>
-          <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>Configure o que cada perfil pode fazer em cada página</p>
+          <p style={{ fontSize: 13, color: '#64748b', marginTop: 4, marginBottom: 0 }}>Configure o que cada perfil pode fazer em cada página</p>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -106,11 +98,11 @@ export default function Permissoes() {
                 borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
                 overflow: 'hidden',
               }}>
-                {/* Header do accordion */}
+                {/* Header accordion */}
                 <button
                   onClick={() => togglePerfil(item.perfil)}
                   style={{
-                    width: '100%', padding: '14px 20px',
+                    width: '100%', padding: '14px 16px',
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     background: 'none', border: 'none', cursor: 'pointer',
                     borderBottom: aberto ? '1px solid #f1f5f9' : 'none',
@@ -127,25 +119,25 @@ export default function Permissoes() {
                   </svg>
                 </button>
 
-                {/* Conteúdo */}
+                {/* Tabela com scroll horizontal */}
                 {aberto && (
-                  <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                  <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 420 }}>
                       <thead>
                         <tr style={{ background: '#f8fafc' }}>
-                          <th style={{ textAlign: 'left', padding: '8px 20px', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>PÁGINA</th>
-                          <th style={{ textAlign: 'center', padding: '8px', fontSize: 11, fontWeight: 700, color: '#2563eb', letterSpacing: 1, width: 70 }}>VER</th>
-                          <th style={{ textAlign: 'center', padding: '8px', fontSize: 11, fontWeight: 700, color: '#16a34a', letterSpacing: 1, width: 70 }}>CRIAR</th>
-                          <th style={{ textAlign: 'center', padding: '8px', fontSize: 11, fontWeight: 700, color: '#d97706', letterSpacing: 1, width: 70 }}>EDITAR</th>
-                          <th style={{ textAlign: 'center', padding: '8px 20px 8px 8px', fontSize: 11, fontWeight: 700, color: '#dc2626', letterSpacing: 1, width: 70 }}>EXCLUIR</th>
+                          <th style={{ textAlign: 'left', padding: '8px 16px', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>PÁGINA</th>
+                          <th style={{ textAlign: 'center', padding: '8px', fontSize: 11, fontWeight: 700, color: '#2563eb', letterSpacing: 1, width: 60 }}>VER</th>
+                          <th style={{ textAlign: 'center', padding: '8px', fontSize: 11, fontWeight: 700, color: '#16a34a', letterSpacing: 1, width: 60 }}>CRIAR</th>
+                          <th style={{ textAlign: 'center', padding: '8px', fontSize: 11, fontWeight: 700, color: '#d97706', letterSpacing: 1, width: 60 }}>EDITAR</th>
+                          <th style={{ textAlign: 'center', padding: '8px 16px 8px 8px', fontSize: 11, fontWeight: 700, color: '#dc2626', letterSpacing: 1, width: 60 }}>EXCLUIR</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {PAGINAS.map((pagina, idx) => {
+                        {PAGINAS.map((pagina) => {
                           const paginaPerms = item.paginas?.[pagina.key] || {}
                           return (
                             <tr key={pagina.key} style={{ borderTop: '1px solid #f1f5f9' }}>
-                              <td style={{ padding: '8px 20px', fontWeight: 600, color: '#334155', fontSize: 13 }}>{pagina.label}</td>
+                              <td style={{ padding: '8px 16px', fontWeight: 600, color: '#334155', fontSize: 13, whiteSpace: 'nowrap' }}>{pagina.label}</td>
                               {['ver', 'criar', 'editar', 'excluir'].map(acao => {
                                 const temAcao = pagina.acoes.includes(acao)
                                 const ativo = paginaPerms[acao] === true
@@ -165,7 +157,7 @@ export default function Permissoes() {
                                           transition: 'all 0.15s',
                                         }}
                                       >
-                                        {ativo ? '✓' : '×'}
+                                        {ativo ? '✓' : '—'}
                                       </button>
                                     ) : (
                                       <span style={{ color: '#e2e8f0', fontSize: 13 }}>—</span>

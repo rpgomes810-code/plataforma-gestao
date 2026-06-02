@@ -24,10 +24,18 @@ export default function NovaEscala() {
   const [hospitais, setHospitais] = useState<Hospital[]>([])
   const [grupos, setGrupos] = useState<Grupo[]>([])
   const [atendentes, setAtendentes] = useState<Membro[]>([])
+  const [isMobile, setIsMobile] = useState(false)
   const [form, setForm] = useState({
     data: '', grupo: '', hospital_id: '', local_texto: '',
     hora_inicio: '', atendentes: '', observacoes: '',
   })
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   useEffect(() => {
     const supabase = createBrowserClient(
@@ -49,6 +57,13 @@ export default function NovaEscala() {
     }
   }
 
+  // Máscara HH:MM para mobile
+  const handleHoraMobile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let v = e.target.value.replace(/\D/g, '').slice(0, 4)
+    if (v.length >= 3) v = v.slice(0, 2) + ':' + v.slice(2)
+    setForm({ ...form, hora_inicio: v })
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -63,9 +78,8 @@ export default function NovaEscala() {
   const selectStyle = { ...inputStyle, appearance: 'none' as const, WebkitAppearance: 'none' as const, paddingRight: 32 }
 
   return (
-    <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: '28px 40px' }} className="nova-wrap">
+    <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: isMobile ? '16px' : '28px 40px' }}>
       <style>{`
-        @media (max-width: 768px) { .nova-wrap { padding: 16px !important; } .grid-3 { grid-template-columns: 1fr !important; } .grid-2 { grid-template-columns: 1fr !important; } }
         input:focus, select:focus, textarea:focus { border-color: #2563eb !important; background: #fff !important; }
       `}</style>
 
@@ -87,9 +101,10 @@ export default function NovaEscala() {
         <form onSubmit={handleSubmit}>
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
 
-            <div style={{ padding: '24px 28px', borderBottom: '1px solid #f1f5f9' }}>
+            {/* Informações básicas */}
+            <div style={{ padding: isMobile ? '16px' : '24px 28px', borderBottom: '1px solid #f1f5f9' }}>
               <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, marginBottom: 16 }}>INFORMAÇÕES BÁSICAS</p>
-              <div className="grid-3" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: 16 }}>
                 <div>
                   <label style={labelStyle}>Data *</label>
                   <input name="data" type="date" required value={form.data} onChange={handleChange} style={inputStyle} />
@@ -108,15 +123,30 @@ export default function NovaEscala() {
                   </div>
                 </div>
                 <div>
-                  <label style={labelStyle}>Hora de início *</label>
-                  <input name="hora_inicio" type="time" required value={form.hora_inicio} onChange={handleChange} style={inputStyle} />
+                  <label style={labelStyle}>Hora de início * {isMobile && <span style={{ fontWeight: 400, color: '#94a3b8' }}>(ex: 14:30)</span>}</label>
+                  {isMobile ? (
+                    <input
+                      name="hora_inicio"
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="14:30"
+                      required
+                      value={form.hora_inicio}
+                      onChange={handleHoraMobile}
+                      maxLength={5}
+                      style={inputStyle}
+                    />
+                  ) : (
+                    <input name="hora_inicio" type="time" required value={form.hora_inicio} onChange={handleChange} style={inputStyle} />
+                  )}
                 </div>
               </div>
             </div>
 
-            <div style={{ padding: '24px 28px', borderBottom: '1px solid #f1f5f9' }}>
+            {/* Local */}
+            <div style={{ padding: isMobile ? '16px' : '24px 28px', borderBottom: '1px solid #f1f5f9' }}>
               <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, marginBottom: 16 }}>LOCAL</p>
-              <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
                 <div>
                   <label style={labelStyle}>Hospital</label>
                   <div style={{ position: 'relative' }}>
@@ -137,7 +167,8 @@ export default function NovaEscala() {
               </div>
             </div>
 
-            <div style={{ padding: '24px 28px', borderBottom: '1px solid #f1f5f9' }}>
+            {/* Atendente */}
+            <div style={{ padding: isMobile ? '16px' : '24px 28px', borderBottom: '1px solid #f1f5f9' }}>
               <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, marginBottom: 16 }}>ATENDENTE</p>
               <div style={{ position: 'relative' }}>
                 <select name="atendentes" value={form.atendentes} onChange={handleChange} style={selectStyle}>
@@ -151,14 +182,16 @@ export default function NovaEscala() {
               </div>
             </div>
 
-            <div style={{ padding: '24px 28px', borderBottom: '1px solid #f1f5f9' }}>
+            {/* Observações */}
+            <div style={{ padding: isMobile ? '16px' : '24px 28px', borderBottom: '1px solid #f1f5f9' }}>
               <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, marginBottom: 16 }}>OBSERVAÇÕES</p>
               <textarea name="observacoes" rows={3} value={form.observacoes} onChange={handleChange}
                 placeholder="Alguma observação específica..."
                 style={{ ...inputStyle, resize: 'vertical' }} />
             </div>
 
-            <div style={{ padding: '20px 28px', display: 'flex', gap: 10 }}>
+            {/* Botões */}
+            <div style={{ padding: isMobile ? '16px' : '20px 28px', display: 'flex', gap: 10 }}>
               <button type="submit" disabled={loading} style={{
                 padding: '10px 24px', borderRadius: 8, border: 'none',
                 background: loading ? '#93c5fd' : '#2563eb',

@@ -29,6 +29,14 @@ export default function Escalas() {
   const [liberando, setLiberando] = useState<string | null>(null)
   const [liberandoLote, setLiberandoLote] = useState<string | null>(null)
   const [enviandoLembrete, setEnviandoLembrete] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   useEffect(() => {
     fetch('/api/membros/eu').then(res => res.json()).then(data => setPermissoes(data.permissoes || {})).catch(() => setPermissoes({}))
@@ -174,94 +182,97 @@ export default function Escalas() {
     border: '1px solid #e2e8f0', background: '#f8fafc',
     fontSize: 12, color: '#334155', outline: 'none',
     appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer',
-    minWidth: 140,
+    minWidth: isMobile ? 100 : 140,
   }
 
-  return (
-    <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: '28px 40px' }} className="escalas-wrap">
-      <style>{`
-        @media (max-width: 768px) {
-          .escalas-wrap { padding: 16px !important; }
-          .escalas-header { flex-direction: column !important; align-items: flex-start !important; }
-          .col-atendente, .col-hora, .col-liberar { display: none !important; }
-        }
-        .escala-row:hover { background: #f8fafc; }
-      `}</style>
+  // Ícone de lixeira para excluir (substitui o texto "Excluir")
+  const IconeLixeira = () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="3 6 5 6 21 6"/>
+      <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+      <path d="M10 11v6M14 11v6"/>
+      <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+    </svg>
+  )
 
+  return (
+    <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: isMobile ? '16px' : '28px 40px' }}>
       <div style={{ maxWidth: 1280, margin: '0 auto' }}>
 
-        <div className="escalas-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, gap: 16 }}>
-          <div>
-            <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>Escalas</h1>
-            <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
-              {escalas.length} escala{escalas.length !== 1 ? 's' : ''} em {meses[mes - 1]} {ano}
-            </p>
+        {/* Cabeçalho */}
+        <div style={{ marginBottom: 20 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>Escalas</h1>
+          <p style={{ fontSize: 13, color: '#64748b', marginTop: 4, marginBottom: 0 }}>
+            {escalas.length} escala{escalas.length !== 1 ? 's' : ''} em {meses[mes - 1]} {ano}
+          </p>
+        </div>
+
+        {/* Controles */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20, alignItems: 'center' }}>
+          {/* Navegação mês */}
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <button onClick={() => navMes(-1)} style={{ width: 34, height: 34, borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', color: '#475569', fontSize: 14 }}>←</button>
+            <span style={{ padding: '7px 12px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 13, fontWeight: 600, color: '#334155', whiteSpace: 'nowrap' }}>
+              {meses[mes - 1]} {ano}
+            </span>
+            <button onClick={() => navMes(1)} style={{ width: 34, height: 34, borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', color: '#475569', fontSize: 14 }}>→</button>
           </div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-              <button onClick={() => navMes(-1)} style={{ width: 34, height: 34, borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', color: '#475569', fontSize: 14 }}>←</button>
-              <span style={{ padding: '7px 16px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 13, fontWeight: 600, color: '#334155' }}>
-                {meses[mes - 1]} {ano}
-              </span>
-              <button onClick={() => navMes(1)} style={{ width: 34, height: 34, borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', color: '#475569', fontSize: 14 }}>→</button>
-            </div>
 
-            {podeExcluir && escalas.length > 0 && (
-              <button onClick={excluirMes} style={{
-                padding: '8px 14px', borderRadius: 8, border: '1px solid #fecaca',
-                background: '#fff', color: '#dc2626', fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', gap: 6,
-              }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
-                </svg>
-                Excluir mês
-              </button>
-            )}
+          {podeExcluir && escalas.length > 0 && (
+            <button onClick={excluirMes} style={{
+              padding: '8px 14px', borderRadius: 8, border: '1px solid #fecaca',
+              background: '#fff', color: '#dc2626', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap',
+            }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+              </svg>
+              Excluir mês
+            </button>
+          )}
 
-            {podeCriar && estaНаSemanaDeSabado && (
-              <button onClick={enviarLembrete} disabled={enviandoLembrete} style={{
-                padding: '8px 16px', borderRadius: 8, border: '1px solid #7c3aed',
-                background: '#fff', color: '#7c3aed', fontSize: 13, fontWeight: 600,
-                cursor: enviandoLembrete ? 'not-allowed' : 'pointer',
-                display: 'flex', alignItems: 'center', gap: 6,
-                opacity: enviandoLembrete ? 0.5 : 1,
-              }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                  <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                </svg>
-                {enviandoLembrete ? 'Enviando...' : 'Enviar lembrete'}
-              </button>
-            )}
+          {podeCriar && estaНаSemanaDeSabado && (
+            <button onClick={enviarLembrete} disabled={enviandoLembrete} style={{
+              padding: '8px 14px', borderRadius: 8, border: '1px solid #7c3aed',
+              background: '#fff', color: '#7c3aed', fontSize: 13, fontWeight: 600,
+              cursor: enviandoLembrete ? 'not-allowed' : 'pointer',
+              display: 'flex', alignItems: 'center', gap: 6,
+              opacity: enviandoLembrete ? 0.5 : 1, whiteSpace: 'nowrap',
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+              </svg>
+              {enviandoLembrete ? 'Enviando...' : 'Enviar lembrete'}
+            </button>
+          )}
 
-            {podeCriar && (
-              <a href="/dashboard/escalas/gerar" style={{
-                padding: '8px 16px', borderRadius: 8, border: '1px solid #e2e8f0',
-                background: '#fff', color: '#475569', fontSize: 13, fontWeight: 600,
-                textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6,
-              }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
-                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-                </svg>
-                Gerar Escalas
-              </a>
-            )}
+          {podeCriar && (
+            <a href="/dashboard/escalas/gerar" style={{
+              padding: '8px 14px', borderRadius: 8, border: '1px solid #e2e8f0',
+              background: '#fff', color: '#475569', fontSize: 13, fontWeight: 600,
+              textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap',
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+              </svg>
+              Gerar Escalas
+            </a>
+          )}
 
-            {podeCriar && (
-              <a href="/dashboard/escalas/nova" style={{
-                padding: '8px 16px', borderRadius: 8, border: '1px solid #2563eb',
-                background: '#fff', color: '#2563eb', fontSize: 13, fontWeight: 600,
-                textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6,
-              }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-                Nova Escala
-              </a>
-            )}
-          </div>
+          {podeCriar && (
+            <a href="/dashboard/escalas/nova" style={{
+              padding: '8px 14px', borderRadius: 8, border: '1px solid #2563eb',
+              background: '#fff', color: '#2563eb', fontSize: 13, fontWeight: 600,
+              textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap',
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Nova Escala
+            </a>
+          )}
         </div>
 
         {isMesPassado && (
@@ -286,51 +297,52 @@ export default function Escalas() {
 
               return (
                 <div key={data} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
-                  <div style={{ background: '#1e3a5f', padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h3 style={{ color: '#fff', fontWeight: 700, fontSize: 14, margin: 0, textTransform: 'capitalize' }}>{formatarData(data)}</h3>
+                  <div style={{ background: '#1e3a5f', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                    <h3 style={{ color: '#fff', fontWeight: 700, fontSize: 13, margin: 0, textTransform: 'capitalize' }}>{formatarData(data)}</h3>
                     {podeEditar && !todasLiberadas && pendentesComAtendente.length > 0 && (
                       <button
                         onClick={() => liberarTodasDoDia(data, itens)}
                         disabled={isLiberandoEsseDia}
                         style={{
-                          padding: '5px 14px', borderRadius: 999,
+                          padding: '5px 12px', borderRadius: 999,
                           border: '1px solid rgba(255,255,255,0.4)',
                           background: isLiberandoEsseDia ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.15)',
-                          color: '#fff', fontSize: 12, fontWeight: 600,
+                          color: '#fff', fontSize: 11, fontWeight: 600,
                           cursor: isLiberandoEsseDia ? 'not-allowed' : 'pointer',
-                          display: 'flex', alignItems: 'center', gap: 6,
+                          display: 'flex', alignItems: 'center', gap: 5,
                           opacity: isLiberandoEsseDia ? 0.7 : 1,
-                          transition: 'background 0.15s',
+                          whiteSpace: 'nowrap', flexShrink: 0,
                         }}
                       >
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M5 12l5 5L20 7"/>
                         </svg>
                         {isLiberandoEsseDia ? 'Liberando...' : `Liberar todas (${pendentesComAtendente.length})`}
                       </button>
                     )}
                     {podeEditar && todasLiberadas && (
-                      <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>✅ Todas liberadas</span>
+                      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', fontWeight: 600, flexShrink: 0 }}>✅ Todas liberadas</span>
                     )}
                   </div>
-                  <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+
+                  <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: isMobile ? 600 : 'auto' }}>
                       <thead>
                         <tr style={{ background: '#f8fafc', borderBottom: '1px solid #f1f5f9' }}>
-                          <th style={{ textAlign: 'left', padding: '10px 20px', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>GRUPO</th>
-                          <th style={{ textAlign: 'left', padding: '10px 16px', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>LOCAL</th>
-                          <th className="col-hora" style={{ textAlign: 'left', padding: '10px 16px', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>HORA</th>
-                          <th className="col-atendente" style={{ textAlign: 'left', padding: '10px 16px', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>ATENDENTE</th>
-                          <th className="col-liberar" style={{ textAlign: 'center', padding: '10px 16px', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>STATUS</th>
-                          <th style={{ textAlign: 'right', padding: '10px 20px', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>AÇÕES</th>
+                          <th style={{ textAlign: 'left', padding: '10px 16px', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, whiteSpace: 'nowrap' }}>GRUPO</th>
+                          <th style={{ textAlign: 'left', padding: '10px 16px', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, whiteSpace: 'nowrap' }}>LOCAL</th>
+                          <th style={{ textAlign: 'left', padding: '10px 16px', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, whiteSpace: 'nowrap' }}>HORA</th>
+                          <th style={{ textAlign: 'left', padding: '10px 16px', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, whiteSpace: 'nowrap' }}>ATENDENTE</th>
+                          <th style={{ textAlign: 'center', padding: '10px 16px', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, whiteSpace: 'nowrap' }}>STATUS</th>
+                          <th style={{ textAlign: 'right', padding: '10px 16px', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, whiteSpace: 'nowrap' }}>AÇÕES</th>
                         </tr>
                       </thead>
                       <tbody>
                         {itens.map((escala, idx) => (
-                          <tr key={escala.id} className="escala-row" style={{ borderBottom: idx < itens.length - 1 ? '1px solid #f1f5f9' : 'none', transition: 'background 0.15s' }}>
-                            <td style={{ padding: '12px 20px', fontWeight: 600, color: '#1e293b' }}>{escala.grupo}</td>
-                            <td style={{ padding: '12px 16px', color: '#475569' }}>{escala.local_texto}</td>
-                            <td className="col-hora" style={{ padding: '12px 16px', color: '#475569' }}>
+                          <tr key={escala.id} style={{ borderBottom: idx < itens.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
+                            <td style={{ padding: '12px 16px', fontWeight: 600, color: '#1e293b', whiteSpace: 'nowrap' }}>{escala.grupo}</td>
+                            <td style={{ padding: '12px 16px', color: '#475569', minWidth: 120 }}>{escala.local_texto}</td>
+                            <td style={{ padding: '12px 16px', color: '#475569', whiteSpace: 'nowrap' }}>
                               <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                   <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
@@ -338,7 +350,7 @@ export default function Escalas() {
                                 {escala.hora_inicio}
                               </span>
                             </td>
-                            <td className="col-atendente" style={{ padding: '12px 16px' }}>
+                            <td style={{ padding: '12px 16px' }}>
                               {podeEditar ? (
                                 <div style={{ position: 'relative', display: 'inline-block' }}>
                                   <select
@@ -356,19 +368,19 @@ export default function Escalas() {
                                   </svg>
                                 </div>
                               ) : (
-                                <span style={{ color: escala.atendentes ? '#475569' : '#cbd5e1' }}>
+                                <span style={{ color: escala.atendentes ? '#475569' : '#cbd5e1', whiteSpace: 'nowrap' }}>
                                   {escala.atendentes || 'A definir'}
                                 </span>
                               )}
                             </td>
-                            <td className="col-liberar" style={{ padding: '12px 16px', textAlign: 'center' }}>
+                            <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                               {podeEditar ? (
                                 <button
                                   onClick={() => liberarEscala(escala.id, escala.confirmacao_aberta)}
                                   disabled={liberando === escala.id}
                                   style={{
-                                    padding: '4px 12px', borderRadius: 999, border: 'none',
-                                    fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                                    padding: '4px 10px', borderRadius: 999, border: 'none',
+                                    fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
                                     background: escala.confirmacao_aberta ? '#dcfce7' : '#f1f5f9',
                                     color: escala.confirmacao_aberta ? '#16a34a' : '#64748b',
                                   }}
@@ -377,7 +389,7 @@ export default function Escalas() {
                                 </button>
                               ) : (
                                 <span style={{
-                                  fontSize: 11, fontWeight: 600, padding: '4px 12px', borderRadius: 999,
+                                  fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 999, whiteSpace: 'nowrap',
                                   background: escala.confirmacao_aberta ? '#dcfce7' : '#f1f5f9',
                                   color: escala.confirmacao_aberta ? '#16a34a' : '#64748b',
                                 }}>
@@ -385,7 +397,7 @@ export default function Escalas() {
                                 </span>
                               )}
                             </td>
-                            <td style={{ padding: '12px 20px' }}>
+                            <td style={{ padding: '12px 16px' }}>
                               <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                                 {podeEditar && (
                                   <a href={`/dashboard/escalas/${escala.id}/editar`} title="Editar" style={{
@@ -398,7 +410,14 @@ export default function Escalas() {
                                     </svg>
                                   </a>
                                 )}
-                                {podeExcluir && <BotaoExcluirEscala id={escala.id} />}
+                                {podeExcluir && (
+                                  <div style={{
+                                    width: 30, height: 30, borderRadius: 7, background: '#fee2e2',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  }}>
+                                    <BotaoExcluirEscala id={escala.id} />
+                                  </div>
+                                )}
                               </div>
                             </td>
                           </tr>

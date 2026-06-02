@@ -190,7 +190,11 @@ export default function Login() {
         .btn-primary { transition: all 0.2s; }
         .btn-secondary:hover { background: #e2e8f0 !important; }
         .btn-secondary { transition: background 0.2s; }
-        @media (max-width: 768px) { .login-inner { flex-direction: column !important; } .login-left { display: none !important; } }
+        @media (max-width: 768px) {
+          .login-inner { flex-direction: column !important; border-radius: 16px !important; }
+          .login-left { display: none !important; }
+          .login-right { width: 100% !important; padding: 32px 24px !important; }
+        }
       `}</style>
 
       <div className="login-card" style={{ width: '100%', maxWidth: 860 }}>
@@ -214,7 +218,7 @@ export default function Login() {
           </div>
 
           {/* Lado direito */}
-          <div style={{
+          <div className="login-right" style={{
             width: 400, background: '#fff',
             padding: '48px 40px',
             display: 'flex', flexDirection: 'column', justifyContent: 'center',

@@ -23,13 +23,20 @@ export default function Historico() {
   const [loading, setLoading] = useState(false)
   const [detalhesAbertos, setDetalhesAbertos] = useState<Record<string, boolean>>({})
   const [permissoes, setPermissoes] = useState<any>(null)
+  const [isMobile, setIsMobile] = useState(false)
 
-  // Modal edição
   const [modalEdicao, setModalEdicao] = useState<any>(null)
   const [formEdicao, setFormEdicao] = useState<any>(null)
   const [salvandoEdicao, setSalvandoEdicao] = useState(false)
   const [buscaMembro, setBuscaMembro] = useState('')
   const [grupos, setGrupos] = useState<string[]>([])
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   useEffect(() => {
     fetch('/api/membros').then(r => r.json()).then(data => {
@@ -60,7 +67,6 @@ export default function Historico() {
   useEffect(() => {
     setLoading(true)
     setDetalhesAbertos({})
-
     if (aba === 'escalas' || aba === 'confirmacoes') {
       fetch(`/api/escalas/historico?mes=${mes + 1}&ano=${ano}`)
         .then(r => r.json())
@@ -75,9 +81,7 @@ export default function Historico() {
     }
   }, [mes, ano, aba])
 
-  const toggleDetalhes = (id: string) => {
-    setDetalhesAbertos(prev => ({ ...prev, [id]: !prev[id] }))
-  }
+  const toggleDetalhes = (id: string) => setDetalhesAbertos(prev => ({ ...prev, [id]: !prev[id] }))
 
   const abrirEdicao = (registro: any) => {
     setModalEdicao(registro)
@@ -111,12 +115,8 @@ export default function Historico() {
       method: 'PUT', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     })
-    if (res.ok) {
-      setModalEdicao(null)
-      carregarRegistros()
-    } else {
-      alert('Erro ao salvar')
-    }
+    if (res.ok) { setModalEdicao(null); carregarRegistros() }
+    else alert('Erro ao salvar')
     setSalvandoEdicao(false)
   }
 
@@ -128,9 +128,8 @@ export default function Historico() {
   }
 
   const adicionarMembroEdicao = (nome: string) => {
-    if (!formEdicao.membros_presentes.includes(nome)) {
+    if (!formEdicao.membros_presentes.includes(nome))
       setFormEdicao((prev: any) => ({ ...prev, membros_presentes: [...prev.membros_presentes, nome] }))
-    }
     setBuscaMembro('')
   }
 
@@ -141,9 +140,8 @@ export default function Historico() {
     setBuscaMembro('')
   }
 
-  const removerMembroEdicao = (nome: string) => {
+  const removerMembroEdicao = (nome: string) =>
     setFormEdicao((prev: any) => ({ ...prev, membros_presentes: prev.membros_presentes.filter((n: string) => n !== nome) }))
-  }
 
   const gruposFiltrados = grupos.filter(g => buscaMembro.length > 0 && g.toLowerCase().includes(buscaMembro.toLowerCase()))
   const membrosFiltrados = membros.filter(m =>
@@ -173,21 +171,17 @@ export default function Historico() {
   }
 
   const abaStyle = (a: string): React.CSSProperties => ({
-    padding: '8px 18px', borderRadius: 8, cursor: 'pointer',
+    padding: '8px 16px', borderRadius: 8, cursor: 'pointer',
     fontSize: 13, fontWeight: 600,
     background: aba === a ? '#1e3a5f' : '#fff',
     color: aba === a ? '#fff' : '#475569',
     border: aba === a ? '1px solid #1e3a5f' : '1px solid #e2e8f0',
+    whiteSpace: 'nowrap',
   })
 
   return (
-    <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: '28px 40px' }} className="historico-wrap">
+    <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: isMobile ? '16px' : '28px 40px' }}>
       <style>{`
-        @media (max-width: 768px) {
-          .historico-wrap { padding: 16px !important; }
-          .historico-header { flex-direction: column !important; align-items: flex-start !important; }
-          .col-extra { display: none !important; }
-        }
         .hist-row:hover { background: #f8fafc; }
         input:focus, select:focus, textarea:focus { border-color: #2563eb !important; background: #fff !important; }
       `}</style>
@@ -202,8 +196,7 @@ export default function Historico() {
             </div>
 
             <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
                 <div>
                   <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, marginBottom: 6 }}>HOSPITAL</label>
                   <select value={formEdicao.hospital_id} onChange={e => setFormEdicao((p: any) => ({ ...p, hospital_id: e.target.value }))} style={inputStyle}>
@@ -217,7 +210,7 @@ export default function Historico() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
                 <div>
                   <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, marginBottom: 6 }}>HORA INÍCIO</label>
                   <input type="time" value={formEdicao.hora_inicio} onChange={e => setFormEdicao((p: any) => ({ ...p, hora_inicio: e.target.value }))} style={inputStyle} />
@@ -233,7 +226,7 @@ export default function Historico() {
                 <input type="text" value={formEdicao.quem_autorizou} onChange={e => setFormEdicao((p: any) => ({ ...p, quem_autorizou: e.target.value }))} style={inputStyle} />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
                 <div>
                   <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, marginBottom: 6 }}>HINOS EXECUTADOS</label>
                   <input type="number" min="0" value={formEdicao.hinos_executados} onChange={e => setFormEdicao((p: any) => ({ ...p, hinos_executados: e.target.value }))} style={inputStyle} />
@@ -305,15 +298,16 @@ export default function Historico() {
 
       <div style={{ maxWidth: 1280, margin: '0 auto' }}>
 
-        <div className="historico-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, gap: 16 }}>
+        {/* Cabeçalho */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, gap: 16, flexWrap: 'wrap' }}>
           <div>
             <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>Histórico</h1>
-            <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>Escalas, registros e confirmações anteriores</p>
+            <p style={{ fontSize: 13, color: '#64748b', marginTop: 4, marginBottom: 0 }}>Escalas, registros e confirmações anteriores</p>
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
             <button onClick={() => { if (mes === 0) { setMes(11); setAno(ano - 1) } else setMes(mes - 1) }}
               style={{ width: 34, height: 34, borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', color: '#475569', fontSize: 14 }}>←</button>
-            <span style={{ padding: '7px 16px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 13, fontWeight: 600, color: '#334155' }}>
+            <span style={{ padding: '7px 12px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 13, fontWeight: 600, color: '#334155', whiteSpace: 'nowrap' }}>
               {meses[mes]} {ano}
             </span>
             <button onClick={() => { if (mes === 11) { setMes(0); setAno(ano + 1) } else setMes(mes + 1) }}
@@ -321,7 +315,8 @@ export default function Historico() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+        {/* Abas */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
           <button style={abaStyle('escalas')} onClick={() => setAba('escalas')}>Escalas</button>
           <button style={abaStyle('registros')} onClick={() => setAba('registros')}>Registros</button>
           <button style={abaStyle('confirmacoes')} onClick={() => setAba('confirmacoes')}>Confirmações</button>
@@ -340,20 +335,34 @@ export default function Historico() {
                 </div>
               ) : (
                 <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
-                  <div style={{ padding: '10px 20px', background: '#f8fafc', borderBottom: '1px solid #f1f5f9', display: 'grid', gridTemplateColumns: '1fr 200px 100px' }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>ESCALA</span>
-                    <span className="col-extra" style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>LOCAL</span>
-                    <span className="col-extra" style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>HORA</span>
-                  </div>
                   {escalas.map((escala, idx) => (
-                    <div key={escala.id} style={{ borderBottom: idx < escalas.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
-                      <div className="hist-row" style={{ display: 'grid', gridTemplateColumns: '1fr 200px 100px', padding: '14px 20px', alignItems: 'center', transition: 'background 0.15s' }}>
+                    <div key={escala.id} className="hist-row" style={{
+                      borderBottom: idx < escalas.length - 1 ? '1px solid #f1f5f9' : 'none',
+                      padding: '14px 20px', transition: 'background 0.15s',
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                         <div>
-                          <p style={{ fontSize: 14, fontWeight: 600, color: '#1e293b', margin: 0 }}>{escala.grupo}</p>
-                          <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>{formatarData(escala.data)}</p>
+                          <p style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: '0 0 2px' }}>{escala.grupo}</p>
+                          <p style={{ fontSize: 12, color: '#94a3b8', margin: '0 0 4px' }}>{formatarData(escala.data)}</p>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+                            {escala.local_texto && (
+                              <span style={{ fontSize: 12, color: '#475569', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                                </svg>
+                                {escala.local_texto}
+                              </span>
+                            )}
+                            {escala.hora_inicio && (
+                              <span style={{ fontSize: 12, color: '#475569', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                                </svg>
+                                {escala.hora_inicio}
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        <span className="col-extra" style={{ fontSize: 13, color: '#475569' }}>{escala.local_texto}</span>
-                        <span className="col-extra" style={{ fontSize: 13, color: '#475569' }}>{escala.hora_inicio}</span>
                       </div>
                     </div>
                   ))}
@@ -376,19 +385,19 @@ export default function Historico() {
                     const criadoEm = registro.criado_em ? new Date(registro.criado_em).toLocaleString('pt-BR') : null
                     return (
                       <div key={registro.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
-                        <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{ padding: '16px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
                             <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#1e3a5f', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
                               </svg>
                             </div>
-                            <div>
-                              <p style={{ fontSize: 15, fontWeight: 700, color: '#1e293b', margin: 0 }}>{registro.hospitais?.nome || '—'}</p>
+                            <div style={{ minWidth: 0 }}>
+                              <p style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{registro.hospitais?.nome || '—'}</p>
                               <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>{formatarData(registro.data)} · {registro.hora_inicio} às {registro.hora_termino}</p>
                             </div>
                           </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                             {podeEditar && (
                               <button onClick={() => abrirEdicao(registro)} title="Editar" style={{
                                 width: 30, height: 30, borderRadius: 7, border: 'none',
@@ -416,19 +425,19 @@ export default function Historico() {
                             <button onClick={() => toggleDetalhes(registro.id)} style={{
                               fontSize: 12, fontWeight: 600, color: '#2563eb',
                               background: 'none', border: 'none', cursor: 'pointer',
-                              display: 'flex', alignItems: 'center', gap: 4,
+                              display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap',
                             }}>
                               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                 {aberto ? <polyline points="18 15 12 9 6 15"/> : <polyline points="6 9 12 15 18 9"/>}
                               </svg>
-                              {aberto ? 'Ocultar' : 'Ver detalhes'}
+                              {isMobile ? '' : (aberto ? 'Ocultar' : 'Detalhes')}
                             </button>
                           </div>
                         </div>
 
                         {aberto && (
-                          <div style={{ borderTop: '1px solid #f1f5f9', padding: '16px 20px', background: '#f8fafc' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: criadoEm ? 12 : 0 }}>
+                          <div style={{ borderTop: '1px solid #f1f5f9', padding: '16px', background: '#f8fafc' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: 12, marginBottom: criadoEm ? 12 : 0 }}>
                               <div>
                                 <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, margin: '0 0 4px' }}>AUTORIZOU</p>
                                 <p style={{ fontSize: 13, color: '#475569', margin: 0 }}>{registro.quem_autorizou || '—'}</p>
@@ -484,17 +493,17 @@ export default function Historico() {
 
                     return (
                       <div key={escala.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
-                        <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                            <div>
-                              <p style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: 0 }}>{escala.grupo}</p>
+                        <div style={{ padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, flex: 1, minWidth: 0 }}>
+                            <div style={{ minWidth: 0 }}>
+                              <p style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: '0 0 2px' }}>{escala.grupo}</p>
                               <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>{formatarData(escala.data)} · {escala.local_texto}</p>
                             </div>
-                            <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999, background: completo ? '#dcfce7' : '#fef9c3', color: completo ? '#16a34a' : '#854d0e' }}>
+                            <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999, flexShrink: 0, background: completo ? '#dcfce7' : '#fef9c3', color: completo ? '#16a34a' : '#854d0e' }}>
                               {completo ? 'Completo' : 'Incompleto'}
                             </span>
                           </div>
-                          <button onClick={() => toggleDetalhes(escala.id)} style={{ fontSize: 12, fontWeight: 600, color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <button onClick={() => toggleDetalhes(escala.id)} style={{ fontSize: 12, fontWeight: 600, color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                               {aberto ? <polyline points="18 15 12 9 6 15"/> : <polyline points="6 9 12 15 18 9"/>}
                             </svg>
@@ -503,7 +512,7 @@ export default function Historico() {
                         </div>
 
                         {aberto && (
-                          <div style={{ borderTop: '1px solid #f1f5f9', padding: '16px 20px', background: '#f8fafc', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                          <div style={{ borderTop: '1px solid #f1f5f9', padding: '16px', background: '#f8fafc', display: 'flex', flexDirection: 'column', gap: 12 }}>
                             {confirmados.length > 0 && (
                               <div>
                                 <p style={{ fontSize: 11, fontWeight: 700, color: '#16a34a', letterSpacing: 1, margin: '0 0 8px' }}>✅ CONFIRMADOS ({confirmados.length})</p>

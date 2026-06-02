@@ -24,6 +24,11 @@ export default function Comunicados() {
   const [salvando, setSalvando] = useState(false)
   const [loading, setLoading] = useState(true)
   const [expandido, setExpandido] = useState<string | null>(null)
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 768)
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('resize', () => setIsMobile(window.innerWidth < 768))
+  }
 
   const carregarComunicados = (b = busca) => {
     setLoading(true)
@@ -128,8 +133,7 @@ export default function Comunicados() {
   }
 
   return (
-    <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: '28px 40px' }} className="com-wrap">
-      <style>{`@media (max-width: 768px) { .com-wrap { padding: 16px !important; } }`}</style>
+    <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: isMobile ? '16px' : '28px 40px' }}>
 
       <div style={{ maxWidth: 1280, margin: '0 auto' }}>
 
@@ -137,12 +141,12 @@ export default function Comunicados() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>Avisos e Comunicados</h1>
-            <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
+            <p style={{ fontSize: 13, color: '#64748b', marginTop: 4, marginBottom: 0 }}>
               {totalAvisos} aviso{totalAvisos !== 1 ? 's' : ''} · {totalComunicados} comunicado{totalComunicados !== 1 ? 's' : ''}
             </p>
           </div>
           {podeCriar && (
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <button onClick={abrirNovoAviso} style={{
                 padding: '9px 18px', borderRadius: 8, border: 'none',
                 background: '#d97706', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer',
@@ -160,7 +164,7 @@ export default function Comunicados() {
 
         {/* FORMULÁRIO */}
         {mostrarForm && (podeCriar || podeEditar) && (
-          <div style={{ background: '#fff', borderRadius: 12, border: `1px solid ${tipoForm === 'aviso' ? '#fde68a' : '#bfdbfe'}`, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', padding: '24px 28px', marginBottom: 20 }}>
+          <div style={{ background: '#fff', borderRadius: 12, border: `1px solid ${tipoForm === 'aviso' ? '#fde68a' : '#bfdbfe'}`, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', padding: isMobile ? '16px' : '24px 28px', marginBottom: 20 }}>
             <h3 style={{ fontSize: 15, fontWeight: 700, color: '#1e293b', margin: '0 0 20px' }}>
               {tipoForm === 'aviso' ? '⚠️ ATENÇÃO: ESSE AVISO SERÁ VISUALIZADO POR TODOS' : editando ? 'Editar Comunicado' : 'Novo Comunicado'}
             </h3>
@@ -176,7 +180,7 @@ export default function Comunicados() {
               {tipoForm === 'aviso' && (
                 <div>
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>Exibir no dashboard por quantos dias? *</label>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                     <input type="number" min={1} max={90} value={diasAviso} onChange={e => setDiasAviso(Number(e.target.value))} style={{ ...inputStyle, width: 100 }} />
                     <span style={{ fontSize: 13, color: '#64748b' }}>
                       dias (até {(() => { const d = new Date(); d.setDate(d.getDate() + diasAviso); return d.toLocaleDateString('pt-BR') })()})
@@ -204,7 +208,7 @@ export default function Comunicados() {
                   </div>
                 </div>
               )}
-              <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
+              <div style={{ display: 'flex', gap: 10, paddingTop: 4, flexWrap: 'wrap' }}>
                 <button onClick={salvar} disabled={salvando} style={{
                   padding: '10px 24px', borderRadius: 8, border: 'none',
                   background: salvando ? '#93c5fd' : tipoForm === 'aviso' ? '#d97706' : '#2563eb',
@@ -258,63 +262,63 @@ export default function Comunicados() {
                   <div
                     onClick={() => setExpandido(aberto ? null : comunicado.id)}
                     style={{
-                      display: 'flex', alignItems: 'center', gap: 12,
-                      padding: '14px 20px', cursor: 'pointer',
+                      display: 'flex', alignItems: 'flex-start', gap: 10,
+                      padding: '14px 16px', cursor: 'pointer',
                       background: aberto ? '#f8fafc' : '#fff',
                       transition: 'background 0.15s',
+                      flexWrap: isMobile ? 'wrap' : 'nowrap',
                     }}
                   >
                     {/* Badge tipo */}
                     <span style={{
-                      fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999, whiteSpace: 'nowrap', flexShrink: 0,
+                      fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 999, whiteSpace: 'nowrap', flexShrink: 0, marginTop: 1,
                       background: isAviso ? '#fff7ed' : '#eff6ff',
                       color: isAviso ? '#d97706' : '#2563eb',
                     }}>
                       {isAviso ? '⚠️ AVISO' : '📢 COMUNICADO'}
                     </span>
 
-                    {/* Título */}
-                    <span style={{ fontWeight: 600, color: '#1e293b', fontSize: 14, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {comunicado.titulo}
-                    </span>
-
-                    {/* Data */}
-                    <span style={{ fontSize: 12, color: '#94a3b8', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                      {formatarData(comunicado.criado_em)}
-                    </span>
-
-                    {/* Percentual ciência (só comunicados e gestores) */}
-                    {!isAviso && isGestor && (
-                      <span style={{
-                        fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0,
-                        color: percentual === 100 ? '#16a34a' : '#2563eb',
-                      }}>
-                        {percentual}% cientes
-                      </span>
-                    )}
+                    {/* Título + meta */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontWeight: 700, color: '#1e293b', fontSize: 14, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {comunicado.titulo}
+                      </p>
+                      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                        <span style={{ fontSize: 12, color: '#94a3b8' }}>
+                          {formatarData(comunicado.criado_em)}
+                        </span>
+                        {!isAviso && isGestor && (
+                          <span style={{
+                            fontSize: 12, fontWeight: 700,
+                            color: percentual === 100 ? '#16a34a' : '#2563eb',
+                          }}>
+                            {percentual}% cientes
+                          </span>
+                        )}
+                      </div>
+                    </div>
 
                     {/* Seta */}
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, transition: 'transform 0.2s', transform: aberto ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                      style={{ flexShrink: 0, transition: 'transform 0.2s', transform: aberto ? 'rotate(180deg)' : 'rotate(0deg)', marginTop: 3 }}>
                       <polyline points="6 9 12 15 18 9"/>
                     </svg>
                   </div>
 
                   {/* DETALHES EXPANDIDOS */}
                   {aberto && (
-                    <div style={{ padding: '0 20px 20px', borderTop: '1px solid #f1f5f9', background: '#f8fafc' }}>
+                    <div style={{ padding: isMobile ? '0 16px 16px' : '0 20px 20px', borderTop: '1px solid #f1f5f9', background: '#f8fafc' }}>
 
                       <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.7, margin: '16px 0 14px', wordBreak: 'break-word' }}>
                         {comunicado.conteudo}
                       </p>
 
-                      {/* Info extra aviso */}
                       {isAviso && comunicado.dashboard_expira_em && (
                         <p style={{ fontSize: 12, color: '#d97706', marginBottom: 12 }}>
                           ⏱️ Expira em {new Date(comunicado.dashboard_expira_em + 'T12:00:00').toLocaleDateString('pt-BR')}
                         </p>
                       )}
 
-                      {/* Perfis destinatários */}
                       {!isAviso && Array.isArray(comunicado.perfis_destino) && (
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
                           {comunicado.perfis_destino.map((p: string) => (
@@ -323,7 +327,6 @@ export default function Comunicados() {
                         </div>
                       )}
 
-                      {/* Barra ciência gestores */}
                       {isGestor && totalDestinatarios > 0 && !isAviso && (
                         <div style={{ background: '#fff', borderRadius: 10, padding: '12px 16px', marginBottom: 12, border: '1px solid #e2e8f0' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
@@ -335,7 +338,7 @@ export default function Comunicados() {
                           <div style={{ height: 6, borderRadius: 999, background: '#e2e8f0' }}>
                             <div style={{ height: 6, borderRadius: 999, background: percentual === 100 ? '#16a34a' : '#2563eb', width: `${percentual}%`, transition: 'width 0.3s' }} />
                           </div>
-                          <div style={{ marginTop: 14, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                          <div style={{ marginTop: 14, display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
                             <div>
                               <p style={{ fontSize: 12, fontWeight: 700, color: '#16a34a', margin: '0 0 8px' }}>✅ Cientes ({totalCientes})</p>
                               {destinatarios.filter(d => cientes.includes(d.id)).map(d => (
@@ -354,8 +357,7 @@ export default function Comunicados() {
                         </div>
                       )}
 
-                      {/* Ações */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4, flexWrap: 'wrap', gap: 8 }}>
                         <div style={{ display: 'flex', gap: 6 }}>
                           {podeEditar && (
                             <button onClick={() => abrirEdicao(comunicado)} title="Editar" style={{

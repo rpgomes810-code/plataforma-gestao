@@ -54,7 +54,7 @@ export default function Dashboard() {
     fetch('/api/hospitais').then(r => r.json()).then(data => { if (Array.isArray(data)) setHospitais(data) })
     fetch('/api/grafico').then(r => r.json()).then(data => { if (Array.isArray(data)) setRegistrosGrafico(data) })
     const agora = new Date()
-fetch(`/api/grafico-hospitais?mes=${agora.getMonth() + 1}&ano=${agora.getFullYear()}`).then(r => r.json()).then(data => { if (Array.isArray(data)) setRegistrosHospitais(data) })
+    fetch(`/api/grafico-hospitais?mes=${agora.getMonth() + 1}&ano=${agora.getFullYear()}`).then(r => r.json()).then(data => { if (Array.isArray(data)) setRegistrosHospitais(data) })
     fetch('/api/avisos').then(r => r.json()).then(data => { if (Array.isArray(data)) setAvisos(data) })
     fetch('/api/aniversariantes').then(r => r.json()).then(data => { if (Array.isArray(data)) setAniversariantes(data) })
     if ('Notification' in window) setNotificacaoAtiva(Notification.permission === 'granted')
@@ -203,26 +203,27 @@ fetch(`/api/grafico-hospitais?mes=${agora.getMonth() + 1}&ano=${agora.getFullYea
 
         <div style={{ marginBottom: 28 }}>
           <p style={{ color: '#64748b', fontSize: 13, fontWeight: 600, margin: 0 }}>Bem-vindo de volta</p>
-          <h2 style={{ color: '#0f172a', fontSize: 28, fontWeight: 800, margin: '4px 0 0' }}>{membro?.nome || '...'}</h2>
+          <h2 style={{ color: '#0f172a', fontSize: isMobile ? 22 : 28, fontWeight: 800, margin: '4px 0 0' }}>{membro?.nome || '...'}</h2>
         </div>
 
         {!cadastroCompleto && (
           <a href="/dashboard/completar-cadastro" style={{ textDecoration: 'none' }}>
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '14px 20px', borderRadius: 12, marginBottom: 24,
+              padding: '14px 16px', borderRadius: 12, marginBottom: 16,
               background: bannerBg, boxShadow: bannerShadow, cursor: 'pointer',
+              gap: 8, overflow: 'hidden',
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, flex: 1, minWidth: 0 }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
                   <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                  <p style={{ color: 'white', fontWeight: 800, fontSize: 14, margin: 0 }}>COMPLETE SEU CADASTRO</p>
-                  <span style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', fontSize: 12, fontWeight: 700, padding: '3px 10px', borderRadius: 999 }}>{bannerMsg}</span>
+                <div style={{ minWidth: 0 }}>
+                  <p style={{ color: 'white', fontWeight: 800, fontSize: 13, margin: '0 0 4px' }}>COMPLETE SEU CADASTRO</p>
+                  <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, margin: 0, fontWeight: 500, wordBreak: 'break-word' }}>{bannerMsg}</p>
                 </div>
               </div>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                 <polyline points="9 18 15 12 9 6"/>
               </svg>
             </div>
@@ -232,14 +233,15 @@ fetch(`/api/grafico-hospitais?mes=${agora.getMonth() + 1}&ano=${agora.getFullYea
         {avisos.map(aviso => (
           <div key={aviso.id} style={{
             background: 'linear-gradient(135deg, #d97706, #f59e0b)',
-            borderRadius: 12, padding: '16px 20px', marginBottom: 12,
+            borderRadius: 12, padding: '14px 16px', marginBottom: 12,
             boxShadow: '0 4px 12px rgba(217,119,6,0.25)',
-            display: 'flex', alignItems: 'flex-start', gap: 12,
+            display: 'flex', alignItems: 'flex-start', gap: 10,
+            overflow: 'hidden',
           }}>
-            <span style={{ fontSize: 22, flexShrink: 0 }}>⚠️</span>
-            <div style={{ flex: 1 }}>
-              <p style={{ color: '#fff', fontWeight: 800, fontSize: 14, margin: '0 0 4px' }}>{aviso.titulo}</p>
-              <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: 13, margin: 0, lineHeight: 1.5 }}>{aviso.conteudo}</p>
+            <span style={{ fontSize: 20, flexShrink: 0, marginTop: 1 }}>⚠️</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ color: '#fff', fontWeight: 800, fontSize: 13, margin: '0 0 4px', wordBreak: 'break-word' }}>{aviso.titulo}</p>
+              <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: 12, margin: 0, lineHeight: 1.5, wordBreak: 'break-word' }}>{aviso.conteudo}</p>
             </div>
           </div>
         ))}
@@ -247,23 +249,24 @@ fetch(`/api/grafico-hospitais?mes=${agora.getMonth() + 1}&ano=${agora.getFullYea
         {aniversariantes.length > 0 && (
           <div style={{
             background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
-            borderRadius: 12, padding: '16px 20px', marginBottom: 24,
+            borderRadius: 12, padding: '14px 16px', marginBottom: 16,
             boxShadow: '0 4px 12px rgba(124,58,237,0.25)',
-            display: 'flex', alignItems: 'center', gap: 12,
+            display: 'flex', alignItems: 'flex-start', gap: 10,
+            overflow: 'hidden',
           }}>
-            <span style={{ fontSize: 28, flexShrink: 0 }}>🎂</span>
-            <div style={{ flex: 1 }}>
-              <p style={{ color: '#fff', fontWeight: 800, fontSize: 14, margin: '0 0 4px' }}>
+            <span style={{ fontSize: 24, flexShrink: 0 }}>🎂</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ color: '#fff', fontWeight: 800, fontSize: 13, margin: '0 0 4px', wordBreak: 'break-word' }}>
                 🎉 Parabéns, {aniversariantes.map(a => a.nome.split(' ')[0]).join(' e ')}!
               </p>
-              <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, margin: '0 0 6px' }}>
+              <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, margin: '0 0 6px', wordBreak: 'break-word' }}>
                 {aniversariantes.map((a, i) => (
                   <span key={a.id}>
                     <strong>{a.nome}</strong> ({a.grupo}){i < aniversariantes.length - 1 ? ' • ' : ''}
                   </span>
                 ))}
               </p>
-              <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, margin: 0, fontStyle: 'italic' }}>
+              <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, margin: 0, fontStyle: 'italic', wordBreak: 'break-word' }}>
                 "Que este dia seja tão especial quanto você é para nós! Em nome de toda a equipe DARPE, desejamos a você um feliz aniversário cheio das bênçãos de Deus. Que o Senhor te guarde e te prospere em mais um ano de vida!"
               </p>
             </div>
@@ -273,21 +276,24 @@ fetch(`/api/grafico-hospitais?mes=${agora.getMonth() + 1}&ano=${agora.getFullYea
         {vagas.length > 0 && (
           <a href="/dashboard/vagas" style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '14px 20px', borderRadius: 12, marginBottom: 24,
+            padding: '14px 16px', borderRadius: 12, marginBottom: 16,
             background: 'linear-gradient(135deg, #d97706, #f59e0b)',
             textDecoration: 'none', boxShadow: '0 4px 12px rgba(217,119,6,0.25)',
+            gap: 8, overflow: 'hidden',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
                 <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
               </svg>
-              <div>
-                <p style={{ color: 'white', fontWeight: 800, fontSize: 14, margin: 0 }}>{vagas.length} vaga{vagas.length > 1 ? 's' : ''} aberta{vagas.length > 1 ? 's' : ''}</p>
+              <div style={{ minWidth: 0 }}>
+                <p style={{ color: 'white', fontWeight: 800, fontSize: 13, margin: 0 }}>{vagas.length} vaga{vagas.length > 1 ? 's' : ''} aberta{vagas.length > 1 ? 's' : ''}</p>
                 <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, margin: 0, fontWeight: 500 }}>Clique para ver e preencher</p>
               </div>
             </div>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
           </a>
         )}
 
@@ -324,14 +330,14 @@ fetch(`/api/grafico-hospitais?mes=${agora.getMonth() + 1}&ano=${agora.getFullYea
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1e40af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              <h3 style={{ color: '#0f172a', fontSize: 16, fontWeight: 800, margin: 0 }}>Agenda de Escalas</h3>
+              <h3 style={{ color: '#0f172a', fontSize: isMobile ? 13 : 16, fontWeight: 800, margin: 0 }}>Agenda de Escalas</h3>
             </div>
             <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
               <button onClick={() => { if (calMes === 0) { setCalMes(11); setCalAno(calAno - 1) } else setCalMes(calMes - 1) }}
                 style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
               </button>
-              <span style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', minWidth: isMobile ? 90 : 130, textAlign: 'center' }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', minWidth: isMobile ? 80 : 130, textAlign: 'center' }}>
                 {isMobile ? `${mesesNomes[calMes]} ${calAno}` : `${mesesCompletos[calMes]} ${calAno}`}
               </span>
               <button onClick={() => { if (calMes === 11) { setCalMes(0); setCalAno(calAno + 1) } else setCalMes(calMes + 1) }}
@@ -417,7 +423,7 @@ fetch(`/api/grafico-hospitais?mes=${agora.getMonth() + 1}&ano=${agora.getFullYea
         <div style={{ ...cardStyle, marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
             <div style={{ width: 4, height: 20, borderRadius: 2, background: 'linear-gradient(180deg, #3b82f6, #1e40af)' }}></div>
-            <h3 style={{ color: '#0f172a', fontSize: 14, fontWeight: 800, margin: 0 }}>Atendimentos mensais — últimos 12 meses</h3>
+            <h3 style={{ color: '#0f172a', fontSize: 13, fontWeight: 800, margin: 0 }}>Atendimentos mensais — últimos 12 meses</h3>
           </div>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: isMobile ? 4 : 8, height: 140, paddingBottom: 8 }}>
             {ultimos12.map((m, i) => (
@@ -438,7 +444,7 @@ fetch(`/api/grafico-hospitais?mes=${agora.getMonth() + 1}&ano=${agora.getFullYea
         <div style={{ ...cardStyle, marginBottom: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
             <div style={{ width: 4, height: 20, borderRadius: 2, background: 'linear-gradient(180deg, #7c3aed, #a855f7)' }}></div>
-            <h3 style={{ color: '#0f172a', fontSize: 14, fontWeight: 800, margin: 0 }}>Atendimentos por hospital — mês atual</h3>
+            <h3 style={{ color: '#0f172a', fontSize: 13, fontWeight: 800, margin: 0 }}>Atendimentos por hospital — mês atual</h3>
           </div>
           {dadosHospital.length === 0 ? (
             <p style={{ color: '#94a3b8', fontSize: 14, fontWeight: 500 }}>Nenhum registro este mês.</p>

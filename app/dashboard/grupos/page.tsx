@@ -9,6 +9,11 @@ export default function Grupos() {
   const [novoGrupo, setNovoGrupo] = useState('')
   const [loading, setLoading] = useState(false)
   const [permissoes, setPermissoes] = useState<any>(null)
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 768)
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('resize', () => setIsMobile(window.innerWidth < 768))
+  }
 
   const carregar = () => {
     fetch('/api/grupos').then(res => res.json()).then(data => { if (Array.isArray(data)) setGrupos(data) })
@@ -46,20 +51,24 @@ export default function Grupos() {
   }
 
   return (
-    <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: '28px 40px' }} className="grupos-wrap">
-      <style>{`@media (max-width: 768px) { .grupos-wrap { padding: 16px !important; } }`}</style>
-
+    <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: isMobile ? '16px' : '28px 40px' }}>
       <div style={{ maxWidth: 600, margin: '0 auto' }}>
 
         <div style={{ marginBottom: 24 }}>
           <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>Grupos</h1>
-          <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>{grupos.length} grupos cadastrados</p>
+          <p style={{ fontSize: 13, color: '#64748b', marginTop: 4, marginBottom: 0 }}>{grupos.length} grupos cadastrados</p>
         </div>
 
         <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
 
           {podeCriar && (
-            <div style={{ padding: '16px 20px', borderBottom: '1px solid #f1f5f9', display: 'flex', gap: 10 }}>
+            <div style={{
+              padding: '16px',
+              borderBottom: '1px solid #f1f5f9',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: 10,
+            }}>
               <input
                 type="text"
                 value={novoGrupo}
@@ -69,7 +78,8 @@ export default function Grupos() {
                 style={{
                   flex: 1, border: '1px solid #e2e8f0', borderRadius: 8,
                   padding: '9px 14px', fontSize: 14, color: '#1e293b',
-                  background: '#f8fafc', outline: 'none',
+                  background: '#f8fafc', outline: 'none', width: '100%',
+                  boxSizing: 'border-box',
                 }}
               />
               <button onClick={adicionar} disabled={loading} style={{
@@ -79,7 +89,8 @@ export default function Grupos() {
                 fontSize: 13, fontWeight: 600,
                 cursor: loading ? 'not-allowed' : 'pointer',
                 opacity: loading ? 0.5 : 1,
-                display: 'flex', alignItems: 'center', gap: 6,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                whiteSpace: 'nowrap',
               }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -97,17 +108,17 @@ export default function Grupos() {
             grupos.map((g, idx) => (
               <div key={g.id} style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '14px 20px',
+                padding: '14px 16px',
                 borderBottom: idx < grupos.length - 1 ? '1px solid #f1f5f9' : 'none',
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontSize: 16 }}>🎻</span>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: '#1e293b' }}>{g.nome}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                  <span style={{ fontSize: 16, flexShrink: 0 }}>🎻</span>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.nome}</span>
                 </div>
                 {podeExcluir && (
                   <button onClick={() => excluir(g.id, g.nome)} style={{
                     width: 30, height: 30, borderRadius: 7, border: 'none',
-                    background: '#fff1f2', cursor: 'pointer',
+                    background: '#fff1f2', cursor: 'pointer', flexShrink: 0,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

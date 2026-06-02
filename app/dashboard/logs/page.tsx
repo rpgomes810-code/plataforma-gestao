@@ -29,8 +29,8 @@ function DiffView({ antes, depois }: { antes: any, depois: any }) {
       {alterados.map(campo => (
         <div key={campo} style={{ borderRadius: 6, overflow: 'hidden', border: '1px solid #f1f5f9', fontSize: 11 }}>
           <div style={{ background: '#f8fafc', padding: '3px 8px', fontWeight: 700, color: '#475569' }}>{campo}</div>
-          <div style={{ background: '#fee2e2', padding: '3px 8px', color: '#dc2626', whiteSpace: 'pre-wrap' }}>— {formatarValor(antes[campo])}</div>
-          <div style={{ background: '#dcfce7', padding: '3px 8px', color: '#16a34a', whiteSpace: 'pre-wrap' }}>+ {formatarValor(depois[campo])}</div>
+          <div style={{ background: '#fee2e2', padding: '3px 8px', color: '#dc2626', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>— {formatarValor(antes[campo])}</div>
+          <div style={{ background: '#dcfce7', padding: '3px 8px', color: '#16a34a', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>+ {formatarValor(depois[campo])}</div>
         </div>
       ))}
     </div>
@@ -63,13 +63,22 @@ export default async function Logs() {
 
   return (
     <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: '28px 40px' }} className="logs-wrap">
-      <style>{`@media (max-width: 768px) { .logs-wrap { padding: 16px !important; } .col-alteracoes { display: none !important; } }`}</style>
+      <style>{`
+        @media (max-width: 768px) {
+          .logs-wrap { padding: 16px !important; }
+          .logs-tabela { display: none !important; }
+          .logs-cards { display: flex !important; }
+        }
+        @media (min-width: 769px) {
+          .logs-cards { display: none !important; }
+        }
+      `}</style>
 
       <div style={{ maxWidth: 1280, margin: '0 auto' }}>
 
         <div style={{ marginBottom: 24 }}>
           <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>Log de Auditoria</h1>
-          <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>{logs?.length} registros — últimas 200 ações</p>
+          <p style={{ fontSize: 13, color: '#64748b', marginTop: 4, marginBottom: 0 }}>{logs?.length} registros — últimas 200 ações</p>
         </div>
 
         {!logs?.length ? (
@@ -78,31 +87,86 @@ export default async function Logs() {
             <p style={{ color: '#64748b', fontSize: 14 }}>Nenhuma ação registrada ainda</p>
           </div>
         ) : (
-          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '160px 160px 1fr 100px 1fr 80px', padding: '10px 20px', background: '#f8fafc', borderBottom: '1px solid #f1f5f9' }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>DATA/HORA</span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>USUÁRIO</span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>AÇÃO</span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>TABELA</span>
-              <span className="col-alteracoes" style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>ALTERAÇÕES</span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}></span>
+          <>
+            {/* TABELA — desktop */}
+            <div className="logs-tabela" style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '160px 160px 1fr 100px 1fr 80px', padding: '10px 20px', background: '#f8fafc', borderBottom: '1px solid #f1f5f9' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>DATA/HORA</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>USUÁRIO</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>AÇÃO</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>TABELA</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}>ALTERAÇÕES</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 }}></span>
+              </div>
+
+              {logs?.map((log, idx) => {
+                const { bg, color } = badgeAcao(log.acao)
+                return (
+                  <div key={log.id} style={{
+                    display: 'grid', gridTemplateColumns: '160px 160px 1fr 100px 1fr 80px',
+                    padding: '12px 20px', borderBottom: idx < logs.length - 1 ? '1px solid #f1f5f9' : 'none',
+                    alignItems: 'start',
+                  }}>
+                    <span style={{ fontSize: 11, color: '#94a3b8' }}>{formatarDataHora(log.criado_em)}</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: '#1e293b' }}>{log.usuario_nome || '—'}</span>
+                    <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999, background: bg, color, display: 'inline-block', width: 'fit-content' }}>
+                      {log.acao}
+                    </span>
+                    <span style={{ fontSize: 12, color: '#64748b' }}>{log.tabela || '—'}</span>
+                    <div>
+                      {log.dados_antes && log.dados_depois && !log.dados_depois.excluido ? (
+                        <details>
+                          <summary style={{ cursor: 'pointer', color: '#2563eb', fontSize: 12, fontWeight: 600 }}>Ver o que mudou</summary>
+                          <DiffView antes={log.dados_antes} depois={log.dados_depois} />
+                        </details>
+                      ) : log.dados_antes && (
+                        <details>
+                          <summary style={{ cursor: 'pointer', color: '#2563eb', fontSize: 12, fontWeight: 600 }}>Ver dados</summary>
+                          <div style={{ marginTop: 8, background: '#fee2e2', borderRadius: 6, padding: 8 }}>
+                            <pre style={{ fontSize: 11, color: '#dc2626', whiteSpace: 'pre-wrap', margin: 0 }}>{JSON.stringify(log.dados_antes, null, 2)}</pre>
+                          </div>
+                        </details>
+                      )}
+                    </div>
+                    <div>
+                      {podeReverter(log) && <BotaoReverter logId={log.id} tabela={log.tabela} dadosAntes={log.dados_antes} />}
+                    </div>
+                  </div>
+                )
+              })}
             </div>
 
-            {logs?.map((log, idx) => {
-              const { bg, color } = badgeAcao(log.acao)
-              return (
-                <div key={log.id} style={{
-                  display: 'grid', gridTemplateColumns: '160px 160px 1fr 100px 1fr 80px',
-                  padding: '12px 20px', borderBottom: idx < logs.length - 1 ? '1px solid #f1f5f9' : 'none',
-                  alignItems: 'start',
-                }}>
-                  <span style={{ fontSize: 11, color: '#94a3b8' }}>{formatarDataHora(log.criado_em)}</span>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: '#1e293b' }}>{log.usuario_nome || '—'}</span>
-                  <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999, background: bg, color, display: 'inline-block', width: 'fit-content' }}>
-                    {log.acao}
-                  </span>
-                  <span style={{ fontSize: 12, color: '#64748b' }}>{log.tabela || '—'}</span>
-                  <div className="col-alteracoes">
+            {/* CARDS — mobile */}
+            <div className="logs-cards" style={{ flexDirection: 'column', gap: 10 }}>
+              {logs?.map((log) => {
+                const { bg, color } = badgeAcao(log.acao)
+                return (
+                  <div key={log.id} style={{
+                    background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.06)', padding: '14px 16px',
+                  }}>
+                    {/* Data e usuário */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8, gap: 8 }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: '#1e293b' }}>{log.usuario_nome || '—'}</span>
+                      <span style={{ fontSize: 11, color: '#94a3b8', whiteSpace: 'nowrap' }}>{formatarDataHora(log.criado_em)}</span>
+                    </div>
+
+                    {/* Ação */}
+                    <span style={{
+                      fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999,
+                      background: bg, color, display: 'inline-block', marginBottom: 8,
+                    }}>
+                      {log.acao}
+                    </span>
+
+                    {/* Tabela */}
+                    {log.tabela && (
+                      <p style={{ fontSize: 12, color: '#64748b', margin: '0 0 8px' }}>
+                        Tabela: <strong>{log.tabela}</strong>
+                      </p>
+                    )}
+
+                    {/* Alterações */}
                     {log.dados_antes && log.dados_depois && !log.dados_depois.excluido ? (
                       <details>
                         <summary style={{ cursor: 'pointer', color: '#2563eb', fontSize: 12, fontWeight: 600 }}>Ver o que mudou</summary>
@@ -112,18 +176,21 @@ export default async function Logs() {
                       <details>
                         <summary style={{ cursor: 'pointer', color: '#2563eb', fontSize: 12, fontWeight: 600 }}>Ver dados</summary>
                         <div style={{ marginTop: 8, background: '#fee2e2', borderRadius: 6, padding: 8 }}>
-                          <pre style={{ fontSize: 11, color: '#dc2626', whiteSpace: 'pre-wrap', margin: 0 }}>{JSON.stringify(log.dados_antes, null, 2)}</pre>
+                          <pre style={{ fontSize: 11, color: '#dc2626', whiteSpace: 'pre-wrap', margin: 0, wordBreak: 'break-all' }}>{JSON.stringify(log.dados_antes, null, 2)}</pre>
                         </div>
                       </details>
                     )}
+
+                    {podeReverter(log) && (
+                      <div style={{ marginTop: 8 }}>
+                        <BotaoReverter logId={log.id} tabela={log.tabela} dadosAntes={log.dados_antes} />
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    {podeReverter(log) && <BotaoReverter logId={log.id} tabela={log.tabela} dadosAntes={log.dados_antes} />}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+                )
+              })}
+            </div>
+          </>
         )}
       </div>
     </div>
