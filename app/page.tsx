@@ -293,16 +293,29 @@ if (estaEmStandalone) {
                 </button>
 
                 <a href="/solicitar-acesso" className="btn-secondary" style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                  padding: '12px', borderRadius: 10, border: 'none',
-                  background: '#f1f5f9', color: '#64748b',
-                  fontSize: 13, fontWeight: 600, textDecoration: 'none', textTransform: 'uppercase', letterSpacing: 1,
-                }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>
-                  </svg>
-                  SOLICITAR ACESSO
-                </a>
+  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+  padding: '12px', borderRadius: 10, border: 'none',
+  background: '#f1f5f9', color: '#64748b',
+  fontSize: 13, fontWeight: 600, textDecoration: 'none', textTransform: 'uppercase', letterSpacing: 1,
+}}>
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>
+  </svg>
+  SOLICITAR ACESSO
+</a>
+
+<a href="/candidatar" className="btn-secondary" style={{
+  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+  padding: '12px', borderRadius: 10, border: '1px solid #e2e8f0',
+  background: '#fff', color: '#1e3a5f',
+  fontSize: 13, fontWeight: 600, textDecoration: 'none', textTransform: 'uppercase', letterSpacing: 1,
+}}>
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+  </svg>
+  SEJA VOLUNTARIO
+</a>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
