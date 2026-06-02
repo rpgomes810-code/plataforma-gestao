@@ -64,7 +64,7 @@ export default function EditarMembro() {
     nome: '', telefone: '', email: '', data_nascimento: '',
     comum: '', cidade: '', instrumento: '', tipo: '', grupo: '',
     nivel_acesso: '', cargo: '', status: '', observacoes: '',
-    data_inscricao_darpe: '', perfil: '',
+    data_inscricao_darpe: '', data_integracao: '', perfil: '',
   })
 
   useEffect(() => {
@@ -87,6 +87,7 @@ export default function EditarMembro() {
           status: data.status || '',
           observacoes: data.observacoes || '',
           data_inscricao_darpe: data.data_inscricao_darpe || '',
+          data_integracao: data.data_integracao || '',
           perfil: data.perfil || '',
         })
         setLoadingData(false)
@@ -117,6 +118,7 @@ export default function EditarMembro() {
       ...form,
       data_nascimento: form.data_nascimento || null,
       data_inscricao_darpe: form.data_inscricao_darpe || null,
+      data_integracao: form.data_integracao || null,
     }
 
     const res = await fetch(`/api/membros/${params.id}`, {
@@ -284,6 +286,10 @@ export default function EditarMembro() {
                   <div>
                     <label style={labelStyle}>Data de inscrição no DARPE *</label>
                     <input name="data_inscricao_darpe" type="date" required value={form.data_inscricao_darpe} onChange={handleChange} style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Data de integração</label>
+                    <input name="data_integracao" type="date" value={form.data_integracao || ''} onChange={handleChange} style={inputStyle} />
                   </div>
                 </div>
 
