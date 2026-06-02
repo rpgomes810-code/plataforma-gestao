@@ -49,9 +49,15 @@ export default function Login() {
 
   useEffect(() => {
     const ios = /iphone|ipad|ipod/i.test(navigator.userAgent)
-    setIsIOS(ios)
-    const jaInstalou = localStorage.getItem('app_instalado') === 'true'
-    if (!jaInstalou) setMostrarBanner(true)
+setIsIOS(ios)
+const estaEmStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true
+if (estaEmStandalone) {
+  localStorage.setItem('app_instalado', 'true')
+  setMostrarBanner(false)
+} else {
+  const jaInstalou = localStorage.getItem('app_instalado') === 'true'
+  if (!jaInstalou) setMostrarBanner(true)
+}
     const handler = (e: any) => { e.preventDefault(); setDeferredPrompt(e) }
     window.addEventListener('beforeinstallprompt', handler)
     return () => window.removeEventListener('beforeinstallprompt', handler)
