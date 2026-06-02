@@ -15,7 +15,6 @@ export default function BotaoExcluirEscala({ id }: { id: string }) {
     const confirmado = confirm('Tem certeza que deseja excluir esta escala?')
     if (!confirmado) return
 
-    // Busca dados da escala antes de excluir
     const dadosRes = await fetch(`/api/escalas/${id}`)
     const dadosAntes = dadosRes.ok ? await dadosRes.json() : { id }
 
@@ -41,9 +40,22 @@ export default function BotaoExcluirEscala({ id }: { id: string }) {
   }
 
   return (
-    <button onClick={excluir}
-      className="text-xs text-red-600 hover:underline ml-3">
-      Excluir
+    <button
+      onClick={excluir}
+      title="Excluir escala"
+      style={{
+        width: 30, height: 30, borderRadius: 7, border: 'none',
+        background: '#fee2e2', cursor: 'pointer',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 0,
+      }}
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="3 6 5 6 21 6"/>
+        <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+        <path d="M10 11v6"/><path d="M14 11v6"/>
+        <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+      </svg>
     </button>
   )
 }
