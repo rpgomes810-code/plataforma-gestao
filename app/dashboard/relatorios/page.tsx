@@ -197,6 +197,27 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
     { valor: totalOracoes, label: 'Atend. c/ oração', cor: '#d97706', bg: '#fff7ed', icon: '🙏' },
   ]
 
+  const secoes = [
+    {
+      titulo: '🎻 Membros por grupo',
+      itens: Object.entries(porGrupo),
+      cor: '#2563eb', bg: '#eff6ff',
+      renderValor: (total: number) => `${total} membro${total > 1 ? 's' : ''}`,
+    },
+    {
+      titulo: '👥 Membros por perfil',
+      itens: Object.entries(porPerfil),
+      cor: '#7c3aed', bg: '#f5f3ff',
+      renderValor: (total: number) => `${total}`,
+    },
+    {
+      titulo: '🎼 Por instrumento',
+      itens: instrumentosOrdenados,
+      cor: '#d97706', bg: '#fff7ed',
+      renderValor: (total: number) => `${total} (${Math.round((total / totalInstrumentos) * 100)}%)`,
+    },
+  ]
+
   return (
     <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: '28px 40px' }} className="rel-wrap">
       <style>{`
@@ -206,6 +227,8 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
           .rel-cards { grid-template-columns: 1fr 1fr !important; }
           .rel-grid { grid-template-columns: 1fr !important; }
           .tres-cols { grid-template-columns: 1fr !important; }
+          .tres-cols > div { border-left: none !important; border-top: 1px solid #f1f5f9 !important; padding: 16px 0 0 0 !important; margin-top: 8px !important; }
+          .tres-cols > div:first-child { border-top: none !important; padding-top: 0 !important; margin-top: 0 !important; }
         }
       `}</style>
 
@@ -215,11 +238,11 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
         <div className="rel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, gap: 16 }}>
           <div>
             <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>Relatórios</h1>
-            <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
+            <p style={{ fontSize: 13, color: '#64748b', marginTop: 4, marginBottom: 0 }}>
               {nomePeriodo[periodo]} · {dataInicio} até {dataFim}
             </p>
           </div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             <FiltroRelatorio periodoAtual={periodo} inicioAtual={params.inicio} fimAtual={params.fim} />
             <BotaoImprimir
               dataInicio={dataInicio}
@@ -267,7 +290,7 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
         <div style={{ ...card, marginBottom: 12 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
             <div>
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: '0 0 16px', fontFamily: "'Inter', sans-serif", letterSpacing: 0 }}>🎻 Status dos Grupos</h3>
+              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: '0 0 8px', fontFamily: "'Inter', sans-serif" }}>🎻 Status dos Grupos</h3>
               <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>{statusGrupos.length} grupos monitorados</p>
             </div>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -292,14 +315,14 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   background: '#f8fafc',
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                     <span style={{ fontSize: 14, fontWeight: 700, color: '#1e293b' }}>{g.grupo}</span>
                     <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: g.bg, color: g.cor }}>
                       {g.label}
                     </span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <span style={{ fontSize: 12, color: '#94a3b8' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                    <span style={{ fontSize: 11, color: '#94a3b8' }}>
                       {g.violinos}V · {g.violas}Va · {g.violoncelos}Vc · {g.vocais}Vo
                     </span>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -343,7 +366,7 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }} className="rel-grid">
             <div style={card}>
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: '0 0 16px', fontFamily: "'Inter', sans-serif", letterSpacing: 0 }}>🏥 Atendimentos por hospital</h3>
+              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: '0 0 16px', fontFamily: "'Inter', sans-serif" }}>🏥 Atendimentos por hospital</h3>
               {hospitalOrdenado.length === 0 ? (
                 <p style={{ fontSize: 13, color: '#94a3b8' }}>Nenhum atendimento no período</p>
               ) : (
@@ -364,7 +387,7 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
             </div>
 
             <div style={card}>
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: '0 0 16px', fontFamily: "'Inter', sans-serif", letterSpacing: 0 }}>🆕 Novos membros no período</h3>
+              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: '0 0 16px', fontFamily: "'Inter', sans-serif" }}>🆕 Novos membros no período</h3>
               {novosNoPeriodo.length === 0 ? (
                 <p style={{ fontSize: 13, color: '#94a3b8' }}>Nenhum membro adicionado no período</p>
               ) : (
@@ -382,7 +405,7 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }} className="rel-grid">
             <div style={card}>
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: '0 0 16px', fontFamily: "'Inter', sans-serif", letterSpacing: 0 }}>⭐ Mais presentes</h3>
+              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: '0 0 16px', fontFamily: "'Inter', sans-serif" }}>⭐ Mais presentes</h3>
               {maisPresentes.length === 0 ? (
                 <p style={{ fontSize: 13, color: '#94a3b8' }}>Nenhum atendimento no período</p>
               ) : (
@@ -403,7 +426,7 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
             </div>
 
             <div style={card}>
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: '0 0 16px', fontFamily: "'Inter', sans-serif", letterSpacing: 0 }}>⚠️ Menos frequentes</h3>
+              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: '0 0 16px', fontFamily: "'Inter', sans-serif" }}>⚠️ Menos frequentes</h3>
               {menosPresentes.length === 0 ? (
                 <p style={{ fontSize: 13, color: '#94a3b8' }}>Nenhum atendimento no período</p>
               ) : (
@@ -424,39 +447,21 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
             </div>
           </div>
 
-          <div style={{ ...card, gridColumn: '1 / -1' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }} className="tres-cols">
-              <style>{`@media (max-width: 768px) { .tres-cols { grid-template-columns: 1fr !important; } .rel-grid { grid-template-columns: 1fr !important; } }`}</style>
-              {[
-                {
-                  titulo: '🎻 Membros por grupo',
-                  itens: Object.entries(porGrupo),
-                  cor: '#2563eb', bg: '#eff6ff',
-                  renderValor: (total: number) => `${total} membro${total > 1 ? 's' : ''}`,
-                },
-                {
-                  titulo: '👥 Membros por perfil',
-                  itens: Object.entries(porPerfil),
-                  cor: '#7c3aed', bg: '#f5f3ff',
-                  renderValor: (total: number) => `${total}`,
-                },
-                {
-                  titulo: '🎼 Por instrumento',
-                  itens: instrumentosOrdenados,
-                  cor: '#d97706', bg: '#fff7ed',
-                  renderValor: (total: number) => `${total} (${Math.round((total / totalInstrumentos) * 100)}%)`,
-                },
-              ].map((secao, idx) => (
+          {/* Membros por grupo / perfil / instrumento */}
+          <div style={card}>
+            <div className="tres-cols" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}>
+              {secoes.map((secao, idx) => (
                 <div key={secao.titulo} style={{
                   borderLeft: idx > 0 ? '1px solid #f1f5f9' : 'none',
-                  padding: idx > 0 ? '0 0 0 24px' : '0 24px 0 0',
+                  paddingLeft: idx > 0 ? 24 : 0,
+                  paddingRight: idx < secoes.length - 1 ? 24 : 0,
                 }}>
                   <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: '0 0 12px', fontFamily: "'Inter', sans-serif" }}>{secao.titulo}</h3>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
                     {secao.itens.map(([label, total]) => (
                       <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
                         <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{label}</span>
-                        <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: secao.bg, color: secao.cor }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: secao.bg, color: secao.cor, whiteSpace: 'nowrap' }}>
                           {secao.renderValor(total as number)}
                         </span>
                       </div>
@@ -466,6 +471,7 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
               ))}
             </div>
           </div>
+
         </div>
       </div>
     </div>
