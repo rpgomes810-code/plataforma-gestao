@@ -1,7 +1,7 @@
 import { supabase } from '../../lib/supabase'
 import { NextRequest, NextResponse } from 'next/server'
 
-const CAMPOS_MAIUSCULO = ['nome', 'comum', 'cidade', 'instrumento', 'grupo', 'perfil', 'cargo', 'observacoes']
+const CAMPOS_MAIUSCULO = ['nome', 'comum', 'cidade', 'instrumento', 'grupo', 'cargo', 'observacoes']
 
 function maiuscular(obj: any) {
   const resultado = { ...obj }
