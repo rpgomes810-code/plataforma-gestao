@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
-import webpush from 'web-push'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -10,29 +9,29 @@ const supabase = createClient(
 export async function POST(req: Request) {
   const { subscription, membro_id } = await req.json()
 
-  try {
-    webpush.setVapidDetails(
-      process.env.VAPID_SUBJECT!,
-      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-      process.env.VAPID_PRIVATE_KEY!
-    )
+  const { data, error } = await supabase
+    .from('push_subscriptions')
+    .select('subscription')
+    .eq('membro_id', membro_id)
+    .single()
 
-    // Envia notificação silenciosa para testar se a assinatura é válida
-    await webpush.sendNotification(
-      subscription,
-      JSON.stringify({ title: '', body: '', silent: true })
-    )
+  if (error || !data) return NextResponse.json({ error: 'Sem assinatura' }, { status: 400 })
 
-    // Atualiza assinatura no banco
-    await supabase.from('push_subscriptions').upsert(
-      { membro_id, subscription },
-      { onConflict: 'membro_id' }
-    )
+  // Compara o endpoint da assinatura do dispositivo com o salvo no banco
+  const endpointDispositivo = subscription?.endpoint
+  const endpointBanco = data.subscription?.endpoint
 
-    return NextResponse.json({ ok: true })
-  } catch (e: any) {
-    // Assinatura inválida — remove do banco
+  if (!endpointDispositivo || !endpointBanco || endpointDispositivo !== endpointBanco) {
+    // Endpoints diferentes — assinatura desatualizada, remove do banco
     await supabase.from('push_subscriptions').delete().eq('membro_id', membro_id)
-    return NextResponse.json({ error: 'Assinatura inválida' }, { status: 400 })
+    return NextResponse.json({ error: 'Assinatura desatualizada' }, { status: 400 })
   }
+
+  // Atualiza assinatura no banco com a mais recente
+  await supabase.from('push_subscriptions').upsert(
+    { membro_id, subscription },
+    { onConflict: 'membro_id' }
+  )
+
+  return NextResponse.json({ ok: true })
 }
