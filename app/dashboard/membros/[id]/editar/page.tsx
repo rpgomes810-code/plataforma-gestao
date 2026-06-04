@@ -223,7 +223,7 @@ export default function EditarMembro() {
                 <div className="grid-3" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
                   <div>
                     <label style={labelStyle}>Data de nascimento *</label>
-                    <input name="data_nascimento" type="date" required value={form.data_nascimento} onChange={handleChange} style={inputStyle} />
+                    <input name="data_nascimento" type="date" value={form.data_nascimento} onChange={handleChange} style={inputStyle} />
                   </div>
                   <div>
                     <label style={labelStyle}>Comum *</label>
@@ -285,7 +285,7 @@ export default function EditarMembro() {
                 <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                   <div>
                     <label style={labelStyle}>Data de inscrição no DARPE *</label>
-                    <input name="data_inscricao_darpe" type="date" required value={form.data_inscricao_darpe} onChange={handleChange} style={inputStyle} />
+                    <input name="data_inscricao_darpe" type="date" value={form.data_inscricao_darpe} onChange={handleChange} style={inputStyle} />
                   </div>
                   <div>
                     <label style={labelStyle}>Data de integração</label>
