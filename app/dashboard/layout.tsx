@@ -17,7 +17,7 @@ const todosNavItems = [
   { href: '/dashboard/solicitacoes', label: 'Solicitações',  key: 'solicitacoes' },
   { href: '/dashboard/comunicados',  label: 'Comunicados',   key: 'comunicados' },
   { href: '/dashboard/grupos',       label: 'Grupos',        key: 'grupos' },
-  { href: '/dashboard/logs',         label: 'Logs',          key: 'logs' },
+  { href: '/dashboard/logs', label: 'Configurações', key: 'logs' },
   { href: '/dashboard/permissoes',   label: 'Permissões',    key: null },
 ]
 

@@ -37,6 +37,8 @@ function DiffView({ antes, depois }: { antes: any, depois: any }) {
   )
 }
 
+import BotaoBackup from './BotaoBackup'
+
 export default async function Logs() {
   const { data: logs } = await supabase
     .from('logs').select('*')
@@ -76,10 +78,13 @@ export default async function Logs() {
 
       <div style={{ maxWidth: 1280, margin: '0 auto' }}>
 
-        <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>Log de Auditoria</h1>
-          <p style={{ fontSize: 13, color: '#64748b', marginTop: 4, marginBottom: 0 }}>{logs?.length} registros — últimas 200 ações</p>
-        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
+  <div>
+    <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>Configurações</h1>
+    <p style={{ fontSize: 13, color: '#64748b', marginTop: 4, marginBottom: 0 }}>Log de auditoria · {logs?.length} registros — últimas 200 ações</p>
+  </div>
+  <BotaoBackup />
+</div>
 
         {!logs?.length ? (
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: '48px 24px', textAlign: 'center' }}>
