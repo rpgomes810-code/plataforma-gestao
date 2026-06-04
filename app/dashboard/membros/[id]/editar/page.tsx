@@ -205,6 +205,11 @@ export default function EditarMembro() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    if (!formRef.current?.checkValidity()) {
+      debugInvalid()
+      return
+    }
+
     setLoading(true)
 
     const dadosParaEnviar = {
@@ -352,6 +357,7 @@ export default function EditarMembro() {
                     <input
                       name="data_nascimento"
                       type="date"
+                      required
                       value={form.data_nascimento}
                       onChange={handleChange}
                       style={inputStyle}
@@ -426,6 +432,7 @@ export default function EditarMembro() {
                     <input
                       name="data_inscricao_darpe"
                       type="date"
+                      required
                       value={form.data_inscricao_darpe}
                       onChange={handleChange}
                       style={inputStyle}
@@ -461,9 +468,6 @@ export default function EditarMembro() {
               <button
                 type="submit"
                 disabled={loading}
-                onClick={() => {
-                  if (!loading) debugInvalid()
-                }}
                 style={{
                   padding: '10px 24px',
                   borderRadius: 8,
