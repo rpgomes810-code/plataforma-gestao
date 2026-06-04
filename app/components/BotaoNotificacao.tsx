@@ -54,9 +54,23 @@ export default function BotaoNotificacao({ membroId }: { membroId: string }) {
   const ativar = async () => {
     setCarregando(true)
     try {
-      const permission = await Notification.requestPermission()
+      // Compatível com Edge e navegadores antigos
+      let permission: NotificationPermission
+      if (typeof Notification.requestPermission === 'function') {
+        const result = Notification.requestPermission()
+        if (result && typeof (result as any).then === 'function') {
+          permission = await result
+        } else {
+          permission = result as unknown as NotificationPermission
+        }
+      } else {
+        alert('Notificações não suportadas neste navegador.')
+        setCarregando(false)
+        return
+      }
+
       if (permission !== 'granted') {
-        alert('Permissão negada.')
+        alert('Permissão negada. Verifique as configurações do navegador.')
         setCarregando(false)
         return
       }
@@ -77,7 +91,7 @@ export default function BotaoNotificacao({ membroId }: { membroId: string }) {
       else alert('Erro ao salvar assinatura.')
     } catch (e) {
       console.error(e)
-      alert('Erro ao ativar notificações.')
+      alert('Erro ao ativar notificações. Tente pelo Chrome ou Firefox.')
     }
     setCarregando(false)
   }

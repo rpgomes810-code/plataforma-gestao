@@ -53,7 +53,14 @@ export default function SolicitarAcesso() {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
-    const { error } = await supabase.from('solicitacoes').insert([{ ...form, status: 'pendente' }])
+    const [dia, mes, ano] = form.data_nascimento.split('/')
+const dataNascimentoFormatada = dia && mes && ano ? `${ano}-${mes}-${dia}` : null
+
+const { error } = await supabase.from('solicitacoes').insert([{
+  ...form,
+  data_nascimento: dataNascimentoFormatada,
+  status: 'pendente'
+}])
     if (error) { alert('Erro ao enviar solicitação. Tente novamente.'); setLoading(false) }
     else setEnviado(true)
   }
