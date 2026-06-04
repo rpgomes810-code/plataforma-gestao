@@ -41,10 +41,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   const body = await req.json()
   const dados = maiuscular(body)
 
-  const { error } = await supabase
-    .from('membros')
-    .update(dados)
-    .eq('id', id)
+  const { error } = await supabaseAdmin
+  .from('membros')
+  .update(dados)
+  .eq('id', id)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })
