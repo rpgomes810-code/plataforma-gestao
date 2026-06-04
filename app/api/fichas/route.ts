@@ -75,8 +75,8 @@ export async function POST(req: Request) {
       await webpush.sendNotification(
         assinatura.subscription,
         JSON.stringify({
-          title: 'DARPE — Complete seu cadastro!',
-          body: 'Seu prazo para preencher o cadastro está vencendo. Acesse o app e complete agora.',
+          title: 'DARPE — Cadastro vencido!',
+body: 'Seu prazo para completar o cadastro expirou. Acesse o app e complete agora para não perder o acesso.',
         })
       )
       return NextResponse.json({ ok: true })
