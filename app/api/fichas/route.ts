@@ -51,12 +51,15 @@ export async function POST(req: Request) {
   }
 
   if (acao === 'notificar') {
+    const { data: assinatura, error: errAssinatura } = await supabase
+      .from('push_subscriptions').select('subscription').eq('membro_id', membro_id).single()
+
+    if (errAssinatura || !assinatura) {
+      console.error('Assinatura não encontrada:', errAssinatura)
+      return NextResponse.json({ error: 'Membro sem notificação ativa' }, { status: 400 })
+    }
+
     try {
-      const { data: assinatura } = await supabase
-        .from('push_subscriptions').select('subscription').eq('membro_id', membro_id).single()
-
-      if (!assinatura) return NextResponse.json({ error: 'Membro sem notificação ativa' }, { status: 400 })
-
       webpush.setVapidDetails(
         process.env.VAPID_SUBJECT!,
         process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
@@ -71,8 +74,9 @@ export async function POST(req: Request) {
         })
       )
       return NextResponse.json({ ok: true })
-    } catch (e) {
-      return NextResponse.json({ error: 'Erro ao enviar notificação' }, { status: 500 })
+    } catch (e: any) {
+      console.error('Erro webpush:', e?.message, e?.statusCode, e?.body)
+      return NextResponse.json({ error: e?.message || 'Erro ao enviar notificação' }, { status: 500 })
     }
   }
 
