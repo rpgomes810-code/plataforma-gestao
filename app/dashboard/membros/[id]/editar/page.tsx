@@ -45,6 +45,21 @@ function ajustarParaOption(valorBanco: string, opcoes: string[]) {
   return achou || ''
 }
 
+function yyyyMmDd(v: any) {
+  if (!v) return ''
+  if (typeof v === 'string') {
+    // aceita "2026-06-04" e "2026-06-04T00:00:00.000Z"
+    return v.slice(0, 10)
+  }
+  try {
+    const d = new Date(v)
+    if (Number.isNaN(d.getTime())) return ''
+    return d.toISOString().slice(0, 10)
+  } catch {
+    return ''
+  }
+}
+
 const inputStyle: React.CSSProperties = {
   width: '100%',
   border: '1px solid #e2e8f0',
@@ -108,10 +123,8 @@ export default function EditarMembro() {
     const formEl = formRef.current
     if (!formEl) return
 
-    // Mostra o aviso no campo (nativo do browser)
     formEl.reportValidity()
 
-    // Loga qual campo está invalidando
     const invalids = Array.from(formEl.elements).filter((el) => {
       if (
         !(el instanceof HTMLInputElement) &&
@@ -144,23 +157,22 @@ export default function EditarMembro() {
         setDadosOriginais(data)
 
         setForm({
-          nome: data.nome || '',
-          telefone: data.telefone || '',
-          email: data.email || '',
-          data_nascimento: data.data_nascimento || '',
-          comum: data.comum || '',
-          cidade: data.cidade || '',
-          instrumento: data.instrumento || '',
-          tipo: data.tipo || '',
-          grupo: data.grupo || '',
-          nivel_acesso: data.nivel_acesso || '',
-          cargo: data.cargo || 'Nenhum',
-          status: data.status || '',
-          observacoes: data.observacoes || '',
-          data_inscricao_darpe: data.data_inscricao_darpe || '',
-          data_integracao: data.data_integracao || '',
-          // Ajuste para casar com as options mesmo se vier MAIÚSCULO/sem acento/etc.
-          perfil: data.perfil ? ajustarParaOption(data.perfil, PERFIS) : '',
+          nome: data?.nome || '',
+          telefone: data?.telefone || '',
+          email: data?.email || '',
+          data_nascimento: yyyyMmDd(data?.data_nascimento ?? data?.dataNascimento),
+          comum: data?.comum || '',
+          cidade: data?.cidade || '',
+          instrumento: data?.instrumento || '',
+          tipo: data?.tipo || '',
+          grupo: data?.grupo || '',
+          nivel_acesso: data?.nivel_acesso ?? data?.nivelAcesso ?? '',
+          cargo: data?.cargo || 'Nenhum',
+          status: data?.status || '',
+          observacoes: data?.observacoes || '',
+          data_inscricao_darpe: yyyyMmDd(data?.data_inscricao_darpe ?? data?.dataInscricaoDarpe),
+          data_integracao: yyyyMmDd(data?.data_integracao ?? data?.dataIntegracao),
+          perfil: data?.perfil ? ajustarParaOption(data.perfil, PERFIS) : '',
         })
 
         setLoadingData(false)
@@ -179,7 +191,6 @@ export default function EditarMembro() {
       })
   }, [params.id])
 
-  // Quando os grupos chegarem, tenta ajustar o valor selecionado (caso venha com caixa/acentos diferente)
   useEffect(() => {
     if (!form.grupo) return
     if (!grupos.length) return
@@ -190,7 +201,7 @@ export default function EditarMembro() {
     if (corrigido && corrigido !== form.grupo) {
       setForm((prev) => ({ ...prev, grupo: corrigido }))
     }
-  }, [grupos]) // intencional: roda quando grupos carregar
+  }, [grupos]) // intencional
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
@@ -212,11 +223,21 @@ export default function EditarMembro() {
 
     setLoading(true)
 
-    const dadosParaEnviar = {
+    // envia snake_case + camelCase (pra API não ignorar campo)
+    const dadosParaEnviar: any = {
       ...form,
+
       data_nascimento: form.data_nascimento || null,
+      dataNascimento: form.data_nascimento || null,
+
       data_inscricao_darpe: form.data_inscricao_darpe || null,
+      dataInscricaoDarpe: form.data_inscricao_darpe || null,
+
       data_integracao: form.data_integracao || null,
+      dataIntegracao: form.data_integracao || null,
+
+      nivel_acesso: form.nivel_acesso || null,
+      nivelAcesso: form.nivel_acesso || null,
     }
 
     const res = await fetch(`/api/membros/${params.id}`, {
@@ -239,11 +260,18 @@ export default function EditarMembro() {
         }),
       })
       router.push('/dashboard/membros')
-    } else {
-      const erro = await res.json()
-      alert('Erro ao atualizar membro: ' + (erro.error || 'Erro desconhecido'))
-      setLoading(false)
+      return
     }
+
+    let msg = 'Erro desconhecido'
+    try {
+      const erro = await res.json()
+      msg = erro?.error || msg
+    } catch {
+      // ignora
+    }
+    alert('Erro ao atualizar membro: ' + msg)
+    setLoading(false)
   }
 
   if (loadingData)
@@ -276,7 +304,6 @@ export default function EditarMembro() {
       `}</style>
 
       <div style={{ maxWidth: 1280, margin: '0 auto' }}>
-        {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
           <div>
             <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>Editar Membro</h1>
@@ -311,7 +338,6 @@ export default function EditarMembro() {
           </a>
         </div>
 
-        {/* Formulário */}
         <form ref={formRef} onSubmit={handleSubmit}>
           <div
             style={{
@@ -322,7 +348,6 @@ export default function EditarMembro() {
               overflow: 'hidden',
             }}
           >
-            {/* Seção: Dados Pessoais */}
             <div style={{ padding: '24px 28px', borderBottom: '1px solid #f1f5f9' }}>
               <p style={secaoStyle}>Dados Pessoais</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -375,7 +400,6 @@ export default function EditarMembro() {
               </div>
             </div>
 
-            {/* Seção: Dados do Ministério */}
             <div style={{ padding: '24px 28px', borderBottom: '1px solid #f1f5f9' }}>
               <p style={secaoStyle}>Dados do Ministério</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -463,7 +487,6 @@ export default function EditarMembro() {
               </div>
             </div>
 
-            {/* Botões */}
             <div style={{ padding: '20px 28px', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
               <button
                 type="submit"
