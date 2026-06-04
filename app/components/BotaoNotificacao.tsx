@@ -32,36 +32,26 @@ export default function BotaoNotificacao({ membroId }: { membroId: string }) {
         const reg = await navigator.serviceWorker.register('/sw.js')
         await navigator.serviceWorker.ready
 
-        // Verifica se já existe uma assinatura ativa no dispositivo
-       
-       
-       
-        const subExistente = await reg.pushManager.getSubscription()
+        const sub = await reg.pushManager.getSubscription()
 
-if (subExistente && Notification.permission === 'granted') {
-  // Testa se a assinatura ainda é válida pingando o servidor
-  const res = await fetch('/api/push/verificar', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ subscription: subExistente.toJSON(), membro_id: membroId })
-  })
-  if (res.ok) {
-    setAtivo(true)
-  } else {
-    // Assinatura inválida — cancela e pede para reativar
-    await subExistente.unsubscribe()
-    setAtivo(false)
-  }
-} else {
-  setAtivo(false)
-}
+        // Sem assinatura no dispositivo ou permissão negada
+        if (!sub || Notification.permission !== 'granted') {
+          setAtivo(false)
+          setCarregando(false)
+          return
+        }
 
+        // Verifica no banco se essa assinatura existe
+        const res = await fetch(`/api/push/status?membro_id=${membroId}&endpoint=${encodeURIComponent(sub.endpoint)}`)
+        const data = await res.json()
 
-
-
-
-
-
+        if (data.ativo) {
+          setAtivo(true)
+        } else {
+          // Não existe no banco — cancela no dispositivo também
+          await sub.unsubscribe()
+          setAtivo(false)
+        }
       } catch (e) {
         console.error(e)
         setAtivo(false)
@@ -97,11 +87,9 @@ if (subExistente && Notification.permission === 'granted') {
 
       const reg = await navigator.serviceWorker.ready
 
-      // Cancela assinatura antiga se existir
       const subAntiga = await reg.pushManager.getSubscription()
       if (subAntiga) await subAntiga.unsubscribe()
 
-      // Cria nova assinatura
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
@@ -123,7 +111,7 @@ if (subExistente && Notification.permission === 'granted') {
   }
 
   if (!suportado) return null
-  if (carregando) return <p className="text-xs text-gray-400">Verificando notificações...</p>
+  if (carregando) return <p className="text-xs text-gray-400">Verificando...</p>
   if (ativo) return <p className="text-xs text-green-600">🔔 Notificações ativadas</p>
 
   return (
