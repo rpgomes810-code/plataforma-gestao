@@ -9,6 +9,7 @@ type MembroFicha = {
   situacao: 'completo' | 'no_prazo' | 'vencido'
   diasRestantes: number | null
   acesso_bloqueado: boolean
+  temNotificacao: boolean
 }
 
 export default function CardStatusFichas() {
@@ -17,6 +18,7 @@ export default function CardStatusFichas() {
   const [aberto, setAberto] = useState(false)
   const [filtroCat, setFiltroCat] = useState<'todos' | 'completo' | 'no_prazo' | 'vencido'>('vencido')
   const [processando, setProcessando] = useState<string | null>(null)
+  const [notificado, setNotificado] = useState<string | null>(null)
 
   const carregar = () => {
     setLoading(true)
@@ -35,14 +37,23 @@ export default function CardStatusFichas() {
   const filtrados = filtroCat === 'todos' ? membros
     : membros.filter(m => m.situacao === filtroCat)
 
-  const acao = async (membro_id: string, acao: 'bloquear' | 'desbloquear' | 'notificar') => {
-    setProcessando(membro_id + acao)
-    await fetch('/api/fichas', {
+  const acao = async (membro_id: string, tipo: 'bloquear' | 'desbloquear' | 'notificar') => {
+    setProcessando(membro_id + tipo)
+    const res = await fetch('/api/fichas', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ acao, membro_id }),
+      body: JSON.stringify({ acao: tipo, membro_id }),
     })
-    if (acao !== 'notificar') carregar()
+    if (tipo === 'notificar') {
+      if (res.ok) {
+        setNotificado(membro_id)
+        setTimeout(() => setNotificado(null), 3000)
+      } else {
+        alert('Erro ao enviar notificação.')
+      }
+    } else {
+      carregar()
+    }
     setProcessando(null)
   }
 
@@ -54,7 +65,7 @@ export default function CardStatusFichas() {
         width: '100%', padding: '16px 20px', background: 'none', border: 'none',
         cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', margin: 0, fontFamily: "'Inter', sans-serif" }}>
             📋 Status das Fichas de Cadastro
           </h3>
@@ -130,25 +141,39 @@ export default function CardStatusFichas() {
                       {m.acesso_bloqueado && (
                         <span style={{ fontSize: 11, fontWeight: 600, color: '#7c3aed', background: '#f5f3ff', padding: '1px 6px', borderRadius: 999 }}>🔒 Bloqueado</span>
                       )}
+                      {!m.temNotificacao && m.situacao !== 'completo' && (
+                        <span style={{ fontSize: 11, color: '#94a3b8' }}>🔕 Sem notificação</span>
+                      )}
                     </div>
                   </div>
 
                   {/* Ações só para vencidos */}
                   {m.situacao === 'vencido' && (
                     <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                      <button
-                        onClick={() => acao(m.id, 'notificar')}
-                        disabled={processando === m.id + 'notificar'}
-                        title="Enviar notificação"
-                        style={{ padding: '5px 10px', borderRadius: 7, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', fontSize: 11, fontWeight: 600, color: '#2563eb' }}
-                      >
-                        {processando === m.id + 'notificar' ? '...' : '🔔 Notificar'}
-                      </button>
+                      {m.temNotificacao ? (
+                        <button
+                          onClick={() => acao(m.id, 'notificar')}
+                          disabled={processando === m.id + 'notificar' || notificado === m.id}
+                          title="Enviar notificação"
+                          style={{
+                            padding: '5px 10px', borderRadius: 7, border: '1px solid #e2e8f0',
+                            background: notificado === m.id ? '#dcfce7' : '#fff',
+                            cursor: processando === m.id + 'notificar' ? 'not-allowed' : 'pointer',
+                            fontSize: 11, fontWeight: 600,
+                            color: notificado === m.id ? '#16a34a' : '#2563eb',
+                          }}
+                        >
+                          {processando === m.id + 'notificar' ? '...' : notificado === m.id ? '✅ Enviado!' : '🔔 Notificar'}
+                        </button>
+                      ) : (
+                        <span style={{ fontSize: 11, color: '#94a3b8', padding: '5px 10px', borderRadius: 7, background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                          🔕 Sem notificação
+                        </span>
+                      )}
                       {m.acesso_bloqueado ? (
                         <button
                           onClick={() => acao(m.id, 'desbloquear')}
                           disabled={processando === m.id + 'desbloquear'}
-                          title="Desbloquear acesso"
                           style={{ padding: '5px 10px', borderRadius: 7, border: '1px solid #bbf7d0', background: '#f0fdf4', cursor: 'pointer', fontSize: 11, fontWeight: 600, color: '#16a34a' }}
                         >
                           {processando === m.id + 'desbloquear' ? '...' : '🔓 Desbloquear'}
@@ -157,7 +182,6 @@ export default function CardStatusFichas() {
                         <button
                           onClick={() => acao(m.id, 'bloquear')}
                           disabled={processando === m.id + 'bloquear'}
-                          title="Bloquear acesso"
                           style={{ padding: '5px 10px', borderRadius: 7, border: '1px solid #fecaca', background: '#fff5f5', cursor: 'pointer', fontSize: 11, fontWeight: 600, color: '#dc2626' }}
                         >
                           {processando === m.id + 'bloquear' ? '...' : '🔒 Bloquear'}

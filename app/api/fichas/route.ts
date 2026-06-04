@@ -16,20 +16,27 @@ export async function GET() {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
+  const { data: assinaturas } = await supabase
+    .from('push_subscriptions')
+    .select('membro_id')
+
+  const idsComNotificacao = new Set((assinaturas || []).map((a: any) => a.membro_id))
+
   const hoje = new Date()
 
   const resultado = (membros || []).map(m => {
-    if (m.cadastro_completo) return { ...m, situacao: 'completo', diasRestantes: null }
+    const temNotificacao = idsComNotificacao.has(m.id)
 
-    if (!m.data_inscricao_darpe) return { ...m, situacao: 'vencido', diasRestantes: 0 }
+    if (m.cadastro_completo) return { ...m, situacao: 'completo', diasRestantes: null, temNotificacao }
+    if (!m.data_inscricao_darpe) return { ...m, situacao: 'vencido', diasRestantes: 0, temNotificacao }
 
     const dataInscricao = new Date(m.data_inscricao_darpe)
     const prazo = new Date(dataInscricao)
     prazo.setDate(prazo.getDate() + 15)
     const diff = Math.ceil((prazo.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24))
 
-    if (diff > 0) return { ...m, situacao: 'no_prazo', diasRestantes: diff }
-    return { ...m, situacao: 'vencido', diasRestantes: diff }
+    if (diff > 0) return { ...m, situacao: 'no_prazo', diasRestantes: diff, temNotificacao }
+    return { ...m, situacao: 'vencido', diasRestantes: diff, temNotificacao }
   })
 
   return NextResponse.json(resultado)
@@ -55,7 +62,6 @@ export async function POST(req: Request) {
       .from('push_subscriptions').select('subscription').eq('membro_id', membro_id).single()
 
     if (errAssinatura || !assinatura) {
-      console.error('Assinatura não encontrada:', errAssinatura)
       return NextResponse.json({ error: 'Membro sem notificação ativa' }, { status: 400 })
     }
 
