@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import FiltroRelatorio from './FiltroRelatorio'
 import CardsPresenca from './CardsPresenca'
 import BotaoImprimir from './BotaoImprimir'
+import CardStatusFichas from './CardStatusFichas'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -248,19 +249,10 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
               dataInicio={dataInicio}
               dataFim={dataFim}
               dados={{
-                registros,
-                confirmouMasNaoFoi,
-                naoConfirmouMasFoi,
-                faltou,
-                statusGrupos,
-                hospitalOrdenado,
-                novosNoPeriodo,
-                maisPresentes,
-                menosPresentes,
-                porGrupo,
-                porPerfil,
-                instrumentosOrdenados,
-                totalInstrumentos,
+                registros, confirmouMasNaoFoi, naoConfirmouMasFoi, faltou,
+                statusGrupos, hospitalOrdenado, novosNoPeriodo,
+                maisPresentes, menosPresentes, porGrupo, porPerfil,
+                instrumentosOrdenados, totalInstrumentos,
               }}
             />
           </div>
@@ -285,6 +277,9 @@ export default async function Relatorios({ searchParams }: { searchParams: Promi
           naoConfirmouMasFoi={naoConfirmouMasFoi}
           faltou={faltou}
         />
+
+        {/* Status das Fichas — card client */}
+        <CardStatusFichas />
 
         {/* Status dos Grupos */}
         <div style={{ ...card, marginBottom: 12 }}>

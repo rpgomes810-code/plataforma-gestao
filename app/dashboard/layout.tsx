@@ -115,6 +115,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   // Ciência
   const [comunicadosPendentes, setComunicadosPendentes] = useState<any[]>([])
+const [acessoBloqueado, setAcessoBloqueado] = useState(false)
   const [comunicadoAtual, setComunicadoAtual] = useState<any>(null)
   const [marcandoCiente, setMarcandoCiente] = useState(false)
 
@@ -132,8 +133,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [])
 
   useEffect(() => {
-    fetch('/api/membros/eu').then(r => r.json()).then(async membro => {
-      const perms = membro.permissoes || {}
+  fetch('/api/membros/eu').then(r => r.json()).then(async membro => {
+    if (membro.acesso_bloqueado) setAcessoBloqueado(true)
+    const perms = membro.permissoes || {}
       setPermissoes(perms)
       const res = await fetch('/api/permissoes/acesso?membro_id=' + membro.id)
       const data = await res.json()
@@ -325,7 +327,32 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </div>
             </div>
           )}
-
+{/* TELA DE BLOQUEIO */}
+{acessoBloqueado && (
+  <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.85)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+    <div style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 400, textAlign: 'center', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+      <div style={{ background: '#dc2626', padding: '28px 24px 20px' }}>
+        <span style={{ fontSize: 48 }}>🔒</span>
+        <h2 style={{ color: '#fff', fontSize: 20, fontWeight: 800, margin: '12px 0 6px' }}>Acesso Bloqueado</h2>
+        <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, margin: 0 }}>
+          Seu cadastro está incompleto e o prazo venceu.
+        </p>
+      </div>
+      <div style={{ padding: '24px' }}>
+        <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.7, margin: '0 0 20px' }}>
+          Para continuar usando o app, você precisa completar seu cadastro. Entre em contato com o administrador caso precise de ajuda.
+        </p>
+        <a href="/dashboard/completar-cadastro" style={{
+          display: 'block', width: '100%', padding: '12px', borderRadius: 10,
+          background: '#2563eb', color: '#fff', fontSize: 14, fontWeight: 700,
+          textDecoration: 'none', textAlign: 'center', boxSizing: 'border-box',
+        }}>
+          📝 Completar Cadastro Agora
+        </a>
+      </div>
+    </div>
+  </div>
+)}
           {semPermissao ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '96px 0' }}>
               <div style={{ textAlign: 'center' }}>
