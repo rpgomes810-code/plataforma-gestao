@@ -11,7 +11,7 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-const CAMPOS_MAIUSCULO = ['nome', 'comum', 'cidade', 'instrumento', 'grupo', 'cargo', 'observacoes']
+const CAMPOS_MAIUSCULO = ['nome', 'comum', 'cidade', 'observacoes']
 
 function maiuscular(body: any) {
   const resultado = { ...body }
