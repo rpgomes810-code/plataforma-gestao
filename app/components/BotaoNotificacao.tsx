@@ -17,44 +17,49 @@ function urlBase64ToUint8Array(base64String: string) {
 
 export default function BotaoNotificacao({ membroId }: { membroId: string }) {
   const [ativo, setAtivo] = useState(false)
-  const [carregando, setCarregando] = useState(false)
+  const [carregando, setCarregando] = useState(true)
   const [suportado, setSuportado] = useState(true)
 
   useEffect(() => {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
       setSuportado(false)
+      setCarregando(false)
       return
     }
 
-    const registrar = async () => {
+    const verificar = async () => {
       try {
         const reg = await navigator.serviceWorker.register('/sw.js')
         await navigator.serviceWorker.ready
 
-        if (Notification.permission === 'granted') {
-          const sub = await reg.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-          })
+        // Verifica se já existe uma assinatura ativa no dispositivo
+        const subExistente = await reg.pushManager.getSubscription()
+
+        if (subExistente && Notification.permission === 'granted') {
+          // Atualiza no banco para garantir que está salva
           await fetch('/api/push/assinar', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ subscription: sub.toJSON(), membro_id: membroId })
+            body: JSON.stringify({ subscription: subExistente.toJSON(), membro_id: membroId })
           })
           setAtivo(true)
+        } else {
+          // Sem assinatura ativa no dispositivo
+          setAtivo(false)
         }
       } catch (e) {
         console.error(e)
+        setAtivo(false)
       }
+      setCarregando(false)
     }
 
-    registrar()
+    verificar()
   }, [membroId])
 
   const ativar = async () => {
     setCarregando(true)
     try {
-      // Compatível com Edge e navegadores antigos
       let permission: NotificationPermission
       if (typeof Notification.requestPermission === 'function') {
         const result = Notification.requestPermission()
@@ -76,6 +81,12 @@ export default function BotaoNotificacao({ membroId }: { membroId: string }) {
       }
 
       const reg = await navigator.serviceWorker.ready
+
+      // Cancela assinatura antiga se existir
+      const subAntiga = await reg.pushManager.getSubscription()
+      if (subAntiga) await subAntiga.unsubscribe()
+
+      // Cria nova assinatura
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
@@ -97,6 +108,7 @@ export default function BotaoNotificacao({ membroId }: { membroId: string }) {
   }
 
   if (!suportado) return null
+  if (carregando) return <p className="text-xs text-gray-400">Verificando notificações...</p>
   if (ativo) return <p className="text-xs text-green-600">🔔 Notificações ativadas</p>
 
   return (
