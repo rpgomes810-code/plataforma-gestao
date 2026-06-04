@@ -461,18 +461,7 @@ export default function Dashboard() {
           )}
         </div>
 
-        {notificacaoAtiva !== null && (
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            padding: '12px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600,
-            background: notificacaoAtiva ? '#f0fdf4' : '#fef2f2',
-            border: `1px solid ${notificacaoAtiva ? '#bbf7d0' : '#fecaca'}`,
-            color: notificacaoAtiva ? '#15803d' : '#dc2626',
-          }}>
-            <span>{notificacaoAtiva ? '🔔' : '🔕'}</span>
-            <span>{notificacaoAtiva ? 'Notificações ativadas' : 'Notificações desativadas — ative nas configurações do celular'}</span>
-          </div>
-        )}
+        
 
       </div>
     </div>

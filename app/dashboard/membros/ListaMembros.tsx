@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import BotaoExcluir from './BotaoExcluir'
 
 export default function ListaMembros({ membros, membroLogado, podeEditar, podeExcluir, podeVerFicha }: {
@@ -15,10 +15,22 @@ export default function ListaMembros({ membros, membroLogado, podeEditar, podeEx
   const [filtroPerfil, setFiltroPerfil] = useState('')
   const [filtroInstrumento, setFiltroInstrumento] = useState('')
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 768)
+  const [idsComNotificacao, setIdsComNotificacao] = useState<Set<string>>(new Set())
 
-  if (typeof window !== 'undefined') {
-    window.addEventListener('resize', () => setIsMobile(window.innerWidth < 768))
-  }
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
+  useEffect(() => {
+    fetch('/api/push/status-todos')
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data)) setIdsComNotificacao(new Set(data))
+      })
+  }, [])
 
   const grupos = [...new Set(membros.map(m => m.grupo).filter(Boolean))].sort((a, b) => {
     const numA = parseInt(a.replace(/\D/g, '')) || 0
@@ -59,6 +71,19 @@ export default function ListaMembros({ membros, membroLogado, podeEditar, podeEx
     cursor: 'pointer', outline: 'none', width: '100%',
   }
 
+  const BadgeNotificacao = ({ membroId }: { membroId: string }) => {
+    const tem = idsComNotificacao.has(membroId)
+    return (
+      <span style={{
+        fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 999,
+        background: tem ? '#eff6ff' : '#f1f5f9',
+        color: tem ? '#2563eb' : '#94a3b8',
+      }}>
+        {tem ? '🔔' : '🔕'}
+      </span>
+    )
+  }
+
   return (
     <div style={{ background: '#f1f5f9', minHeight: '100vh', padding: isMobile ? '16px' : '28px 40px' }}>
       <style>{`.membro-row:hover { background: #f8fafc; }`}</style>
@@ -80,7 +105,6 @@ export default function ListaMembros({ membros, membroLogado, podeEditar, podeEx
           boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
         }}>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 12 }}>
-            {/* Grupo */}
             <div>
               <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, marginBottom: 5 }}>GRUPO</label>
               <div style={{ position: 'relative' }}>
@@ -95,7 +119,6 @@ export default function ListaMembros({ membros, membroLogado, podeEditar, podeEx
               </div>
             </div>
 
-            {/* Perfil */}
             <div>
               <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, marginBottom: 5 }}>PERFIL</label>
               <div style={{ position: 'relative' }}>
@@ -110,7 +133,6 @@ export default function ListaMembros({ membros, membroLogado, podeEditar, podeEx
               </div>
             </div>
 
-            {/* Instrumento */}
             <div>
               <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 1, marginBottom: 5 }}>INSTRUMENTO</label>
               <div style={{ position: 'relative' }}>
@@ -171,7 +193,6 @@ export default function ListaMembros({ membros, membroLogado, podeEditar, podeEx
           borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
           overflow: 'hidden',
         }}>
-          {/* Cabeçalho tabela — só desktop */}
           {!isMobile && (
             <div style={{
               display: 'grid',
@@ -204,7 +225,6 @@ export default function ListaMembros({ membros, membroLogado, podeEditar, podeEx
               }),
             }}>
               {isMobile ? (
-                /* Card mobile */
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{
                     width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
@@ -226,12 +246,9 @@ export default function ListaMembros({ membros, membroLogado, podeEditar, podeEx
                       }}>
                         {membro.status || 'Pendente'}
                       </span>
-                      {membro.grupo && (
-                        <span style={{ fontSize: 11, color: '#64748b', fontWeight: 500 }}>{membro.grupo}</span>
-                      )}
-                      {membro.perfil && (
-                        <span style={{ fontSize: 11, color: '#94a3b8' }}>{membro.perfil}</span>
-                      )}
+                      <BadgeNotificacao membroId={membro.id} />
+                      {membro.grupo && <span style={{ fontSize: 11, color: '#64748b', fontWeight: 500 }}>{membro.grupo}</span>}
+                      {membro.perfil && <span style={{ fontSize: 11, color: '#94a3b8' }}>{membro.perfil}</span>}
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
@@ -265,7 +282,6 @@ export default function ListaMembros({ membros, membroLogado, podeEditar, podeEx
                   </div>
                 </div>
               ) : (
-                /* Linha desktop */
                 <>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{
@@ -277,23 +293,24 @@ export default function ListaMembros({ membros, membroLogado, podeEditar, podeEx
                       {membro.nome?.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <p style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, margin: 0, textTransform: 'uppercase', letterSpacing: 0.4 }}>
+                      <p style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: 0.4 }}>
                         {membro.nome}
                       </p>
-                      <span style={{
-                        fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 999,
-                        background: membro.status === 'Ativo' ? '#dcfce7' : '#f1f5f9',
-                        color: membro.status === 'Ativo' ? '#16a34a' : '#64748b',
-                      }}>
-                        {membro.status || 'Pendente'}
-                      </span>
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                        <span style={{
+                          fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 999,
+                          background: membro.status === 'Ativo' ? '#dcfce7' : '#f1f5f9',
+                          color: membro.status === 'Ativo' ? '#16a34a' : '#64748b',
+                        }}>
+                          {membro.status || 'Pendente'}
+                        </span>
+                        <BadgeNotificacao membroId={membro.id} />
+                      </div>
                     </div>
                   </div>
 
-                  <span style={{ fontSize: 13, color: '#475569', display: 'flex', alignItems: 'center', gap: 5 }}>
-                    {membro.instrumento && membro.instrumento !== 'Nenhum' ? (
-                      <>{membro.instrumento}</>
-                    ) : <span style={{ color: '#cbd5e1' }}>—</span>}
+                  <span style={{ fontSize: 13, color: '#475569' }}>
+                    {membro.instrumento && membro.instrumento !== 'Nenhum' ? membro.instrumento : <span style={{ color: '#cbd5e1' }}>—</span>}
                   </span>
 
                   <span style={{ fontSize: 13, color: '#475569' }}>
