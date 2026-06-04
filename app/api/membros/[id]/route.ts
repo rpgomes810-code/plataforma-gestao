@@ -11,6 +11,18 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+const CAMPOS_MAIUSCULO = ['nome', 'comum', 'cidade', 'instrumento', 'grupo', 'perfil', 'cargo', 'observacoes']
+
+function maiuscular(body: any) {
+  const resultado = { ...body }
+  for (const campo of CAMPOS_MAIUSCULO) {
+    if (resultado[campo] && typeof resultado[campo] === 'string') {
+      resultado[campo] = resultado[campo].toUpperCase()
+    }
+  }
+  return resultado
+}
+
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
@@ -27,10 +39,11 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const body = await req.json()
+  const dados = maiuscular(body)
 
   const { error } = await supabase
     .from('membros')
-    .update(body)
+    .update(dados)
     .eq('id', id)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -40,14 +53,12 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
-  // Busca o user_id do membro antes de excluir
   const { data: membro } = await supabaseAdmin
     .from('membros')
     .select('user_id')
     .eq('id', id)
     .single()
 
-  // Exclui da tabela membros
   const { error } = await supabaseAdmin
     .from('membros')
     .delete()
@@ -55,7 +66,6 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ id: str
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Exclui do Auth do Supabase
   if (membro?.user_id) {
     await supabaseAdmin.auth.admin.deleteUser(membro.user_id)
   }

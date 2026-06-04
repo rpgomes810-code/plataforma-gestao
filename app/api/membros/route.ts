@@ -1,6 +1,18 @@
 import { supabase } from '../../lib/supabase'
 import { NextRequest, NextResponse } from 'next/server'
 
+const CAMPOS_MAIUSCULO = ['nome', 'comum', 'cidade', 'instrumento', 'grupo', 'perfil', 'cargo', 'observacoes']
+
+function maiuscular(obj: any) {
+  const resultado = { ...obj }
+  for (const campo of CAMPOS_MAIUSCULO) {
+    if (resultado[campo] && typeof resultado[campo] === 'string') {
+      resultado[campo] = resultado[campo].toUpperCase()
+    }
+  }
+  return resultado
+}
+
 export async function GET() {
   const { data, error } = await supabase
     .from('membros')
@@ -14,7 +26,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const formData = await request.formData()
 
-  const membro = {
+  const membro = maiuscular({
     nome: formData.get('nome'),
     telefone: formData.get('telefone'),
     data_nascimento: formData.get('data_nascimento') || null,
@@ -28,7 +40,7 @@ export async function POST(request: NextRequest) {
     observacoes: formData.get('observacoes') || null,
     status: 'Ativo',
     aprovado: false,
-  }
+  })
 
   const { error } = await supabase.from('membros').insert([membro])
 

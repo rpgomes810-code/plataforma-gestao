@@ -8,6 +8,18 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+const CAMPOS_MAIUSCULO = ['quem_autorizou', 'observacoes', 'membros_presentes', 'criado_por']
+
+function maiuscular(obj: any) {
+  const resultado = { ...obj }
+  for (const campo of CAMPOS_MAIUSCULO) {
+    if (resultado[campo] && typeof resultado[campo] === 'string') {
+      resultado[campo] = resultado[campo].toUpperCase()
+    }
+  }
+  return resultado
+}
+
 async function getUsuarioLogado() {
   try {
     const cookieStore = await cookies()
@@ -46,17 +58,18 @@ export async function POST(req: Request) {
   const body = await req.json()
   const { escala_id } = body
   const usuarioNome = await getUsuarioLogado()
+  const dados = maiuscular(body)
 
-  const { data, error } = await supabaseAdmin.from('registros').insert([body]).select().single()
+  const { data, error } = await supabaseAdmin.from('registros').insert([dados]).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   await supabaseAdmin.from('logs').insert([{
     usuario_nome: usuarioNome,
-    acao: `Registrou atendimento: ${body.data || ''}`,
+    acao: `Registrou atendimento: ${dados.data || ''}`,
     tabela: 'registros',
     registro_id: data?.id,
     dados_antes: null,
-    dados_depois: body,
+    dados_depois: dados,
   }])
 
   if (escala_id) {

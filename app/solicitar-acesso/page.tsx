@@ -53,14 +53,22 @@ export default function SolicitarAcesso() {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
-    const [dia, mes, ano] = form.data_nascimento.split('/')
-const dataNascimentoFormatada = dia && mes && ano ? `${ano}-${mes}-${dia}` : null
 
-const { error } = await supabase.from('solicitacoes').insert([{
-  ...form,
-  data_nascimento: dataNascimentoFormatada,
-  status: 'pendente'
-}])
+    const [dia, mes, ano] = form.data_nascimento.split('/')
+    const dataNascimentoFormatada = dia && mes && ano ? `${ano}-${mes}-${dia}` : null
+
+    const { error } = await supabase.from('solicitacoes').insert([{
+      nome: form.nome.toUpperCase(),
+      email: form.email,
+      senha: form.senha,
+      telefone: form.telefone,
+      data_nascimento: dataNascimentoFormatada,
+      comum: form.comum.toUpperCase(),
+      cidade: form.cidade.toUpperCase(),
+      instrumento: form.instrumento.toUpperCase(),
+      status: 'pendente',
+    }])
+
     if (error) { alert('Erro ao enviar solicitação. Tente novamente.'); setLoading(false) }
     else setEnviado(true)
   }
@@ -94,7 +102,6 @@ const { error } = await supabase.from('solicitacoes').insert([{
     }}>
       <div style={{ width: '100%', maxWidth: 480 }}>
 
-        {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
           <div style={{
             width: 56, height: 56, borderRadius: 14, margin: '0 auto 12px',
@@ -111,7 +118,6 @@ const { error } = await supabase.from('solicitacoes').insert([{
           <p style={{ fontSize: 13, color: '#64748b', marginTop: 6 }}>Preencha os dados para solicitar acesso à plataforma</p>
         </div>
 
-        {/* Card */}
         <div style={{
           background: '#fff', borderRadius: 16,
           border: '1px solid #e2e8f0',

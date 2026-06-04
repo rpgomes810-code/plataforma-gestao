@@ -6,6 +6,18 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+const CAMPOS_MAIUSCULO = ['nome', 'comum', 'cidade', 'instrumento', 'como_conheceu_indicacao', 'como_conheceu_outros']
+
+function maiuscular(obj: any) {
+  const resultado = { ...obj }
+  for (const campo of CAMPOS_MAIUSCULO) {
+    if (resultado[campo] && typeof resultado[campo] === 'string') {
+      resultado[campo] = resultado[campo].toUpperCase()
+    }
+  }
+  return resultado
+}
+
 export async function POST(req: Request) {
   const body = await req.json()
   const { nome, telefone, data_nascimento, comum, cidade, instrumento, instrumento_outro,
@@ -13,12 +25,14 @@ export async function POST(req: Request) {
 
   if (!nome || !telefone) return NextResponse.json({ error: 'Campos obrigatórios faltando' }, { status: 400 })
 
-  const { error } = await supabase.from('candidatos').insert({
+  const dados = maiuscular({
     nome, telefone, data_nascimento: data_nascimento || null, comum, cidade,
     instrumento: instrumento === 'Outro' ? instrumento_outro : instrumento,
     como_conheceu, como_conheceu_indicacao, como_conheceu_outros, disponibilidade,
     status: 'candidato',
   })
+
+  const { error } = await supabase.from('candidatos').insert(dados)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })
@@ -35,7 +49,8 @@ export async function GET() {
 export async function PUT(req: Request) {
   const body = await req.json()
   const { id, ...campos } = body
-  const { error } = await supabase.from('candidatos').update(campos).eq('id', id)
+  const dados = maiuscular(campos)
+  const { error } = await supabase.from('candidatos').update(dados).eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })
 }

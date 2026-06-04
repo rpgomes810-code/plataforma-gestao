@@ -9,6 +9,18 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+const CAMPOS_MAIUSCULO = ['grupo', 'local_texto', 'atendentes', 'observacoes']
+
+function maiuscular(obj: any) {
+  const resultado = { ...obj }
+  for (const campo of CAMPOS_MAIUSCULO) {
+    if (resultado[campo] && typeof resultado[campo] === 'string') {
+      resultado[campo] = resultado[campo].toUpperCase()
+    }
+  }
+  return resultado
+}
+
 async function getUsuarioLogado() {
   try {
     const cookieStore = await cookies()
@@ -76,24 +88,25 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const body = await request.json()
+  const dados = maiuscular(body)
   const usuarioNome = await getUsuarioLogado()
 
-  const { data, error } = await supabaseAdmin.from('escalas').insert([body]).select().single()
+  const { data, error } = await supabaseAdmin.from('escalas').insert([dados]).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   await supabaseAdmin.from('logs').insert([{
     usuario_nome: usuarioNome,
-    acao: `Criou escala: ${body.grupo} — ${body.data}`,
+    acao: `Criou escala: ${dados.grupo} — ${dados.data}`,
     tabela: 'escalas',
     registro_id: String(data?.id || ''),
     dados_antes: null,
-    dados_depois: body,
+    dados_depois: dados,
   }])
 
-  if (body.atendentes && body.hospital_id) {
+  if (dados.atendentes && dados.hospital_id) {
     const { data: hospital } = await supabaseAdmin
-      .from('hospitais').select('nome').eq('id', body.hospital_id).single()
-    await notificarAtendente(body.atendentes, body.grupo, body.data, hospital?.nome || '')
+      .from('hospitais').select('nome').eq('id', dados.hospital_id).single()
+    await notificarAtendente(dados.atendentes, dados.grupo, dados.data, hospital?.nome || '')
   }
 
   return NextResponse.json({ success: true })

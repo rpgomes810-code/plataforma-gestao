@@ -8,6 +8,18 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+const CAMPOS_MAIUSCULO = ['nome', 'cidade', 'endereco', 'contato', 'observacoes']
+
+function maiuscular(obj: any) {
+  const resultado = { ...obj }
+  for (const campo of CAMPOS_MAIUSCULO) {
+    if (resultado[campo] && typeof resultado[campo] === 'string') {
+      resultado[campo] = resultado[campo].toUpperCase()
+    }
+  }
+  return resultado
+}
+
 export async function GET() {
   const { data, error } = await supabaseAdmin
     .from('hospitais')
@@ -21,6 +33,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    const dados = maiuscular(body)
 
     const cookieStore = await cookies()
     const supabase = createServerClient(
@@ -31,16 +44,16 @@ export async function POST(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     const { data: membroLogado } = await supabaseAdmin.from('membros').select('nome').eq('user_id', user?.id).single()
 
-    const { data, error } = await supabaseAdmin.from('hospitais').insert([body]).select().single()
+    const { data, error } = await supabaseAdmin.from('hospitais').insert([dados]).select().single()
     if (error) throw error
 
     await supabaseAdmin.from('logs').insert([{
       usuario_nome: membroLogado?.nome || 'Desconhecido',
-      acao: `Criou hospital: ${body.nome}`,
+      acao: `Criou hospital: ${dados.nome}`,
       tabela: 'hospitais',
       registro_id: data?.id,
       dados_antes: null,
-      dados_depois: body,
+      dados_depois: dados,
     }])
 
     return NextResponse.json({ success: true })

@@ -9,6 +9,18 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+const CAMPOS_MAIUSCULO = ['grupo', 'local_texto', 'atendentes', 'observacoes']
+
+function maiuscular(obj: any) {
+  const resultado = { ...obj }
+  for (const campo of CAMPOS_MAIUSCULO) {
+    if (resultado[campo] && typeof resultado[campo] === 'string') {
+      resultado[campo] = resultado[campo].toUpperCase()
+    }
+  }
+  return resultado
+}
+
 async function getUsuarioLogado() {
   try {
     const cookieStore = await cookies()
@@ -48,13 +60,13 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const body = await req.json()
+  const dados = maiuscular(body)
   const usuarioNome = await getUsuarioLogado()
 
   const { data: dadosAntes } = await supabaseAdmin.from('escalas').select('*').eq('id', id).single()
-  const { error } = await supabaseAdmin.from('escalas').update(body).eq('id', id)
+  const { error } = await supabaseAdmin.from('escalas').update(dados).eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Log de edição geral
   if (!body.hasOwnProperty('confirmacao_aberta')) {
     await supabaseAdmin.from('logs').insert([{
       usuario_nome: usuarioNome,
@@ -62,11 +74,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       tabela: 'escalas',
       registro_id: String(id),
       dados_antes: dadosAntes,
-      dados_depois: body,
+      dados_depois: dados,
     }])
   }
 
-  // Log de liberação
   if (body.confirmacao_aberta === true && dadosAntes?.confirmacao_aberta === false) {
     await supabaseAdmin.from('logs').insert([{
       usuario_nome: usuarioNome,
@@ -78,9 +89,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     }])
   }
 
-  if (body.atendentes && body.atendentes !== dadosAntes?.atendentes) {
+  if (dados.atendentes && dados.atendentes !== dadosAntes?.atendentes) {
     const { data: hospital } = await supabaseAdmin.from('hospitais').select('nome').eq('id', dadosAntes?.hospital_id).single()
-    await notificarAtendente(body.atendentes, dadosAntes?.grupo, dadosAntes?.data, hospital?.nome || '')
+    await notificarAtendente(dados.atendentes, dadosAntes?.grupo, dadosAntes?.data, hospital?.nome || '')
   }
 
   return NextResponse.json({ ok: true })

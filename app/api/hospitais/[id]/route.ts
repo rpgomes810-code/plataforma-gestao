@@ -8,6 +8,18 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+const CAMPOS_MAIUSCULO = ['nome', 'cidade', 'endereco', 'contato', 'observacoes']
+
+function maiuscular(obj: any) {
+  const resultado = { ...obj }
+  for (const campo of CAMPOS_MAIUSCULO) {
+    if (resultado[campo] && typeof resultado[campo] === 'string') {
+      resultado[campo] = resultado[campo].toUpperCase()
+    }
+  }
+  return resultado
+}
+
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
@@ -24,6 +36,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const body = await req.json()
+  const dados = maiuscular(body)
 
   const cookieStore = await cookies()
   const supabase = createServerClient(
@@ -36,7 +49,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
   const { data: dadosAntes } = await supabaseAdmin.from('hospitais').select('*').eq('id', id).single()
 
-  const { error } = await supabaseAdmin.from('hospitais').update(body).eq('id', id)
+  const { error } = await supabaseAdmin.from('hospitais').update(dados).eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   await supabaseAdmin.from('logs').insert([{
@@ -45,7 +58,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     tabela: 'hospitais',
     registro_id: id,
     dados_antes: dadosAntes,
-    dados_depois: body,
+    dados_depois: dados,
   }])
 
   return NextResponse.json({ ok: true })
