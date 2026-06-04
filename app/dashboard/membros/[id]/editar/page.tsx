@@ -163,7 +163,7 @@ export default function EditarMembro() {
           data_nascimento: yyyyMmDd(data?.data_nascimento ?? data?.dataNascimento),
           comum: data?.comum || '',
           cidade: data?.cidade || '',
-          instrumento: data?.instrumento || '',
+          instrumento: data?.instrumento ? ajustarParaOption(data.instrumento, ['Nenhum', 'Violino', 'Viola', 'Violoncelo', 'Vocal']) : '',
           tipo: data?.tipo || '',
           grupo: data?.grupo || '',
           nivel_acesso: data?.nivel_acesso ?? data?.nivelAcesso ?? '',
