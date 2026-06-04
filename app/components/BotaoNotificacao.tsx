@@ -33,20 +33,35 @@ export default function BotaoNotificacao({ membroId }: { membroId: string }) {
         await navigator.serviceWorker.ready
 
         // Verifica se já existe uma assinatura ativa no dispositivo
+       
+       
+       
         const subExistente = await reg.pushManager.getSubscription()
 
-        if (subExistente && Notification.permission === 'granted') {
-          // Atualiza no banco para garantir que está salva
-          await fetch('/api/push/assinar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ subscription: subExistente.toJSON(), membro_id: membroId })
-          })
-          setAtivo(true)
-        } else {
-          // Sem assinatura ativa no dispositivo
-          setAtivo(false)
-        }
+if (subExistente && Notification.permission === 'granted') {
+  // Testa se a assinatura ainda é válida pingando o servidor
+  const res = await fetch('/api/push/verificar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ subscription: subExistente.toJSON(), membro_id: membroId })
+  })
+  if (res.ok) {
+    setAtivo(true)
+  } else {
+    // Assinatura inválida — cancela e pede para reativar
+    await subExistente.unsubscribe()
+    setAtivo(false)
+  }
+} else {
+  setAtivo(false)
+}
+
+
+
+
+
+
+
       } catch (e) {
         console.error(e)
         setAtivo(false)
