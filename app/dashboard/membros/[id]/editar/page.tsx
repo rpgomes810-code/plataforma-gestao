@@ -224,21 +224,13 @@ export default function EditarMembro() {
     setLoading(true)
 
     // envia snake_case + camelCase (pra API não ignorar campo)
-    const dadosParaEnviar: any = {
-      ...form,
-
-      data_nascimento: form.data_nascimento || null,
-      dataNascimento: form.data_nascimento || null,
-
-      data_inscricao_darpe: form.data_inscricao_darpe || null,
-      dataInscricaoDarpe: form.data_inscricao_darpe || null,
-
-      data_integracao: form.data_integracao || null,
-      dataIntegracao: form.data_integracao || null,
-
-      nivel_acesso: form.nivel_acesso || null,
-      nivelAcesso: form.nivel_acesso || null,
-    }
+   const dadosParaEnviar: any = {
+  ...form,
+  data_nascimento: form.data_nascimento || null,
+  data_inscricao_darpe: form.data_inscricao_darpe || null,
+  data_integracao: form.data_integracao || null,
+  nivel_acesso: form.nivel_acesso || null,
+}
 
     const res = await fetch(`/api/membros/${params.id}`, {
       method: 'PUT',
