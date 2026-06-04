@@ -45,7 +45,7 @@ export async function GET(req: Request) {
   if (mes && ano) {
     const mesNum = parseInt(mes).toString().padStart(2, '0')
     const inicio = `${ano}-${mesNum}-01`
-    const fim = `${ano}-${mesNum}-31`
+    const fim = new Date(Number(ano), Number(mes), 0).toISOString().split('T')[0]
     query = query.gte('data', inicio).lte('data', fim)
   }
 
