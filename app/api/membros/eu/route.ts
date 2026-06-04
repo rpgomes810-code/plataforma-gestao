@@ -28,7 +28,7 @@ export async function GET() {
 
   const { data: membro } = await supabaseAdmin
     .from('membros')
-    .select('id, nivel_acesso, nome, tipo, grupo, perfil')
+    .select('id, nivel_acesso, nome, tipo, grupo, perfil, acesso_bloqueado, cadastro_completo')
     .eq('user_id', user?.id)
     .single()
 
