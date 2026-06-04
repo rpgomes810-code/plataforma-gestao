@@ -22,9 +22,9 @@ export async function POST(req: Request) {
   const body = await req.json()
 
   const { error } = await supabaseAdmin
-    .from('membros')
-    .update(body)
-    .eq('user_id', user.id)
+  .from('membros')
+  .update({ ...body, acesso_bloqueado: false })
+  .eq('user_id', user.id)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })

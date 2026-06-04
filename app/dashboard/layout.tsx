@@ -328,7 +328,7 @@ const [acessoBloqueado, setAcessoBloqueado] = useState(false)
             </div>
           )}
 {/* TELA DE BLOQUEIO */}
-{acessoBloqueado && (
+{acessoBloqueado && pathname !== '/dashboard/completar-cadastro' && (
   <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.85)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
     <div style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 400, textAlign: 'center', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
       <div style={{ background: '#dc2626', padding: '28px 24px 20px' }}>
